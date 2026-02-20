@@ -1,0 +1,23 @@
+import { getSessionContext } from '@/lib/auth/session';
+import { prisma } from '@/lib/db/prisma';
+import { ResponseEditor } from '@/components/response-editor';
+import { ScoreCard } from '@/components/score-card';
+
+export default async function AssessmentDetailPage({ params }: { params: { assessmentId: string } }) {
+  const session = await getSessionContext();
+  const assessment = await prisma.assessment.findFirst({ where: { id: params.assessmentId, tenantId: session.tenantId } });
+  if (!assessment) return <div className="card">Assessment not found.</div>;
+
+  const questions = await prisma.question.findMany({
+    where: { tenantId: session.tenantId, control: { templateVersionId: assessment.templateVersionId } },
+    include: { control: true }
+  });
+
+  return (
+    <div>
+      <div className="card"><h2>{assessment.name}</h2><p>{assessment.customerName}</p></div>
+      <ScoreCard assessmentId={assessment.id} />
+      <ResponseEditor assessmentId={assessment.id} questions={questions.map((q) => ({ id: q.id, prompt: q.prompt, weight: q.weight, control: { domain: q.control.domain, code: q.control.code } }))} />
+    </div>
+  );
+}

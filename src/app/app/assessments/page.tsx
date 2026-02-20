@@ -1,0 +1,23 @@
+import Link from 'next/link';
+import { prisma } from '@/lib/db/prisma';
+import { getSessionContext } from '@/lib/auth/session';
+
+export default async function AssessmentsPage() {
+  const session = await getSessionContext();
+  const assessments = await prisma.assessment.findMany({ where: { tenantId: session.tenantId }, orderBy: { updatedAt: 'desc' } });
+
+  return (
+    <div>
+      <div className="card" style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <h2>Assessments</h2>
+        <Link href="/app/assessments/new">Create Assessment</Link>
+      </div>
+      {assessments.map((a) => (
+        <Link href={`/app/assessments/${a.id}`} key={a.id} className="card" style={{ display: 'block' }}>
+          <h3>{a.name}</h3>
+          <p>{a.customerName}</p>
+        </Link>
+      ))}
+    </div>
+  );
+}
