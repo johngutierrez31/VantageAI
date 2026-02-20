@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantRole {
+  ADMIN
+  ANALYST
+  VIEWER
+  CLIENT_VIEWER
+}
+
+enum TemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AssessmentStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum PlanTier {
+  STARTER
+  PRO
+  PARTNER
+}
+
+model Tenant {
+  id              String              @id @default(cuid())
+  name            String
+  slug            String              @unique
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  memberships     Membership[]
+  templates       Template[]
+  templateVersions TemplateVersion[]
+  controls        Control[]
+  questions       Question[]
+  assessments     Assessment[]
+  responses       Response[]
+  evidenceItems   Evidence[]
+  evidenceLinks   EvidenceLink[]
+  aiSuggestions   AISuggestion[]
+  exceptions      Exception[]
+  auditLogs       AuditLog[]
+  stripeCustomers StripeCustomer[]
+  subscriptions   Subscription[]
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  name        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+}
+
+model Membership {
+  id        String     @id @default(cuid())
+  tenantId  String
+  userId    String
+  role      TenantRole
+  createdAt DateTime   @default(now())
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+}
+
+model Template {
+  id              String            @id @default(cuid())
+  tenantId        String
+  name            String
+  description     String?
+  status          TemplateStatus    @default(DRAFT)
+  currentVersionId String?
+  createdBy       String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versions        TemplateVersion[]
+  assessments     Assessment[]
+
+  @@unique([tenantId, name])
+}
+
+model TemplateVersion {
+  id          String       @id @default(cuid())
+  tenantId    String
+  templateId  String
+  version     Int
+  title       String
+  notes       String?
+  isPublished Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template    Template     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  controls    Control[]
+
+  @@unique([templateId, version])
+  @@index([tenantId, templateId])
+}
+
+model Control {
+  id                String            @id @default(cuid())
+  tenantId          String
+  templateVersionId String
+  domain            String
+  code              String
+  title             String
+  description       String?
+  weight            Float             @default(1)
+  createdAt         DateTime          @default(now())
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  templateVersion   TemplateVersion   @relation(fields: [templateVersionId], references: [id], onDelete: Cascade)
+  questions         Question[]
+
+  @@unique([templateVersionId, code])
+  @@index([tenantId, templateVersionId])
+}
+
+model Question {
+  id          String      @id @default(cuid())
+  tenantId    String
+  controlId   String
+  prompt      String
+  rubric      String
+  weight      Float       @default(1)
+  createdAt   DateTime    @default(now())
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  control     Control     @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  responses   Response[]
+  evidenceLinks EvidenceLink[]
+}
+
+model Assessment {
+  id              String            @id @default(cuid())
+  tenantId        String
+  templateId      String
+  templateVersionId String
+  name            String
+  customerName    String
+  status          AssessmentStatus  @default(DRAFT)
+  createdBy       String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template        Template          @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  responses       Response[]
+}
+
+model Response {
+  id            String    @id @default(cuid())
+  tenantId      String
+  assessmentId  String
+  questionId    String
+  answer        String?
+  score         Float?
+  confidence    Float?
+  rationale     String?
+  updatedBy     String
+  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question      Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  evidenceLinks EvidenceLink[]
+
+  @@unique([assessmentId, questionId])
+  @@index([tenantId, assessmentId])
+}
+
+model Evidence {
+  id          String       @id @default(cuid())
+  tenantId    String
+  name        String
+  storageKey  String
+  mimeType    String
+  tags        String[]
+  extractedText String?
+  createdBy   String
+  createdAt   DateTime     @default(now())
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links       EvidenceLink[]
+}
+
+model EvidenceLink {
+  id           String    @id @default(cuid())
+  tenantId     String
+  evidenceId   String
+  questionId   String?
+  responseId   String?
+  createdAt    DateTime  @default(now())
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  evidence     Evidence  @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  question     Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  response     Response? @relation(fields: [responseId], references: [id], onDelete: Cascade)
+}
+
+model AISuggestion {
+  id            String    @id @default(cuid())
+  tenantId      String
+  assessmentId  String?
+  questionId    String?
+  type          String
+  prompt        String
+  output        Json
+  citations     String[]
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Exception {
+  id            String    @id @default(cuid())
+  tenantId      String
+  assessmentId  String
+  controlCode   String
+  reason        String
+  owner         String?
+  dueDate       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  tenantId    String
+  actorUserId String
+  entityType  String
+  entityId    String
+  action      String
+  metadata    Json
+  createdAt   DateTime  @default(now())
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model StripeCustomer {
+  id             String   @id @default(cuid())
+  tenantId       String
+  stripeCustomerId String @unique
+  createdAt      DateTime @default(now())
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  plan                  PlanTier @default(STARTER)
+  stripeSubscriptionId  String?  @unique
+  status                String
+  currentPeriodEnd      DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
