@@ -1,0 +1,23 @@
+# VantageCISO Architecture
+
+- Runtime: Next.js App Router (server components + route handlers).
+- Data: PostgreSQL via Prisma with strict `tenantId` scoping.
+- Auth: Auth.js magic-link email sign-in backed by Prisma adapter tables.
+- Access Control: Middleware + RBAC + active membership enforcement.
+- Evidence/RAG:
+  - Evidence vault stores ingested content and chunk embeddings.
+  - Retrieval ranks chunks by cosine similarity.
+  - Draft generation returns citations and stores AI suggestions.
+- Questionnaire Workflow:
+  - Import CSV/JSON questionnaires.
+  - Auto-map to assessment questions using lexical similarity.
+  - Commit mapped rows as assessment responses.
+- Reporting:
+  - Deterministic score + gap extraction.
+  - Persisted report artifacts with branded export rendering.
+- Billing:
+  - Stripe Checkout + Customer Portal.
+  - Webhook-driven subscription sync.
+  - Plan entitlements enforced on gated actions.
+- Auditability:
+  - Writes emit audit records with actor, entity, action, and metadata.
