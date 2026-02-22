@@ -1,20 +1,26 @@
 import './globals.css';
-import Link from 'next/link';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/options';
+import { SessionNav } from '@/components/session-nav';
 
 export const metadata = {
   title: 'VantageCISO',
   description: 'Assessment and AI readiness SaaS MVP'
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html lang="en">
       <body>
         <main>
-          <nav className="card" style={{ display: 'flex', gap: 16 }}>
-            <Link href="/app/templates">Templates</Link>
-            <Link href="/app/assessments">Assessments</Link>
-          </nav>
+          <SessionNav
+            isAuthenticated={Boolean(session?.user)}
+            activeTenantName={session?.user?.activeTenantName}
+            role={session?.user?.role}
+            memberships={session?.user?.memberships}
+          />
           {children}
         </main>
       </body>

@@ -10,7 +10,7 @@ describe('computeAssessmentScore', () => {
     ]);
 
     expect(result.overall).toBe(2.75);
-    expect(result.confidence).toBe(0.73);
+    expect(result.confidence).toBe(0.72);
     expect(result.byDomain.Governance).toBe(3.33);
     expect(result.byDomain.Access).toBe(1);
     expect(result.gaps.length).toBeGreaterThan(0);

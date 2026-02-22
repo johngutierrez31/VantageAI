@@ -5,7 +5,7 @@ import { templateCreateSchema } from '@/lib/validation/template';
 import { requireRole } from '@/lib/rbac/authorize';
 import { writeAuditLog } from '@/lib/audit';
 import { handleRouteError } from '@/lib/http';
-import { getLimitsForPlan } from '@/lib/billing/limits';
+import { getTenantEntitlements } from '@/lib/billing/entitlements';
 
 export async function GET() {
   try {
@@ -27,10 +27,9 @@ export async function POST(request: Request) {
     requireRole(session, 'ANALYST');
     const payload = templateCreateSchema.parse(await request.json());
 
-    const subscription = await prisma.subscription.findFirst({ where: { tenantId: session.tenantId, status: 'active' } });
-    const limits = getLimitsForPlan(subscription?.plan);
+    const entitlements = await getTenantEntitlements(session.tenantId);
     const templateCount = await prisma.template.count({ where: { tenantId: session.tenantId } });
-    if (templateCount >= limits.maxTemplates) {
+    if (templateCount >= entitlements.limits.maxTemplates) {
       return NextResponse.json({ error: 'Template limit reached for current subscription plan' }, { status: 402 });
     }
 

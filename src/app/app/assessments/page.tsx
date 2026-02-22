@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db/prisma';
 import { getSessionContext } from '@/lib/auth/session';
+import { BillingPanel } from '@/components/billing-panel';
 
 export default async function AssessmentsPage() {
   const session = await getSessionContext();
@@ -8,6 +9,7 @@ export default async function AssessmentsPage() {
 
   return (
     <div>
+      <BillingPanel />
       <div className="card" style={{ display: 'flex', justifyContent: 'space-between' }}>
         <h2>Assessments</h2>
         <Link href="/app/assessments/new">Create Assessment</Link>

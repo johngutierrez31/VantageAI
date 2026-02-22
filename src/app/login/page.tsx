@@ -1,9 +1,18 @@
-export default function LoginPage() {
+import { LoginForm } from '@/components/login-form';
+
+type Props = {
+  searchParams?: {
+    error?: string;
+  };
+};
+
+export default function LoginPage({ searchParams }: Props) {
   return (
-    <div className="card">
-      <h2>Login</h2>
-      <p>MVP placeholder for Auth.js magic-link flow.</p>
-      <p>TODO: wire NextAuth email provider and tenant-aware session claims.</p>
+    <div>
+      {searchParams?.error === 'NoMembership' ? (
+        <div className="card">No active tenant membership found for this account.</div>
+      ) : null}
+      <LoginForm />
     </div>
   );
 }

@@ -29,7 +29,7 @@ export default async function TemplateDetailPage({ params }: { params: { templat
           {v.controls.map((c) => (
             <div key={c.id}>
               <strong>
-                {c.code} — {c.title}
+                {c.code} - {c.title}
               </strong>
               <ul>{c.questions.map((q) => <li key={q.id}>{q.prompt}</li>)}</ul>
             </div>

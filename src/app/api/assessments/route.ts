@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db/prisma';
 import { assessmentCreateSchema } from '@/lib/validation/assessment';
 import { requireRole } from '@/lib/rbac/authorize';
 import { writeAuditLog } from '@/lib/audit';
-import { getLimitsForPlan } from '@/lib/billing/limits';
+import { getTenantEntitlements } from '@/lib/billing/entitlements';
 import { handleRouteError } from '@/lib/http';
 
 export async function GET() {
@@ -35,14 +35,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Template unavailable' }, { status: 400 });
     }
 
-    const subscription = await prisma.subscription.findFirst({ where: { tenantId: session.tenantId, status: 'active' } });
-    const limits = getLimitsForPlan(subscription?.plan);
+    const entitlements = await getTenantEntitlements(session.tenantId);
     const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const monthlyCount = await prisma.assessment.count({
       where: { tenantId: session.tenantId, createdAt: { gte: monthStart } }
     });
 
-    if (monthlyCount >= limits.maxAssessmentsPerMonth) {
+    if (monthlyCount >= entitlements.limits.maxAssessmentsPerMonth) {
       return NextResponse.json({ error: 'Assessment monthly limit reached for current plan' }, { status: 402 });
     }
 

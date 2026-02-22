@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/prisma';
+import { Prisma } from '@prisma/client';
 
 type Payload = {
   tenantId: string;
@@ -10,6 +11,8 @@ type Payload = {
 };
 
 export async function writeAuditLog(payload: Payload) {
+  const metadata = (payload.metadata ?? {}) as Prisma.InputJsonValue;
+
   await prisma.auditLog.create({
     data: {
       tenantId: payload.tenantId,
@@ -17,7 +20,7 @@ export async function writeAuditLog(payload: Payload) {
       entityType: payload.entityType,
       entityId: payload.entityId,
       action: payload.action,
-      metadata: payload.metadata ?? {}
+      metadata
     }
   });
 }

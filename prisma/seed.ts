@@ -1,4 +1,10 @@
-import { PrismaClient, TemplateStatus, TenantRole } from '@prisma/client';
+import {
+  PrismaClient,
+  TemplateStatus,
+  TenantRole,
+  MembershipStatus,
+  PlanTier
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -7,29 +13,90 @@ const DEMO_USER_ID = 'user_demo_admin';
 
 async function resetTemplateByName(tenantId: string, name: string) {
   const existing = await prisma.template.findFirst({ where: { tenantId, name } });
-  if (existing) {
-    await prisma.template.delete({ where: { id: existing.id } });
+  if (!existing) return true;
+
+  const assessmentCount = await prisma.assessment.count({
+    where: { tenantId, templateId: existing.id }
+  });
+
+  if (assessmentCount > 0) {
+    console.warn(
+      `[seed] keeping template "${name}" because ${assessmentCount} assessment(s) reference it`
+    );
+    return false;
   }
+
+  await prisma.template.delete({ where: { id: existing.id } });
+  return true;
 }
 
 async function main() {
   const tenant = await prisma.tenant.upsert({
     where: { slug: 'demo-tenant' },
-    update: { name: 'Demo Tenant' },
-    create: { id: DEMO_TENANT_ID, slug: 'demo-tenant', name: 'Demo Tenant' }
+    update: {
+      name: 'Demo Tenant',
+      activeStorageProvider: 'LOCAL',
+      activeVectorProvider: 'HASHED',
+      activeEmailProvider: 'RESEND'
+    },
+    create: {
+      id: DEMO_TENANT_ID,
+      slug: 'demo-tenant',
+      name: 'Demo Tenant',
+      activeStorageProvider: 'LOCAL',
+      activeVectorProvider: 'HASHED',
+      activeEmailProvider: 'RESEND'
+    }
   });
 
   const user = await prisma.user.upsert({
     where: { email: 'admin@vantageciso.local' },
-    update: { name: 'Demo Admin' },
-    create: { id: DEMO_USER_ID, email: 'admin@vantageciso.local', name: 'Demo Admin' }
+    update: { name: 'Demo Admin', emailVerified: new Date() },
+    create: {
+      id: DEMO_USER_ID,
+      email: 'admin@vantageciso.local',
+      name: 'Demo Admin',
+      emailVerified: new Date()
+    }
   });
 
   await prisma.membership.upsert({
     where: { tenantId_userId: { tenantId: tenant.id, userId: user.id } },
-    update: { role: TenantRole.ADMIN },
-    create: { tenantId: tenant.id, userId: user.id, role: TenantRole.ADMIN }
+    update: { role: TenantRole.ADMIN, status: MembershipStatus.ACTIVE },
+    create: { tenantId: tenant.id, userId: user.id, role: TenantRole.ADMIN, status: MembershipStatus.ACTIVE }
   });
+
+  await prisma.tenantBranding.upsert({
+    where: { tenantId: tenant.id },
+    update: {
+      companyName: 'VantageAI Demo',
+      primaryColor: '#0f172a',
+      accentColor: '#2563eb',
+      footerNote: 'Not legal advice. For planning use only.'
+    },
+    create: {
+      tenantId: tenant.id,
+      companyName: 'VantageAI Demo',
+      primaryColor: '#0f172a',
+      accentColor: '#2563eb',
+      footerNote: 'Not legal advice. For planning use only.'
+    }
+  });
+
+  const existingSub = await prisma.subscription.findFirst({
+    where: { tenantId: tenant.id },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  if (!existingSub) {
+    await prisma.subscription.create({
+      data: {
+        tenantId: tenant.id,
+        plan: PlanTier.STARTER,
+        status: 'active'
+      }
+    });
+  }
 
   const templates = [
     {
@@ -71,7 +138,10 @@ async function main() {
   ];
 
   for (const item of templates) {
-    await resetTemplateByName(tenant.id, item.name);
+    const reset = await resetTemplateByName(tenant.id, item.name);
+    if (!reset) {
+      continue;
+    }
 
     const template = await prisma.template.create({
       data: {
