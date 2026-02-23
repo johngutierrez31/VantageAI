@@ -95,6 +95,7 @@ async function generateCopilotAnswer({
           content:
             `You are VantageCISO Copilot for tenant "${tenantName}". ` +
             'Give practical, concise guidance for security assessments and governance workflows. ' +
+            'Use short headings and bullet points for action plans. Keep paragraphs under three lines. ' +
             'If unsure, say what information is missing. Do not claim actions were performed unless the user states they were performed.'
         },
         {

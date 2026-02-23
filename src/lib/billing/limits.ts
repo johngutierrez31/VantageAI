@@ -15,8 +15,8 @@ const limitsByPlan: Record<PlanTier, PlanLimits> = {
     maxTemplates: 5,
     maxAssessmentsPerMonth: 20,
     maxEvidenceItems: 100,
-    canExportPdf: false,
-    canUseAI: false,
+    canExportPdf: true,
+    canUseAI: true,
     canImportQuestionnaire: true,
     canGenerateBrandedReport: true
   },

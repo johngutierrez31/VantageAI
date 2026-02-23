@@ -6,5 +6,13 @@ export default async function NewAssessmentPage() {
   const session = await getPageSessionContext();
   const templates = await prisma.template.findMany({ where: { tenantId: session.tenantId }, select: { id: true, name: true } });
 
-  return <AssessmentCreateForm templates={templates} />;
+  return (
+    <div>
+      <div className="card">
+        <h2>Create Assessment</h2>
+        <p>Choose a template, name the assessment, and set the customer organization.</p>
+      </div>
+      <AssessmentCreateForm templates={templates} />
+    </div>
+  );
 }

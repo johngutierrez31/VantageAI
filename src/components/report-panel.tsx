@@ -16,6 +16,7 @@ type Props = {
 export function ReportPanel({ assessmentId }: Props) {
   const [report, setReport] = useState<ReportSummary | null>(null);
   const [busy, setBusy] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const loadLatest = useCallback(async () => {
@@ -57,9 +58,41 @@ export function ReportPanel({ assessmentId }: Props) {
     setBusy(false);
   }
 
-  function exportReport(format: 'html' | 'markdown' | 'json' | 'pdf') {
+  async function exportReport(format: 'html' | 'markdown' | 'json' | 'pdf') {
     if (!report) return;
-    window.location.href = `/api/reports/${report.id}/export?format=${format}`;
+    setExportingFormat(format);
+    setMessage(null);
+
+    const response = await fetch(`/api/reports/${report.id}/export?format=${format}`);
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to export report';
+      try {
+        const payload = await response.json();
+        errorMessage = payload.error ?? errorMessage;
+      } catch {
+        // Ignore parse error and keep default message.
+      }
+
+      setMessage(errorMessage);
+      setExportingFormat(null);
+      return;
+    }
+
+    const blob = await response.blob();
+    const contentDisposition = response.headers.get('Content-Disposition') ?? '';
+    const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/i);
+    const fileName = fileNameMatch?.[1] ?? `${report.title}.${format === 'markdown' ? 'md' : format}`;
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+
+    setExportingFormat(null);
   }
 
   return (
@@ -71,10 +104,18 @@ export function ReportPanel({ assessmentId }: Props) {
           <p><strong>{report.title}</strong></p>
           <p>{report.summary}</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => exportReport('html')}>Export HTML</button>
-            <button onClick={() => exportReport('markdown')}>Export Markdown</button>
-            <button onClick={() => exportReport('json')}>Export JSON</button>
-            <button onClick={() => exportReport('pdf')}>Export PDF Plan</button>
+            <button onClick={() => exportReport('html')} disabled={exportingFormat !== null}>
+              {exportingFormat === 'html' ? 'Exporting HTML...' : 'Export HTML'}
+            </button>
+            <button onClick={() => exportReport('markdown')} disabled={exportingFormat !== null}>
+              {exportingFormat === 'markdown' ? 'Exporting Markdown...' : 'Export Markdown'}
+            </button>
+            <button onClick={() => exportReport('json')} disabled={exportingFormat !== null}>
+              {exportingFormat === 'json' ? 'Exporting JSON...' : 'Export JSON'}
+            </button>
+            <button onClick={() => exportReport('pdf')} disabled={exportingFormat !== null}>
+              {exportingFormat === 'pdf' ? 'Preparing PDF...' : 'Export PDF'}
+            </button>
           </div>
         </div>
       ) : (

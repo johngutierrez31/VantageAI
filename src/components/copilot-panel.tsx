@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -13,6 +13,58 @@ const starterPrompts = [
   'What evidence should I collect first for access control and incident response?'
 ];
 
+function renderAssistantContent(content: string) {
+  const blocks = content
+    .split(/\n{2,}/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return blocks.map((block, blockIndex) => {
+    const lines = block
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (!lines.length) return null;
+
+    const allBullets = lines.every((line) => /^(\-|\*|\d+\.)\s+/.test(line));
+    if (allBullets) {
+      return (
+        <ul key={`block-list-${blockIndex}`} style={{ margin: '0 0 10px 18px', padding: 0 }}>
+          {lines.map((line, lineIndex) => (
+            <li key={`line-${lineIndex}`} style={{ marginBottom: 6 }}>
+              {line.replace(/^(\-|\*|\d+\.)\s+/, '')}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    return (
+      <Fragment key={`block-text-${blockIndex}`}>
+        {lines.map((line, lineIndex) => {
+          const isHeading = /:$/.test(line) || /^#{1,3}\s+/.test(line);
+          const normalized = line.replace(/^#{1,3}\s+/, '');
+
+          if (isHeading) {
+            return (
+              <p key={`line-${lineIndex}`} style={{ margin: '0 0 6px 0', fontWeight: 700 }}>
+                {normalized.replace(/:$/, '')}
+              </p>
+            );
+          }
+
+          return (
+            <p key={`line-${lineIndex}`} style={{ margin: '0 0 8px 0' }}>
+              {normalized}
+            </p>
+          );
+        })}
+      </Fragment>
+    );
+  });
+}
+
 export function CopilotPanel({ tenantName }: { tenantName: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -23,6 +75,13 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const messageContainerRef = useRef<HTMLDivElement | null>(null);
+  const disableSend = useMemo(() => loading || !input.trim(), [input, loading]);
+
+  useEffect(() => {
+    if (!messageContainerRef.current) return;
+    messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+  }, [messages, loading]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,30 +139,57 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
           </button>
         ))}
       </div>
-      <div style={{ maxHeight: 360, overflowY: 'auto', display: 'grid', gap: 10, marginBottom: 12 }}>
+      <div
+        ref={messageContainerRef}
+        style={{
+          maxHeight: 420,
+          overflowY: 'auto',
+          display: 'grid',
+          gap: 10,
+          marginBottom: 12,
+          padding: 8,
+          border: '1px solid #dbe4ff',
+          borderRadius: 10,
+          background: '#f8fbff'
+        }}
+      >
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
             style={{
               background: message.role === 'assistant' ? '#eef2ff' : '#f8fafc',
               borderRadius: 8,
-              padding: 10,
-              whiteSpace: 'pre-wrap'
+              padding: 12,
+              border: message.role === 'assistant' ? '1px solid #dbe4ff' : '1px solid #e2e8f0',
+              lineHeight: 1.55
             }}
           >
-            <strong>{message.role === 'assistant' ? 'Copilot' : 'You'}:</strong> {message.content}
+            <p style={{ margin: '0 0 8px 0', fontWeight: 700 }}>
+              {message.role === 'assistant' ? 'Copilot' : 'You'}
+            </p>
+            {message.role === 'assistant' ? (
+              <div>{renderAssistantContent(message.content)}</div>
+            ) : (
+              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{message.content}</p>
+            )}
           </div>
         ))}
+        {loading ? (
+          <div style={{ padding: 12, borderRadius: 8, border: '1px solid #dbe4ff', background: '#eef2ff' }}>
+            <p style={{ margin: 0, fontWeight: 700 }}>Copilot</p>
+            <p style={{ margin: '6px 0 0 0' }}>Thinking...</p>
+          </div>
+        ) : null}
       </div>
       <form onSubmit={sendMessage} className="grid">
         <textarea
           rows={4}
-          placeholder="Ask a question..."
+          placeholder="Ask for practical next steps, evidence checklists, or roadmap plans..."
           value={input}
           onChange={(event) => setInput(event.target.value)}
           required
         />
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={disableSend}>
           {loading ? 'Thinking...' : 'Ask Copilot'}
         </button>
       </form>
