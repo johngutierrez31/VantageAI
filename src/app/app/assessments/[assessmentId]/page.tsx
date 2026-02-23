@@ -1,4 +1,4 @@
-import { getSessionContext } from '@/lib/auth/session';
+import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { ResponseEditor } from '@/components/response-editor';
 import { ScoreCard } from '@/components/score-card';
@@ -7,7 +7,7 @@ import { QuestionnaireImportPanel } from '@/components/questionnaire-import-pane
 import { ReportPanel } from '@/components/report-panel';
 
 export default async function AssessmentDetailPage({ params }: { params: { assessmentId: string } }) {
-  const session = await getSessionContext();
+  const session = await getPageSessionContext();
   const assessment = await prisma.assessment.findFirst({ where: { id: params.assessmentId, tenantId: session.tenantId } });
   if (!assessment) return <div className="card">Assessment not found.</div>;
 

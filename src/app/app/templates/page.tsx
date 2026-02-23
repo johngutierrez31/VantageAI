@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db/prisma';
-import { getSessionContext } from '@/lib/auth/session';
+import { getPageSessionContext } from '@/lib/auth/page-session';
 
 export default async function TemplatesPage() {
-  const session = await getSessionContext();
+  const session = await getPageSessionContext();
   const templates = await prisma.template.findMany({
     where: { tenantId: session.tenantId },
     orderBy: { updatedAt: 'desc' }

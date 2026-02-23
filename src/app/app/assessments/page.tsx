@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db/prisma';
-import { getSessionContext } from '@/lib/auth/session';
+import { getPageSessionContext } from '@/lib/auth/page-session';
 import { BillingPanel } from '@/components/billing-panel';
 
 export default async function AssessmentsPage() {
-  const session = await getSessionContext();
+  const session = await getPageSessionContext();
   const assessments = await prisma.assessment.findMany({ where: { tenantId: session.tenantId }, orderBy: { updatedAt: 'desc' } });
 
   return (

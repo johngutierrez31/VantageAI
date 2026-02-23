@@ -1,9 +1,9 @@
 import { prisma } from '@/lib/db/prisma';
-import { getSessionContext } from '@/lib/auth/session';
+import { getPageSessionContext } from '@/lib/auth/page-session';
 import { TemplateActions } from '@/components/template-actions';
 
 export default async function TemplateDetailPage({ params }: { params: { templateId: string } }) {
-  const session = await getSessionContext();
+  const session = await getPageSessionContext();
   const template = await prisma.template.findFirst({
     where: { id: params.templateId, tenantId: session.tenantId },
     include: {
