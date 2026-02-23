@@ -41,6 +41,13 @@ AUTH_SECRET=replace-me
 NEXTAUTH_SECRET=replace-me
 ```
 
+Optional for Copilot + RAG features:
+
+```env
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-4o-mini
+```
+
 Generate secrets (run twice) and replace `AUTH_SECRET` + `NEXTAUTH_SECRET`:
 
 ```powershell
@@ -81,6 +88,7 @@ If email service is not configured yet, use magic link printed in terminal logs.
 - Run questionnaire preview + apply
 - Generate report
 - Export HTML/Markdown/JSON
+- Open `/app/copilot` and verify AI response
 
 ### Step 6: Quality checks
 
@@ -112,6 +120,8 @@ Required now:
 - `DATABASE_URL=...`
 - `AUTH_SECRET=...`
 - `NEXTAUTH_SECRET=...`
+- `OPENAI_API_KEY=...` (required for `/app/copilot` and AI draft features)
+- `OPENAI_MODEL=gpt-4o-mini` (optional override)
 
 Add later when ready:
 
@@ -218,6 +228,8 @@ Events to include:
 - [ ] `DATABASE_URL=<hosted db url>` (not localhost)
 - [ ] `AUTH_SECRET=...`
 - [ ] `NEXTAUTH_SECRET=...`
+- [ ] `OPENAI_API_KEY=...`
+- [ ] `OPENAI_MODEL=gpt-4o-mini` (optional)
 
 5. Hosted DB prep (for deployed env):
 - [ ] Run `prisma migrate deploy` against hosted DB.

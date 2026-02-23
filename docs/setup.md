@@ -13,6 +13,6 @@
 
 ## Optional providers
 
-- OpenAI embeddings/RAG: set `OPENAI_API_KEY`.
+- OpenAI embeddings/RAG/Copilot: set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`, default `gpt-4o-mini`).
 - S3-compatible object storage: set `S3_*` values.
 - Stripe billing: set `STRIPE_*` values and configure webhook endpoint `/api/stripe/webhook`.

@@ -32,6 +32,7 @@ export function SessionNav({ isAuthenticated, activeTenantName, role, membership
       <div style={{ display: 'flex', gap: 16 }}>
         <Link href="/app/templates">Templates</Link>
         <Link href="/app/assessments">Assessments</Link>
+        <Link href="/app/copilot">Copilot</Link>
       </div>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <span>{activeTenantName ?? 'No Tenant'} / {role ?? 'NO_ROLE'}</span>
