@@ -1,6 +1,8 @@
-import { TenantRole } from '@prisma/client';
+import { MembershipStatus, TenantRole } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { prisma } from '@/lib/db/prisma';
+import { getDemoTenantSlug, getDemoUserEmail, isDemoModeEnabled } from '@/lib/auth/demo';
 
 export type SessionContext = {
   userId: string;
@@ -26,10 +28,67 @@ export class SessionContextError extends Error {
   }
 }
 
+async function buildDemoSessionContext(): Promise<SessionContext> {
+  const email = getDemoUserEmail();
+  const preferredTenantSlug = getDemoTenantSlug();
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      memberships: {
+        where: { status: MembershipStatus.ACTIVE },
+        include: {
+          tenant: {
+            select: { id: true, slug: true, name: true }
+          }
+        },
+        orderBy: { createdAt: 'asc' }
+      }
+    }
+  });
+
+  if (!user) {
+    throw new Error(`Demo mode is enabled, but user "${email}" was not found.`);
+  }
+
+  if (!user.memberships.length) {
+    throw new Error(`Demo mode user "${email}" does not have an active tenant membership.`);
+  }
+
+  const activeMembership = preferredTenantSlug
+    ? user.memberships.find((membership) => membership.tenant.slug === preferredTenantSlug)
+    : user.memberships[0];
+
+  if (!activeMembership) {
+    throw new Error(
+      `Demo mode tenant slug "${preferredTenantSlug}" was not found for user "${email}".`
+    );
+  }
+
+  return {
+    userId: user.id,
+    tenantId: activeMembership.tenantId,
+    tenantSlug: activeMembership.tenant.slug,
+    tenantName: activeMembership.tenant.name,
+    role: activeMembership.role,
+    memberships: user.memberships.map((membership) => ({
+      tenantId: membership.tenantId,
+      tenantSlug: membership.tenant.slug,
+      tenantName: membership.tenant.name,
+      role: membership.role
+    }))
+  };
+}
+
 export async function getSessionContext(): Promise<SessionContext> {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
+    if (isDemoModeEnabled()) {
+      return buildDemoSessionContext();
+    }
+
     throw new SessionContextError('Unauthorized', 401);
   }
 

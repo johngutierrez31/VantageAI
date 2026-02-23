@@ -1,6 +1,8 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
+const demoModeEnabled = process.env.DEMO_MODE === 'true';
+
 function isPublicApiRoute(pathname: string) {
   return pathname.startsWith('/api/auth') || pathname === '/api/stripe/webhook';
 }
@@ -11,6 +13,10 @@ export default withAuth(
     const token = req.nextauth.token;
 
     if (isPublicApiRoute(pathname)) {
+      return NextResponse.next();
+    }
+
+    if (demoModeEnabled) {
       return NextResponse.next();
     }
 
@@ -42,6 +48,10 @@ export default withAuth(
         const pathname = req.nextUrl.pathname;
 
         if (isPublicApiRoute(pathname) || pathname === '/login') {
+          return true;
+        }
+
+        if (demoModeEnabled) {
           return true;
         }
 

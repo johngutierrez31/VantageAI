@@ -15,9 +15,10 @@ type Props = {
   activeTenantName?: string | null;
   role?: string | null;
   memberships?: Membership[];
+  demoMode?: boolean;
 };
 
-export function SessionNav({ isAuthenticated, activeTenantName, role, memberships = [] }: Props) {
+export function SessionNav({ isAuthenticated, activeTenantName, role, memberships = [], demoMode = false }: Props) {
   if (!isAuthenticated) {
     return (
       <nav className="card" style={{ display: 'flex', gap: 16, justifyContent: 'space-between' }}>
@@ -36,8 +37,9 @@ export function SessionNav({ isAuthenticated, activeTenantName, role, membership
       </div>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <span>{activeTenantName ?? 'No Tenant'} / {role ?? 'NO_ROLE'}</span>
+        {demoMode ? <span>Demo Mode</span> : null}
         {memberships.length > 1 ? <span>{memberships.length} tenants</span> : null}
-        <button onClick={() => signOut({ callbackUrl: '/login' })}>Sign out</button>
+        {!demoMode ? <button onClick={() => signOut({ callbackUrl: '/login' })}>Sign out</button> : null}
       </div>
     </nav>
   );

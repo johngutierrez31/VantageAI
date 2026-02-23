@@ -7,12 +7,34 @@ Follow steps in order. Do not skip around.
 
 - Phase A = get app working now on Netlify URL.
 - Phase B = switch to `app.vantageciso.com` later.
+- Optional Demo Mode = no login for demos only.
 
 Current working URL:
 `https://fabulous-twilight-a84549.netlify.app`
 
 Future URL:
 `https://app.vantageciso.com`
+
+---
+
+## Demo Mode (No Login)
+
+Use this only for demos/staging, not production.
+
+Set these env vars on the demo site:
+
+- `DEMO_MODE=true`
+- `DEMO_USER_EMAIL=admin@vantageciso.local` (or your admin email)
+- `DEMO_TENANT_SLUG=demo-tenant` (optional, only needed if user has multiple tenants)
+
+When `DEMO_MODE=true`:
+
+- `/app/*` and protected APIs do not require magic-link login.
+- App runs as `DEMO_USER_EMAIL` tenant membership context.
+
+For production, set:
+
+- `DEMO_MODE=false`
 
 ---
 
@@ -122,6 +144,7 @@ Required now:
 - `NEXTAUTH_SECRET=...`
 - `OPENAI_API_KEY=...` (required for `/app/copilot` and AI draft features)
 - `OPENAI_MODEL=gpt-4o-mini` (optional override)
+- `DEMO_MODE=false` (set `true` only on demo/staging)
 
 Add later when ready:
 
@@ -230,6 +253,7 @@ Events to include:
 - [ ] `NEXTAUTH_SECRET=...`
 - [ ] `OPENAI_API_KEY=...`
 - [ ] `OPENAI_MODEL=gpt-4o-mini` (optional)
+- [ ] `DEMO_MODE=false` (or `true` for a separate demo site)
 
 5. Hosted DB prep (for deployed env):
 - [ ] Run `prisma migrate deploy` against hosted DB.
