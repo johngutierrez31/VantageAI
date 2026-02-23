@@ -1,6 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 type Citation = {
   evidenceId: string;
@@ -23,6 +26,7 @@ export function ResponseEditor({ assessmentId, questions }: Props) {
   const [ragBusyId, setRagBusyId] = useState<string | null>(null);
   const [aiDraftByQuestion, setAiDraftByQuestion] = useState<Record<string, string>>({});
   const [citationsByQuestion, setCitationsByQuestion] = useState<Record<string, Citation[]>>({});
+  const [message, setMessage] = useState<string | null>(null);
 
   const completion = useMemo(
     () => Math.round((Object.keys(scores).length / Math.max(questions.length, 1)) * 100),
@@ -31,8 +35,9 @@ export function ResponseEditor({ assessmentId, questions }: Props) {
 
   async function save(questionId: string) {
     setSavingId(questionId);
+    setMessage(null);
 
-    await fetch(`/api/assessments/${assessmentId}`, {
+    const response = await fetch(`/api/assessments/${assessmentId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -44,11 +49,20 @@ export function ResponseEditor({ assessmentId, questions }: Props) {
       })
     });
 
+    const payload = await response.json();
     setSavingId(null);
+
+    if (!response.ok) {
+      setMessage(payload.error ?? 'Failed to save response');
+      return;
+    }
+
+    setMessage('Response saved.');
   }
 
   async function generateDraft(questionId: string) {
     setRagBusyId(questionId);
+    setMessage(null);
 
     const response = await fetch(`/api/assessments/${assessmentId}/rag`, {
       method: 'POST',
@@ -61,46 +75,58 @@ export function ResponseEditor({ assessmentId, questions }: Props) {
       setAiDraftByQuestion((prev) => ({ ...prev, [questionId]: json.answer }));
       setCitationsByQuestion((prev) => ({ ...prev, [questionId]: json.citations ?? [] }));
       setAnswers((prev) => ({ ...prev, [questionId]: json.answer ?? '' }));
+    } else {
+      setMessage(json.error ?? 'Failed to generate draft');
     }
 
     setRagBusyId(null);
   }
 
   return (
-    <div>
-      <div className="card">Completion: {completion}%</div>
-      {questions.map((q) => (
-        <div className="card" key={q.id}>
-          <div>{q.control.domain} / {q.control.code}</div>
-          <div>{q.prompt}</div>
-          <textarea
+    <div className="space-y-3">
+      <div className="rounded-md border border-border bg-muted/20 p-3 text-sm">
+        Completion snapshot: <span className="font-semibold">{completion}%</span>
+      </div>
+
+      {questions.map((question) => (
+        <div key={question.id} className="rounded-md border border-border p-3">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {question.control.domain} - {question.control.code}
+          </p>
+          <p className="mt-1 text-sm font-medium">{question.prompt}</p>
+          <Textarea
             rows={4}
             placeholder="Answer"
-            value={answers[q.id] ?? ''}
-            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-            style={{ width: '100%', marginTop: 8 }}
+            value={answers[question.id] ?? ''}
+            onChange={(event) => setAnswers((prev) => ({ ...prev, [question.id]: event.target.value }))}
+            className="mt-2"
           />
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-            <input
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Input
               type="number"
               min={0}
               max={4}
               step={1}
-              value={scores[q.id] ?? ''}
-              onChange={(e) => setScores((prev) => ({ ...prev, [q.id]: Number(e.target.value) }))}
+              value={scores[question.id] ?? ''}
+              onChange={(event) => setScores((prev) => ({ ...prev, [question.id]: Number(event.target.value) }))}
+              className="w-[120px]"
             />
-            <button onClick={() => save(q.id)} disabled={savingId === q.id}>
-              {savingId === q.id ? 'Saving...' : 'Save response'}
-            </button>
-            <button onClick={() => generateDraft(q.id)} disabled={ragBusyId === q.id}>
-              {ragBusyId === q.id ? 'Generating...' : 'Generate with evidence'}
-            </button>
+            <Button onClick={() => save(question.id)} disabled={savingId === question.id} size="sm">
+              {savingId === question.id ? 'Saving...' : 'Save response'}
+            </Button>
+            <Button onClick={() => generateDraft(question.id)} disabled={ragBusyId === question.id} size="sm" variant="outline">
+              {ragBusyId === question.id ? 'Generating...' : 'Generate with evidence'}
+            </Button>
           </div>
-          {aiDraftByQuestion[q.id] ? <p><strong>AI Draft:</strong> {aiDraftByQuestion[q.id]}</p> : null}
-          {citationsByQuestion[q.id]?.length ? (
-            <ul>
-              {citationsByQuestion[q.id].map((citation) => (
-                <li key={citation.chunkId}>
+          {aiDraftByQuestion[question.id] ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              <strong>AI Draft:</strong> {aiDraftByQuestion[question.id]}
+            </p>
+          ) : null}
+          {citationsByQuestion[question.id]?.length ? (
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {citationsByQuestion[question.id].map((citation) => (
+                <li key={citation.chunkId} className="text-sm text-muted-foreground">
                   {citation.label} - {citation.snippet}
                 </li>
               ))}
@@ -108,6 +134,8 @@ export function ResponseEditor({ assessmentId, questions }: Props) {
           ) : null}
         </div>
       ))}
+
+      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
     </div>
   );
 }

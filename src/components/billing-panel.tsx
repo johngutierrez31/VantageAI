@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 
 type Entitlements = {
   plan: string;
@@ -68,25 +70,24 @@ export function BillingPanel() {
   }
 
   return (
-    <div className="card">
-      <h3>Subscription</h3>
-      <p>
+    <div className="space-y-2">
+      <p className="text-sm font-semibold">
         Plan: {entitlements?.plan ?? 'STARTER'} ({entitlements?.status ?? 'active'})
       </p>
-      <p>
+      <p className="text-sm text-muted-foreground">
         AI: {entitlements?.limits?.canUseAI ? 'Enabled' : 'Disabled'} | PDF Export:{' '}
         {entitlements?.limits?.canExportPdf ? 'Enabled' : 'Disabled'}
       </p>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <select value={plan} onChange={(event) => setPlan(event.target.value as 'STARTER' | 'PRO' | 'PARTNER')}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={plan} onChange={(event) => setPlan(event.target.value as 'STARTER' | 'PRO' | 'PARTNER')} className="w-[180px]">
           <option value="STARTER">Starter</option>
           <option value="PRO">Pro</option>
           <option value="PARTNER">Partner</option>
-        </select>
-        <button onClick={startCheckout} disabled={busy}>{busy ? 'Working...' : 'Upgrade / change plan'}</button>
-        <button onClick={openPortal} disabled={busy}>Manage billing portal</button>
+        </Select>
+        <Button onClick={startCheckout} disabled={busy}>{busy ? 'Working...' : 'Upgrade / change plan'}</Button>
+        <Button variant="outline" onClick={openPortal} disabled={busy}>Manage billing portal</Button>
       </div>
-      {message ? <p>{message}</p> : null}
+      {message ? <p className="text-sm text-danger">{message}</p> : null}
     </div>
   );
 }

@@ -97,7 +97,71 @@ export function renderReportHtml(report: Report, branding: BrandingInput, tenant
 </html>`;
 }
 
-export function buildReportExport(report: Report, branding: BrandingInput, tenantName: string, format: 'html' | 'markdown' | 'json' | 'pdf') {
+function renderExecutiveHtml(report: Report, branding: BrandingInput, tenantName: string) {
+  const payload = typeof report.jsonPayload === 'object' && report.jsonPayload ? (report.jsonPayload as Record<string, unknown>) : {};
+  const score = payload.score as { overall?: number; confidence?: number; byDomain?: Record<string, number> } | undefined;
+  const topGaps = (payload.topGaps as Array<{ controlCode?: string; score?: number }> | undefined) ?? [];
+  const primaryColor = branding?.primaryColor ?? '#0f172a';
+  const accentColor = branding?.accentColor ?? '#2563eb';
+  const companyName = branding?.companyName ?? tenantName;
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(report.title)} (Executive)</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 24px; background: #f8fafc; color: #0f172a; }
+    .panel { max-width: 900px; margin: 0 auto; border: 1px solid #dbe4ff; border-radius: 16px; background: white; overflow: hidden; }
+    .header { padding: 24px; color: #f8fafc; background: linear-gradient(120deg, ${primaryColor}, ${accentColor}); }
+    .section { padding: 20px 24px; border-top: 1px solid #e2e8f0; }
+    .kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .kpi { border: 1px solid #dbe4ff; border-radius: 12px; padding: 12px; }
+    .muted { color: #475569; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="header">
+      <h1 style="margin:0;">${escapeHtml(report.title)}</h1>
+      <p style="margin:8px 0 0;">${escapeHtml(companyName)} - Executive Scorecard</p>
+    </div>
+    <div class="section">
+      <div class="kpis">
+        <div class="kpi"><div class="muted">Overall score</div><div style="font-size:24px;font-weight:700;">${score?.overall ?? 'N/A'} / 4</div></div>
+        <div class="kpi"><div class="muted">Confidence</div><div style="font-size:24px;font-weight:700;">${
+          score?.confidence ? Math.round(score.confidence * 100) : 'N/A'
+        }%</div></div>
+        <div class="kpi"><div class="muted">Generated</div><div style="font-size:16px;font-weight:600;">${escapeHtml(
+          new Date(report.createdAt).toISOString().slice(0, 10)
+        )}</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2 style="margin:0 0 10px;">Top gaps</h2>
+      <ul style="margin:0;padding-left:20px;">
+        ${
+          topGaps.length
+            ? topGaps
+                .slice(0, 5)
+                .map((gap) => `<li>${escapeHtml(gap.controlCode ?? 'Unknown')} (${gap.score ?? 0}/4)</li>`)
+                .join('')
+            : '<li>No major gaps identified.</li>'
+        }
+      </ul>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+export function buildReportExport(
+  report: Report,
+  branding: BrandingInput,
+  tenantName: string,
+  format: 'html' | 'markdown' | 'json' | 'pdf',
+  options?: { view?: 'executive' | 'detailed' }
+) {
   if (format === 'json') {
     return {
       body: JSON.stringify(report.jsonPayload, null, 2),
@@ -114,7 +178,8 @@ export function buildReportExport(report: Report, branding: BrandingInput, tenan
     };
   }
 
-  const html = renderReportHtml(report, branding, tenantName);
+  const view = options?.view ?? 'detailed';
+  const html = view === 'executive' ? renderExecutiveHtml(report, branding, tenantName) : renderReportHtml(report, branding, tenantName);
 
   if (format === 'pdf') {
     return {

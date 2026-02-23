@@ -1,15 +1,16 @@
 import { CopilotPanel } from '@/components/copilot-panel';
 import { getPageSessionContext } from '@/lib/auth/page-session';
+import { PageHeader } from '@/components/app/page-header';
 
 export default async function CopilotPage() {
   const session = await getPageSessionContext();
 
   return (
-    <div>
-      <div className="card">
-        <h2>Copilot Workspace</h2>
-        <p>Use AI guidance for assessment planning, evidence strategy, and governance execution.</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Copilot"
+        description="Generate practical plans, policy guidance, and control remediation steps with tenant-aware context."
+      />
       <CopilotPanel tenantName={session.tenantName} />
     </div>
   );

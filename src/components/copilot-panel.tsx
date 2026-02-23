@@ -30,9 +30,9 @@ function renderAssistantContent(content: string) {
     const allBullets = lines.every((line) => /^(\-|\*|\d+\.)\s+/.test(line));
     if (allBullets) {
       return (
-        <ul key={`block-list-${blockIndex}`} style={{ margin: '0 0 10px 18px', padding: 0 }}>
+        <ul key={`block-list-${blockIndex}`} className="mb-2 list-disc space-y-1 pl-5 text-sm">
           {lines.map((line, lineIndex) => (
-            <li key={`line-${lineIndex}`} style={{ marginBottom: 6 }}>
+            <li key={`line-${lineIndex}`}>
               {line.replace(/^(\-|\*|\d+\.)\s+/, '')}
             </li>
           ))}
@@ -48,14 +48,14 @@ function renderAssistantContent(content: string) {
 
           if (isHeading) {
             return (
-              <p key={`line-${lineIndex}`} style={{ margin: '0 0 6px 0', fontWeight: 700 }}>
+              <p key={`line-${lineIndex}`} className="mb-1 text-sm font-semibold">
                 {normalized.replace(/:$/, '')}
               </p>
             );
           }
 
           return (
-            <p key={`line-${lineIndex}`} style={{ margin: '0 0 8px 0' }}>
+            <p key={`line-${lineIndex}`} className="mb-2 text-sm">
               {normalized}
             </p>
           );
@@ -129,55 +129,49 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
   }
 
   return (
-    <div className="card">
+    <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
       <h3>AI Copilot</h3>
-      <p>Tenant: {tenantName}</p>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+      <p className="text-sm text-muted-foreground">Tenant: {tenantName}</p>
+      <div className="mb-3 mt-3 flex flex-wrap gap-2">
         {starterPrompts.map((prompt) => (
-          <button key={prompt} type="button" onClick={() => setInput(prompt)} disabled={loading}>
+          <button
+            key={prompt}
+            type="button"
+            onClick={() => setInput(prompt)}
+            disabled={loading}
+            className="rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          >
             {prompt}
           </button>
         ))}
       </div>
       <div
         ref={messageContainerRef}
-        style={{
-          maxHeight: 420,
-          overflowY: 'auto',
-          display: 'grid',
-          gap: 10,
-          marginBottom: 12,
-          padding: 8,
-          border: '1px solid #dbe4ff',
-          borderRadius: 10,
-          background: '#f8fbff'
-        }}
+        className="mb-3 grid max-h-[420px] gap-2 overflow-y-auto rounded-md border border-border bg-background p-2"
       >
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
-            style={{
-              background: message.role === 'assistant' ? '#eef2ff' : '#f8fafc',
-              borderRadius: 8,
-              padding: 12,
-              border: message.role === 'assistant' ? '1px solid #dbe4ff' : '1px solid #e2e8f0',
-              lineHeight: 1.55
-            }}
+            className={`rounded-md border p-3 leading-relaxed ${
+              message.role === 'assistant'
+                ? 'border-primary/30 bg-primary/10'
+                : 'border-border bg-muted/20'
+            }`}
           >
-            <p style={{ margin: '0 0 8px 0', fontWeight: 700 }}>
+            <p className="mb-2 text-sm font-semibold">
               {message.role === 'assistant' ? 'Copilot' : 'You'}
             </p>
             {message.role === 'assistant' ? (
               <div>{renderAssistantContent(message.content)}</div>
             ) : (
-              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{message.content}</p>
+              <p className="whitespace-pre-wrap text-sm">{message.content}</p>
             )}
           </div>
         ))}
         {loading ? (
-          <div style={{ padding: 12, borderRadius: 8, border: '1px solid #dbe4ff', background: '#eef2ff' }}>
-            <p style={{ margin: 0, fontWeight: 700 }}>Copilot</p>
-            <p style={{ margin: '6px 0 0 0' }}>Thinking...</p>
+          <div className="rounded-md border border-primary/30 bg-primary/10 p-3">
+            <p className="text-sm font-semibold">Copilot</p>
+            <p className="mt-1 text-sm text-muted-foreground">Thinking...</p>
           </div>
         ) : null}
       </div>
@@ -189,11 +183,15 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
           onChange={(event) => setInput(event.target.value)}
           required
         />
-        <button type="submit" disabled={disableSend}>
+        <button
+          type="submit"
+          disabled={disableSend}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
           {loading ? 'Thinking...' : 'Ask Copilot'}
         </button>
       </form>
-      {error ? <p>{error}</p> : null}
+      {error ? <p className="mt-2 text-sm text-danger">{error}</p> : null}
     </div>
   );
 }

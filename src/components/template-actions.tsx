@@ -2,14 +2,22 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
-export function TemplateActions({ templateId }: { templateId: string }) {
+export function TemplateActions({ templateId, status }: { templateId: string; status: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function publish() {
     setBusy(true);
     await fetch(`/api/templates/${templateId}/publish`, { method: 'POST' });
+    setBusy(false);
+    router.refresh();
+  }
+
+  async function unpublish() {
+    setBusy(true);
+    await fetch(`/api/templates/${templateId}/publish`, { method: 'DELETE' });
     setBusy(false);
     router.refresh();
   }
@@ -37,10 +45,30 @@ export function TemplateActions({ templateId }: { templateId: string }) {
     router.refresh();
   }
 
+  async function duplicate() {
+    setBusy(true);
+    await fetch(`/api/templates/${templateId}/duplicate`, { method: 'POST' });
+    setBusy(false);
+    router.refresh();
+  }
+
   return (
-    <div style={{ display: 'flex', gap: 10 }}>
-      <button onClick={publish} disabled={busy}>Publish latest</button>
-      <button onClick={createMinorVersion} disabled={busy}>Create new version</button>
+    <div className="flex flex-wrap gap-2">
+      {status === 'PUBLISHED' ? (
+        <Button onClick={unpublish} disabled={busy} variant="outline">
+          Unpublish
+        </Button>
+      ) : (
+        <Button onClick={publish} disabled={busy}>
+          Publish latest
+        </Button>
+      )}
+      <Button onClick={createMinorVersion} disabled={busy} variant="outline">
+        Create new version
+      </Button>
+      <Button onClick={duplicate} disabled={busy} variant="secondary">
+        Duplicate
+      </Button>
     </div>
   );
 }

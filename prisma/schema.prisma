@@ -77,6 +77,32 @@ enum ReportFormat {
   PDF
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ExceptionStatus {
+  OPEN
+  ACCEPTED
+  CLOSED
+}
+
+enum EvidenceRequestStatus {
+  REQUESTED
+  RECEIVED
+  COMPLETE
+}
+
 model Tenant {
   id                    String                  @id @default(cuid())
   name                  String
@@ -102,6 +128,8 @@ model Tenant {
   questionnaireRows     QuestionnaireImportRow[]
   reports               Report[]
   reportExports         ReportExport[]
+  tasks                 Task[]
+  evidenceRequests      EvidenceRequest[]
   branding              TenantBranding?
   auditLogs             AuditLog[]
   stripeCustomers       StripeCustomer[]
@@ -219,6 +247,9 @@ model Assessment {
   responses          Response[]
   questionnaireImports QuestionnaireImport[]
   reports            Report[]
+  tasks              Task[]
+  exceptions         Exception[]
+  evidenceRequests   EvidenceRequest[]
 }
 
 model Response {
@@ -316,11 +347,58 @@ model Exception {
   assessmentId String
   controlCode  String
   reason       String
+  status       ExceptionStatus @default(OPEN)
   owner        String?
+  approver     String?
   dueDate      DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, assessmentId, status])
+  @@index([tenantId, dueDate])
+}
+
+model Task {
+  id           String       @id @default(cuid())
+  tenantId     String
+  assessmentId String?
+  title        String
+  controlCode  String?
+  description  String?
+  assignee     String?
+  dueDate      DateTime?
+  status       TaskStatus   @default(TODO)
+  priority     TaskPriority @default(MEDIUM)
+  createdBy    String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment   Assessment?  @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+  @@index([tenantId, assessmentId])
+  @@index([tenantId, dueDate])
+}
+
+model EvidenceRequest {
+  id           String                @id @default(cuid())
+  tenantId     String
+  assessmentId String?
+  title        String
+  details      String?
+  assignee     String?
+  status       EvidenceRequestStatus @default(REQUESTED)
+  dueDate      DateTime?
+  createdBy    String
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment   Assessment?           @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+  @@index([tenantId, assessmentId])
 }
 
 model QuestionnaireImport {

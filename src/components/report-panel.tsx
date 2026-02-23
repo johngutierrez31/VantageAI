@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type ReportSummary = {
   id: string;
@@ -96,32 +98,36 @@ export function ReportPanel({ assessmentId }: Props) {
   }
 
   return (
-    <div className="card">
-      <h3>Report Generation</h3>
-      <button onClick={generate} disabled={busy}>{busy ? 'Generating...' : 'Generate report'}</button>
-      {report ? (
-        <div style={{ marginTop: 12 }}>
-          <p><strong>{report.title}</strong></p>
-          <p>{report.summary}</p>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => exportReport('html')} disabled={exportingFormat !== null}>
-              {exportingFormat === 'html' ? 'Exporting HTML...' : 'Export HTML'}
-            </button>
-            <button onClick={() => exportReport('markdown')} disabled={exportingFormat !== null}>
-              {exportingFormat === 'markdown' ? 'Exporting Markdown...' : 'Export Markdown'}
-            </button>
-            <button onClick={() => exportReport('json')} disabled={exportingFormat !== null}>
-              {exportingFormat === 'json' ? 'Exporting JSON...' : 'Export JSON'}
-            </button>
-            <button onClick={() => exportReport('pdf')} disabled={exportingFormat !== null}>
-              {exportingFormat === 'pdf' ? 'Preparing PDF...' : 'Export PDF'}
-            </button>
+    <Card>
+      <CardHeader>
+        <CardTitle>Report Generation</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Button onClick={generate} disabled={busy}>{busy ? 'Generating...' : 'Generate report'}</Button>
+        {report ? (
+          <div className="space-y-2">
+            <p className="font-semibold">{report.title}</p>
+            <p className="text-sm text-muted-foreground">{report.summary}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => exportReport('html')} disabled={exportingFormat !== null} variant="outline">
+                {exportingFormat === 'html' ? 'Exporting HTML...' : 'Export HTML'}
+              </Button>
+              <Button onClick={() => exportReport('markdown')} disabled={exportingFormat !== null} variant="outline">
+                {exportingFormat === 'markdown' ? 'Exporting Markdown...' : 'Export Markdown'}
+              </Button>
+              <Button onClick={() => exportReport('json')} disabled={exportingFormat !== null} variant="outline">
+                {exportingFormat === 'json' ? 'Exporting JSON...' : 'Export JSON'}
+              </Button>
+              <Button onClick={() => exportReport('pdf')} disabled={exportingFormat !== null}>
+                {exportingFormat === 'pdf' ? 'Preparing PDF...' : 'Export PDF'}
+              </Button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <p>No report yet.</p>
-      )}
-      {message ? <p>{message}</p> : null}
-    </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No report yet.</p>
+        )}
+        {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+      </CardContent>
+    </Card>
   );
 }

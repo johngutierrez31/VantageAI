@@ -13,7 +13,7 @@ export async function GET() {
     const session = await getSessionContext();
     const evidence = await prisma.evidence.findMany({
       where: { tenantId: session.tenantId },
-      include: { chunks: { select: { id: true } } },
+      include: { chunks: { select: { id: true } }, links: { select: { id: true } } },
       orderBy: { createdAt: 'desc' }
     });
 
@@ -25,7 +25,8 @@ export async function GET() {
         mimeType: item.mimeType,
         ingestionStatus: item.ingestionStatus,
         createdAt: item.createdAt,
-        chunkCount: item.chunks.length
+        chunkCount: item.chunks.length,
+        linkCount: item.links.length
       }))
     );
   } catch (error) {

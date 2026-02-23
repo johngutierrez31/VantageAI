@@ -1,8 +1,11 @@
 import { MembershipStatus, TenantRole } from '@prisma/client';
+import { cookies } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db/prisma';
 import { getDemoTenantSlug, getDemoUserEmail, isDemoModeEnabled } from '@/lib/auth/demo';
+
+const ACTIVE_TENANT_COOKIE = 'vantage_active_tenant';
 
 export type SessionContext = {
   userId: string;
@@ -96,12 +99,22 @@ export async function getSessionContext(): Promise<SessionContext> {
     throw new SessionContextError('Forbidden: no active tenant membership', 403);
   }
 
+  const memberships = session.user.memberships ?? [];
+  const cookieTenantId = cookies().get(ACTIVE_TENANT_COOKIE)?.value;
+  const activeFromCookie = cookieTenantId ? memberships.find((membership) => membership.tenantId === cookieTenantId) : null;
+  const activeFromSession = memberships.find((membership) => membership.tenantId === session.user.activeTenantId);
+  const activeMembership = activeFromCookie ?? activeFromSession ?? memberships[0];
+
+  if (!activeMembership) {
+    throw new SessionContextError('Forbidden: no active tenant membership', 403);
+  }
+
   return {
     userId: session.user.id,
-    tenantId: session.user.activeTenantId,
-    tenantSlug: session.user.activeTenantSlug,
-    tenantName: session.user.activeTenantName,
-    role: session.user.role,
-    memberships: session.user.memberships
+    tenantId: activeMembership.tenantId,
+    tenantSlug: activeMembership.tenantSlug,
+    tenantName: activeMembership.tenantName,
+    role: activeMembership.role,
+    memberships
   };
 }

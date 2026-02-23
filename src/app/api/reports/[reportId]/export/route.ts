@@ -17,9 +17,11 @@ export async function GET(request: Request, { params }: { params: { reportId: st
     const session = await getSessionContext();
     const url = new URL(request.url);
     const formatQuery = (url.searchParams.get('format') ?? 'html').toLowerCase();
+    const viewQuery = (url.searchParams.get('view') ?? 'detailed').toLowerCase();
     const format = ['html', 'markdown', 'json', 'pdf'].includes(formatQuery)
       ? (formatQuery as 'html' | 'markdown' | 'json' | 'pdf')
       : 'html';
+    const view = ['executive', 'detailed'].includes(viewQuery) ? (viewQuery as 'executive' | 'detailed') : 'detailed';
 
     if (format === 'pdf') {
       await requirePdfExportAccess(session.tenantId);
@@ -35,10 +37,10 @@ export async function GET(request: Request, { params }: { params: { reportId: st
       where: { tenantId: session.tenantId }
     });
 
-    const exportPayload = buildReportExport(report, branding, session.tenantName, format);
+    const exportPayload = buildReportExport(report, branding, session.tenantName, format, { view });
 
     const fileNameBase = `${toSlug(report.title)}-${new Date().toISOString().slice(0, 10)}`;
-    const fileName = `${fileNameBase}.${exportPayload.extension}`;
+    const fileName = `${fileNameBase}-${view}.${exportPayload.extension}`;
 
     const exportRecord = await prisma.reportExport.create({
       data: {
@@ -60,7 +62,8 @@ export async function GET(request: Request, { params }: { params: { reportId: st
       metadata: {
         reportId: report.id,
         format,
-        fileName
+        fileName,
+        view
       }
     });
 

@@ -1,6 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type QuestionOption = {
   id: string;
@@ -90,37 +95,44 @@ export function QuestionnaireImportPanel({ assessmentId, questions }: Props) {
   }
 
   return (
-    <div className="card">
-      <h3>Questionnaire Import</h3>
-      <p>Paste CSV or JSON then preview auto-mapping before applying responses.</p>
-      <div className="grid">
-        <select value={format} onChange={(event) => setFormat(event.target.value as 'csv' | 'json')}>
-          <option value="csv">CSV</option>
-          <option value="json">JSON</option>
-        </select>
-        <textarea
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">Paste CSV or JSON and review auto-mapping before applying responses.</p>
+      <div className="grid gap-2">
+        <div className="grid gap-2 md:grid-cols-[120px_1fr]">
+          <Select value={format} onChange={(event) => setFormat(event.target.value as 'csv' | 'json')}>
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </Select>
+          <Input readOnly value={`Mapped questions available: ${questions.length}`} />
+        </div>
+        <Textarea
           rows={6}
           value={content}
           onChange={(event) => setContent(event.target.value)}
         />
-        <button onClick={preview} disabled={busy}>{busy ? 'Parsing...' : 'Preview mapping'}</button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={preview} disabled={busy}>{busy ? 'Parsing...' : 'Preview mapping'}</Button>
+          <Button variant="outline" onClick={apply} disabled={busy || !importId}>
+            {busy ? 'Applying...' : 'Apply mappings'}
+          </Button>
+        </div>
       </div>
       {rows.length ? (
-        <div style={{ marginTop: 16 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th align="left">Imported Question</th>
-                <th align="left">Mapped Template Question</th>
-                <th align="left">Match</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="rounded-md border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Imported Question</TableHead>
+                <TableHead>Mapped Template Question</TableHead>
+                <TableHead>Match</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((row) => (
-                <tr key={row.rowId}>
-                  <td>{row.sourceQuestion}</td>
-                  <td>
-                    <select
+                <TableRow key={row.rowId}>
+                  <TableCell>{row.sourceQuestion}</TableCell>
+                  <TableCell>
+                    <Select
                       value={overrides[row.rowId] ?? ''}
                       onChange={(event) =>
                         setOverrides((prev) => ({
@@ -133,19 +145,16 @@ export function QuestionnaireImportPanel({ assessmentId, questions }: Props) {
                       {questions.map((question) => (
                         <option key={question.id} value={question.id}>{question.prompt}</option>
                       ))}
-                    </select>
-                  </td>
-                  <td>{Math.round((row.matchScore ?? 0) * 100)}%</td>
-                </tr>
+                    </Select>
+                  </TableCell>
+                  <TableCell>{Math.round((row.matchScore ?? 0) * 100)}%</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-          <button style={{ marginTop: 12 }} onClick={apply} disabled={busy || !importId}>
-            {busy ? 'Applying...' : 'Apply mappings'}
-          </button>
+            </TableBody>
+          </Table>
         </div>
       ) : null}
-      {message ? <p>{message}</p> : null}
+      {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
     </div>
   );
 }

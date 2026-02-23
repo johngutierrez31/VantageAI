@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { StatusPill } from '@/components/app/status-pill';
 
 type EvidenceItem = {
   id: string;
@@ -8,6 +13,8 @@ type EvidenceItem = {
   tags: string[];
   ingestionStatus: string;
   chunkCount: number;
+  linkCount: number;
+  createdAt: string;
 };
 
 export function EvidenceVaultPanel() {
@@ -47,8 +54,8 @@ export function EvidenceVaultPanel() {
       })
     });
 
+    const json = await response.json();
     if (!response.ok) {
-      const json = await response.json();
       setError(json.error ?? 'Failed to ingest evidence');
       setBusy(false);
       return;
@@ -61,44 +68,69 @@ export function EvidenceVaultPanel() {
     await loadEvidence();
   }
 
+  const staleCount = useMemo(() => {
+    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    return items.filter((item) => new Date(item.createdAt).getTime() < ninetyDaysAgo).length;
+  }, [items]);
+
   return (
-    <div className="card">
-      <h3>Evidence Vault</h3>
-      <form onSubmit={onSubmit} className="grid">
-        <input
-          placeholder="Evidence title"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          required
-        />
-        <textarea
-          rows={4}
-          placeholder="Paste policy text, controls, evidence notes, or document extract"
-          value={content}
-          onChange={(event) => setContent(event.target.value)}
-          required
-        />
-        <input
-          placeholder="Tags (comma-separated)"
-          value={tags}
-          onChange={(event) => setTags(event.target.value)}
-        />
-        <button type="submit" disabled={busy}>{busy ? 'Ingesting...' : 'Add evidence'}</button>
-      </form>
-      {error ? <p>{error}</p> : null}
-      <div style={{ marginTop: 12 }}>
-        {items.length === 0 ? (
-          <p>No evidence added yet.</p>
-        ) : (
-          <ul>
-            {items.map((item) => (
-              <li key={item.id}>
-                <strong>{item.name}</strong> ({item.ingestionStatus}, {item.chunkCount} chunks)
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Evidence Vault</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+          {items.length} total evidence item(s) - {staleCount} stale (&gt;90 days)
+        </div>
+
+        <form onSubmit={onSubmit} className="grid gap-2">
+          <Input
+            placeholder="Evidence title"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+          />
+          <Textarea
+            rows={4}
+            placeholder="Paste policy text, controls, evidence notes, or document extract"
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            required
+          />
+          <Input
+            placeholder="Tags (comma-separated)"
+            value={tags}
+            onChange={(event) => setTags(event.target.value)}
+          />
+          <Button type="submit" disabled={busy}>
+            {busy ? 'Ingesting...' : 'Add evidence'}
+          </Button>
+        </form>
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+        <div className="space-y-2">
+          {items.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No evidence items yet.</p>
+          ) : (
+            items.map((item) => (
+              <div key={item.id} className="rounded-md border border-border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.chunkCount} chunk(s) - linked to {item.linkCount} control/response item(s)
+                    </p>
+                  </div>
+                  <StatusPill status={item.ingestionStatus} />
+                </div>
+                {item.tags.length ? (
+                  <p className="mt-2 text-xs text-muted-foreground">Tags: {item.tags.join(', ')}</p>
+                ) : null}
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
