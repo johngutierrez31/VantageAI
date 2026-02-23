@@ -9,7 +9,7 @@ import { writeAuditLog } from '@/lib/audit';
 export async function POST(request: Request, { params }: { params: { assessmentId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = evidenceLinkSchema.parse(await request.json());
 
     const assessment = await prisma.assessment.findFirst({

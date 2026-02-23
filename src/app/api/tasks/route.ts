@@ -22,7 +22,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = taskCreateSchema.parse(await request.json());
 
     const task = await prisma.task.create({
@@ -57,3 +57,4 @@ export async function POST(request: Request) {
     return handleRouteError(error);
   }
 }
+

@@ -37,11 +37,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
 
     const entitlements = await getTenantEntitlements(session.tenantId);
     const count = await prisma.evidence.count({ where: { tenantId: session.tenantId } });
-    if (count >= entitlements.limits.maxEvidenceItems) {
+    if (count >= entitlements.limits.evidenceFilesMax) {
       return paymentRequired('Evidence vault item limit reached for current plan');
     }
 
@@ -81,3 +81,4 @@ export async function POST(request: Request) {
     return handleRouteError(error);
   }
 }
+

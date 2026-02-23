@@ -5,6 +5,14 @@ import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react
 type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
+  citations?: Array<{
+    evidenceId: string;
+    evidenceName: string;
+    chunkId: string;
+    chunkIndex: number;
+    snippet: string;
+    score: number;
+  }>;
 };
 
 const starterPrompts = [
@@ -102,7 +110,20 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
         body: JSON.stringify({ message, history })
       });
 
-      let payload: { answer?: string; error?: string } | null = null;
+      let payload:
+        | {
+            answer?: string;
+            error?: string;
+            citations?: Array<{
+              evidenceId: string;
+              evidenceName: string;
+              chunkId: string;
+              chunkIndex: number;
+              snippet: string;
+              score: number;
+            }>;
+          }
+        | null = null;
       try {
         payload = await response.json();
       } catch {
@@ -120,7 +141,14 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
         return;
       }
 
-      setMessages((prev) => [...prev, { role: 'assistant', content: answer }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: answer,
+          citations: payload?.citations ?? []
+        }
+      ]);
     } catch {
       setError('Copilot request failed due to a network or server issue.');
     } finally {
@@ -162,7 +190,21 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
               {message.role === 'assistant' ? 'Copilot' : 'You'}
             </p>
             {message.role === 'assistant' ? (
-              <div>{renderAssistantContent(message.content)}</div>
+              <div>
+                {renderAssistantContent(message.content)}
+                {message.citations?.length ? (
+                  <div className="mt-3 rounded-md border border-border bg-muted/20 p-2">
+                    <p className="mb-1 text-xs font-semibold text-muted-foreground">Citations</p>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {message.citations.map((citation, citationIndex) => (
+                        <li key={`${citation.chunkId}-${citationIndex}`}>
+                          [{citationIndex + 1}] {citation.evidenceName} (chunk {citation.chunkIndex})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <p className="whitespace-pre-wrap text-sm">{message.content}</p>
             )}

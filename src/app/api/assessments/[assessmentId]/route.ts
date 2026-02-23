@@ -38,7 +38,7 @@ export async function GET(_: Request, { params }: { params: { assessmentId: stri
 export async function POST(request: Request, { params }: { params: { assessmentId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = responseUpsertSchema.parse(await request.json());
 
     const assessment = await prisma.assessment.findFirst({

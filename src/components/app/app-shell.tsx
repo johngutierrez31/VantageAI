@@ -18,6 +18,7 @@ import {
   Menu,
   Search,
   Settings,
+  ShieldAlert,
   ShieldCheck,
   User
 } from 'lucide-react';
@@ -38,7 +39,7 @@ type SearchItem = {
   label: string;
   description?: string;
   href: string;
-  kind: 'template' | 'assessment' | 'control';
+  kind: 'template' | 'assessment' | 'control' | 'questionnaire' | 'trust';
 };
 
 type NotificationItem = {
@@ -71,10 +72,11 @@ const navItems: NavItem[] = [
   { href: '/app/templates', label: 'Templates', icon: Layers3 },
   { href: '/app/evidence', label: 'Evidence Vault', icon: FolderKanban },
   { href: '/app/questionnaires', label: 'Questionnaire Inbox', icon: ListChecks },
-  { href: '/app/findings', label: 'Findings / Gaps', icon: ShieldCheck },
+  { href: '/app/trust', label: 'Trust Packet', icon: ShieldCheck },
+  { href: '/app/findings', label: 'Findings / Gaps', icon: ShieldAlert },
   { href: '/app/reports', label: 'Reports', icon: FileText },
   { href: '/app/copilot', label: 'Copilot', icon: Bot },
-  { href: '/app/settings', label: 'Settings', icon: Settings }
+  { href: '/app/settings/members', label: 'Settings', icon: Settings }
 ];
 
 function SearchDialog({

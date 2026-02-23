@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { getSessionContext } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
 import { templateCreateSchema } from '@/lib/validation/template';
@@ -24,7 +25,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = templateCreateSchema.parse(await request.json());
 
     const entitlements = await getTenantEntitlements(session.tenantId);
@@ -61,7 +62,24 @@ export async function POST(request: Request) {
 
       await tx.template.update({ where: { id: template.id }, data: { currentVersionId: version.id } });
 
-      for (const control of payload.controls) {
+      const sectionIdByTitle = new Map<string, string>();
+
+      for (let controlIndex = 0; controlIndex < payload.controls.length; controlIndex += 1) {
+        const control = payload.controls[controlIndex];
+        const sectionTitle = control.sectionTitle ?? control.domain;
+
+        if (!sectionIdByTitle.has(sectionTitle)) {
+          const section = await tx.templateSection.create({
+            data: {
+              tenantId: session.tenantId,
+              templateVersionId: version.id,
+              title: sectionTitle,
+              order: sectionIdByTitle.size
+            }
+          });
+          sectionIdByTitle.set(sectionTitle, section.id);
+        }
+
         const createdControl = await tx.control.create({
           data: {
             tenantId: session.tenantId,
@@ -73,13 +91,22 @@ export async function POST(request: Request) {
           }
         });
 
-        for (const question of control.questions) {
+        for (let questionIndex = 0; questionIndex < control.questions.length; questionIndex += 1) {
+          const question = control.questions[questionIndex];
           await tx.question.create({
             data: {
               tenantId: session.tenantId,
               controlId: createdControl.id,
+              sectionId: sectionIdByTitle.get(sectionTitle),
               prompt: question.prompt,
+              guidance: question.guidance,
+              answerType: question.answerType,
               rubric: question.rubric,
+              scoringRubricJson:
+                question.scoringRubricJson === undefined
+                  ? undefined
+                  : (JSON.parse(JSON.stringify(question.scoringRubricJson)) as Prisma.InputJsonValue),
+              order: question.order ?? questionIndex,
               weight: question.weight
             }
           });
@@ -103,3 +130,4 @@ export async function POST(request: Request) {
     return handleRouteError(error);
   }
 }
+

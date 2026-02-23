@@ -13,3 +13,7 @@ export const responseUpsertSchema = z.object({
   confidence: z.number().min(0).max(1).optional(),
   rationale: z.string().optional()
 });
+
+export const responsesPatchSchema = z.object({
+  responses: z.array(responseUpsertSchema).min(1).max(500)
+});

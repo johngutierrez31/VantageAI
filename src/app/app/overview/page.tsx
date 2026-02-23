@@ -114,7 +114,8 @@ export default async function OverviewPage() {
         primaryAction={{ label: 'Create Assessment', href: '/app/assessments/new' }}
         secondaryActions={[
           { label: 'Import Questionnaire', href: '/app/questionnaires', variant: 'outline' },
-          { label: 'Upload Evidence', href: '/app/evidence', variant: 'outline' }
+          { label: 'Upload Evidence', href: '/app/evidence', variant: 'outline' },
+          { label: 'Trust Inbox', href: '/app/trust/inbox', variant: 'outline' }
         ]}
       />
 

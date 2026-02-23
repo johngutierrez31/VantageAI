@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = exceptionCreateSchema.parse(await request.json());
 
     const assessment = await prisma.assessment.findFirst({
@@ -68,3 +68,4 @@ export async function POST(request: Request) {
     return handleRouteError(error);
   }
 }
+

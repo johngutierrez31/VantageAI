@@ -10,7 +10,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const soon = addDays(now, 30);
   const ninetyDaysAgo = subDays(now, 90);
 
-  const [templates, assessments, controls, expiringExceptions, staleEvidenceCount, pendingImports, activeUser] =
+  const [
+    templates,
+    assessments,
+    controls,
+    questionnaireUploads,
+    trustInboxItems,
+    expiringExceptions,
+    staleEvidenceCount,
+    pendingIntakes,
+    activeUser
+  ] =
     await Promise.all([
       prisma.template.findMany({
         where: { tenantId: session.tenantId },
@@ -30,6 +40,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         orderBy: { createdAt: 'desc' },
         take: 20
       }),
+      prisma.questionnaireUpload.findMany({
+        where: { tenantId: session.tenantId },
+        select: { id: true, filename: true },
+        orderBy: { createdAt: 'desc' },
+        take: 20
+      }),
+      prisma.trustInboxItem.findMany({
+        where: { tenantId: session.tenantId },
+        select: { id: true, title: true, status: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 20
+      }),
       prisma.exception.count({
         where: {
           tenantId: session.tenantId,
@@ -42,8 +64,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       prisma.evidence.count({
         where: { tenantId: session.tenantId, createdAt: { lt: ninetyDaysAgo } }
       }),
-      prisma.questionnaireImport.count({
-        where: { tenantId: session.tenantId, status: 'PENDING' }
+      prisma.trustInboxItem.count({
+        where: {
+          tenantId: session.tenantId,
+          status: { in: ['NEW', 'IN_REVIEW'] }
+        }
       }),
       prisma.user.findUnique({
         where: { id: session.userId },
@@ -72,6 +97,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       description: 'Control',
       href: '/app/findings',
       kind: 'control' as const
+    })),
+    ...questionnaireUploads.map((upload) => ({
+      id: `questionnaire-${upload.id}`,
+      label: upload.filename,
+      description: 'Questionnaire upload',
+      href: `/app/questionnaires/${upload.id}`,
+      kind: 'questionnaire' as const
+    })),
+    ...trustInboxItems.map((item) => ({
+      id: `trust-${item.id}`,
+      label: item.title,
+      description: `Trust inbox (${item.status})`,
+      href: `/app/trust/inbox/${item.id}`,
+      kind: 'trust' as const
     }))
   ];
 
@@ -97,8 +136,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     {
       id: 'questionnaire',
       title: 'Questionnaire inbox',
-      detail: pendingImports > 0 ? `${pendingImports} imports are pending review.` : 'No pending imports.',
+      detail: pendingIntakes > 0 ? `${pendingIntakes} intake item(s) pending review.` : 'No pending imports.',
       href: '/app/questionnaires'
+    },
+    {
+      id: 'trust-inbox',
+      title: 'Trust inbox',
+      detail:
+        trustInboxItems.length > 0
+          ? `${trustInboxItems.filter((item) => item.status !== 'DELIVERED').length} trust intake item(s) are open.`
+          : 'No trust intake items.',
+      href: '/app/trust/inbox'
     }
   ];
 

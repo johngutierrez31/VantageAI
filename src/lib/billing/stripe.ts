@@ -17,9 +17,11 @@ export function getStripeClient() {
 
 export function getPriceIdForPlan(plan: PlanTier) {
   const mapping: Record<PlanTier, string | undefined> = {
+    FREE: undefined,
     STARTER: process.env.STRIPE_PRICE_STARTER,
     PRO: process.env.STRIPE_PRICE_PRO,
-    PARTNER: process.env.STRIPE_PRICE_PARTNER
+    BUSINESS: process.env.STRIPE_PRICE_BUSINESS ?? process.env.STRIPE_PRICE_PARTNER,
+    ENTERPRISE: process.env.STRIPE_PRICE_ENTERPRISE
   };
 
   const priceId = mapping[plan];
@@ -31,9 +33,12 @@ export function getPriceIdForPlan(plan: PlanTier) {
 }
 
 export function planFromPriceId(priceId: string | null | undefined): PlanTier {
-  if (!priceId) return 'STARTER';
+  if (!priceId) return 'FREE';
 
-  if (priceId === process.env.STRIPE_PRICE_PARTNER) return 'PARTNER';
+  if (priceId === process.env.STRIPE_PRICE_ENTERPRISE) return 'ENTERPRISE';
+  if (priceId === (process.env.STRIPE_PRICE_BUSINESS ?? process.env.STRIPE_PRICE_PARTNER)) return 'BUSINESS';
   if (priceId === process.env.STRIPE_PRICE_PRO) return 'PRO';
+  if (priceId === process.env.STRIPE_PRICE_STARTER) return 'STARTER';
   return 'STARTER';
 }
+

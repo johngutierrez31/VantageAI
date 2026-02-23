@@ -53,7 +53,7 @@ async function sendVerificationRequest({ identifier, url }: { identifier: string
 }
 
 function hasActiveMembership(role: TenantRole | null | undefined): role is TenantRole {
-  return role === 'ADMIN' || role === 'ANALYST' || role === 'VIEWER' || role === 'CLIENT_VIEWER';
+  return role === 'OWNER' || role === 'ADMIN' || role === 'MEMBER' || role === 'VIEWER';
 }
 
 export const authOptions: NextAuthOptions = {
@@ -160,3 +160,4 @@ export const authOptions: NextAuthOptions = {
 };
 
 export const authBaseUrl = getBaseUrl();
+

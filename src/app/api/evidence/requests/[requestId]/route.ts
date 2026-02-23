@@ -9,7 +9,7 @@ import { writeAuditLog } from '@/lib/audit';
 export async function PATCH(request: Request, { params }: { params: { requestId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = evidenceRequestUpdateSchema.parse(await request.json());
 
     const existing = await prisma.evidenceRequest.findFirst({

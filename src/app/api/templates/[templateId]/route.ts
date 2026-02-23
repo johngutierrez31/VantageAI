@@ -29,7 +29,7 @@ export async function GET(_: Request, { params }: { params: { templateId: string
 export async function PATCH(request: Request, { params }: { params: { templateId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = templateVersionCreateSchema.parse(await request.json());
 
     const template = await prisma.template.findFirst({

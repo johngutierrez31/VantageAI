@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db/prisma';
 import { createEmbedding } from '@/lib/evidence/embeddings';
 import { buildCitationLabel, rankChunks } from '@/lib/evidence/retrieval';
+import { buildSafetySystemPrompt, redactSecrets, sanitizeUntrustedEvidence } from '@/lib/ai/safety';
 
 export type RagCitation = {
   evidenceId: string;
@@ -34,11 +35,13 @@ async function generateOpenAIAnswer(questionPrompt: string, context: string) {
         {
           role: 'system',
           content:
-            'You are a compliance analyst assistant. Use only the provided evidence snippets. If evidence is insufficient, say "insufficient evidence".'
+            'You are a compliance analyst assistant. ' +
+            buildSafetySystemPrompt() +
+            ' Use only the provided evidence snippets. If evidence is insufficient, say "insufficient evidence".'
         },
         {
           role: 'user',
-          content: `Question: ${questionPrompt}\n\nEvidence:\n${context}\n\nReturn a concise answer and include citation references like [1], [2].`
+          content: `Question: ${redactSecrets(questionPrompt)}\n\nEvidence:\n${context}\n\nReturn a concise answer and include citation references like [1], [2].`
         }
       ]
     })
@@ -96,7 +99,7 @@ export async function runRagForQuestion(tenantId: string, questionPrompt: string
     evidenceName: chunk.evidenceName,
     chunkId: chunk.chunkId,
     label: buildCitationLabel(index, chunk.evidenceName),
-    snippet: chunk.chunkText.slice(0, 280),
+    snippet: sanitizeUntrustedEvidence(chunk.chunkText).slice(0, 280),
     similarity: Number(chunk.similarity.toFixed(4))
   }));
 

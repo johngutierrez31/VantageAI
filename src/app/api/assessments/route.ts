@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = assessmentCreateSchema.parse(await request.json());
 
     const template = await prisma.template.findFirst({
@@ -71,3 +71,4 @@ export async function POST(request: Request) {
     return handleRouteError(error);
   }
 }
+

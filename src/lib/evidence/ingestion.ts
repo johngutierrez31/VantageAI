@@ -39,35 +39,7 @@ export async function ingestEvidenceText(args: IngestArgs) {
   });
 
   try {
-    const chunks = splitIntoChunks(args.content);
-
-    for (let index = 0; index < chunks.length; index += 1) {
-      const chunkText = chunks[index];
-      const embedding = await createEmbedding(chunkText);
-
-      await prisma.evidenceChunk.create({
-        data: {
-          tenantId: args.tenantId,
-          evidenceId: evidence.id,
-          chunkIndex: index,
-          chunkText,
-          tokenCount: estimateTokenCount(chunkText),
-          embedding
-        }
-      });
-    }
-
-    const updated = await prisma.evidence.update({
-      where: { id: evidence.id },
-      data: {
-        ingestionStatus: 'COMPLETED',
-        ingestionError: null,
-        extractedAt: new Date()
-      },
-      include: { chunks: true }
-    });
-
-    return updated;
+    return await indexEvidenceById(args.tenantId, evidence.id);
   } catch (error) {
     await prisma.evidence.update({
       where: { id: evidence.id },
@@ -78,4 +50,65 @@ export async function ingestEvidenceText(args: IngestArgs) {
     });
     throw error;
   }
+}
+
+export async function indexEvidenceById(tenantId: string, evidenceId: string) {
+  const evidence = await prisma.evidence.findFirst({
+    where: { id: evidenceId, tenantId },
+    select: {
+      id: true,
+      tenantId: true,
+      extractedText: true
+    }
+  });
+
+  if (!evidence) {
+    throw new Error('Evidence not found');
+  }
+
+  if (!evidence.extractedText || !evidence.extractedText.trim()) {
+    throw new Error('Evidence has no extracted text to index');
+  }
+
+  await prisma.evidence.update({
+    where: { id: evidence.id },
+    data: {
+      ingestionStatus: 'PROCESSING',
+      ingestionError: null
+    }
+  });
+
+  await prisma.evidenceChunk.deleteMany({
+    where: { tenantId, evidenceId: evidence.id }
+  });
+
+  const chunks = splitIntoChunks(evidence.extractedText);
+
+  for (let index = 0; index < chunks.length; index += 1) {
+    const chunkText = chunks[index];
+    const embedding = await createEmbedding(chunkText);
+
+    await prisma.evidenceChunk.create({
+      data: {
+        tenantId,
+        evidenceId: evidence.id,
+        chunkIndex: index,
+        chunkText,
+        tokenCount: estimateTokenCount(chunkText),
+        embedding
+      }
+    });
+  }
+
+  const updated = await prisma.evidence.update({
+    where: { id: evidence.id },
+    data: {
+      ingestionStatus: 'COMPLETED',
+      ingestionError: null,
+      extractedAt: new Date()
+    },
+    include: { chunks: true }
+  });
+
+  return updated;
 }

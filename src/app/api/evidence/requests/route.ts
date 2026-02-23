@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = evidenceRequestCreateSchema.parse(await request.json());
 
     const requestRecord = await prisma.evidenceRequest.create({
@@ -61,3 +61,4 @@ export async function POST(request: Request) {
     return handleRouteError(error);
   }
 }
+

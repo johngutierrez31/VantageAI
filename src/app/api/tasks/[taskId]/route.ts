@@ -9,7 +9,7 @@ import { writeAuditLog } from '@/lib/audit';
 export async function PATCH(request: Request, { params }: { params: { taskId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     const payload = taskUpdateSchema.parse(await request.json());
 
     const task = await prisma.task.findFirst({

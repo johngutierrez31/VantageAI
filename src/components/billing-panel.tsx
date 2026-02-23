@@ -18,7 +18,7 @@ type Entitlements = {
 
 export function BillingPanel() {
   const [entitlements, setEntitlements] = useState<Entitlements | null>(null);
-  const [plan, setPlan] = useState<'STARTER' | 'PRO' | 'PARTNER'>('PRO');
+  const [plan, setPlan] = useState<'STARTER' | 'PRO' | 'BUSINESS' | 'ENTERPRISE'>('PRO');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -72,17 +72,22 @@ export function BillingPanel() {
   return (
     <div className="space-y-2">
       <p className="text-sm font-semibold">
-        Plan: {entitlements?.plan ?? 'STARTER'} ({entitlements?.status ?? 'active'})
+        Plan: {entitlements?.plan ?? 'FREE'} ({entitlements?.status ?? 'active'})
       </p>
       <p className="text-sm text-muted-foreground">
         AI: {entitlements?.limits?.canUseAI ? 'Enabled' : 'Disabled'} | PDF Export:{' '}
         {entitlements?.limits?.canExportPdf ? 'Enabled' : 'Disabled'}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <Select value={plan} onChange={(event) => setPlan(event.target.value as 'STARTER' | 'PRO' | 'PARTNER')} className="w-[180px]">
+        <Select
+          value={plan}
+          onChange={(event) => setPlan(event.target.value as 'STARTER' | 'PRO' | 'BUSINESS' | 'ENTERPRISE')}
+          className="w-[220px]"
+        >
           <option value="STARTER">Starter</option>
           <option value="PRO">Pro</option>
-          <option value="PARTNER">Partner</option>
+          <option value="BUSINESS">Business</option>
+          <option value="ENTERPRISE">Enterprise</option>
         </Select>
         <Button onClick={startCheckout} disabled={busy}>{busy ? 'Working...' : 'Upgrade / change plan'}</Button>
         <Button variant="outline" onClick={openPortal} disabled={busy}>Manage billing portal</Button>
@@ -91,3 +96,4 @@ export function BillingPanel() {
     </div>
   );
 }
+

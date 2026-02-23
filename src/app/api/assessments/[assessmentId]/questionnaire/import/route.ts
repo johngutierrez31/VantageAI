@@ -12,7 +12,7 @@ import { writeAuditLog } from '@/lib/audit';
 export async function POST(request: Request, { params }: { params: { assessmentId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     await requireQuestionnaireImportAccess(session.tenantId);
 
     const payload = questionnaireImportSchema.parse(await request.json());

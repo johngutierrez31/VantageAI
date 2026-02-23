@@ -1,10 +1,10 @@
 import { SessionContext } from '@/lib/auth/session';
 
 const roleWeight = {
-  CLIENT_VIEWER: 0,
-  VIEWER: 1,
-  ANALYST: 2,
-  ADMIN: 3
+  VIEWER: 0,
+  MEMBER: 1,
+  ADMIN: 2,
+  OWNER: 3
 } as const;
 
 export function requireRole(session: SessionContext, minimum: keyof typeof roleWeight) {
@@ -12,3 +12,4 @@ export function requireRole(session: SessionContext, minimum: keyof typeof roleW
     throw new Error(`Forbidden for role ${session.role}`);
   }
 }
+

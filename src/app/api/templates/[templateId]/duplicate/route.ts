@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { getSessionContext } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
 import { requireRole } from '@/lib/rbac/authorize';
@@ -8,7 +9,7 @@ import { handleRouteError, notFound } from '@/lib/http';
 export async function POST(_: Request, { params }: { params: { templateId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
 
     const source = await prisma.template.findFirst({
       where: { id: params.templateId, tenantId: session.tenantId },
@@ -17,6 +18,7 @@ export async function POST(_: Request, { params }: { params: { templateId: strin
           orderBy: { version: 'desc' },
           take: 1,
           include: {
+            sections: true,
             controls: {
               include: { questions: true }
             }
@@ -62,6 +64,19 @@ export async function POST(_: Request, { params }: { params: { templateId: strin
         data: { currentVersionId: version.id }
       });
 
+      const sectionIdMap = new Map<string, string>();
+      for (const section of latestVersion.sections) {
+        const createdSection = await tx.templateSection.create({
+          data: {
+            tenantId: session.tenantId,
+            templateVersionId: version.id,
+            title: section.title,
+            order: section.order
+          }
+        });
+        sectionIdMap.set(section.id, createdSection.id);
+      }
+
       for (const control of latestVersion.controls) {
         const createdControl = await tx.control.create({
           data: {
@@ -80,8 +95,16 @@ export async function POST(_: Request, { params }: { params: { templateId: strin
             data: {
               tenantId: session.tenantId,
               controlId: createdControl.id,
+              sectionId: question.sectionId ? sectionIdMap.get(question.sectionId) : null,
               prompt: question.prompt,
+              guidance: question.guidance,
+              answerType: question.answerType,
               rubric: question.rubric,
+              scoringRubricJson:
+                question.scoringRubricJson === null
+                  ? Prisma.JsonNull
+                  : (question.scoringRubricJson as Prisma.InputJsonValue | undefined),
+              order: question.order,
               weight: question.weight
             }
           });

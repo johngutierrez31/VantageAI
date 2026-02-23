@@ -16,20 +16,20 @@ export async function getTenantEntitlements(tenantId: string): Promise<TenantEnt
 
   if (!subscription) {
     return {
-      plan: 'STARTER',
+      plan: 'FREE',
       status: 'active',
-      limits: getLimitsForPlan('STARTER')
+      limits: getLimitsForPlan('FREE')
     };
   }
 
-  const plan = subscription.plan ?? 'STARTER';
+  const plan = subscription.plan ?? 'FREE';
   const status = subscription.status;
 
   if (!isBillingActive(status)) {
     return {
-      plan: 'STARTER',
+      plan: 'FREE',
       status,
-      limits: getLimitsForPlan('STARTER')
+      limits: getLimitsForPlan('FREE')
     };
   }
 
@@ -42,6 +42,50 @@ export async function getTenantEntitlements(tenantId: string): Promise<TenantEnt
 
 function fail(feature: string): never {
   throw new Error(`Forbidden: ${feature} requires a higher subscription plan`);
+}
+
+function asTokenCount(value: unknown) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return 0;
+  return value;
+}
+
+function startOfUtcDay() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+export async function requireCopilotQuota(tenantId: string, requestedTokens: number) {
+  const entitlements = await getTenantEntitlements(tenantId);
+  if (!entitlements.limits.canUseAI) fail('AI workflows');
+
+  const todayStart = startOfUtcDay();
+  const logs = await prisma.auditLog.findMany({
+    where: {
+      tenantId,
+      action: {
+        in: ['copilot_chat', 'questionnaire_draft']
+      },
+      createdAt: {
+        gte: todayStart
+      }
+    },
+    select: { metadata: true }
+  });
+
+  const usedTokens = logs.reduce((sum, entry) => {
+    if (!entry.metadata || typeof entry.metadata !== 'object' || Array.isArray(entry.metadata)) return sum;
+    return sum + asTokenCount((entry.metadata as Record<string, unknown>).aiTokens);
+  }, 0);
+
+  if (usedTokens + requestedTokens > entitlements.limits.copilotTokensPerDay) {
+    throw new Error('Forbidden: AI daily token quota exceeded for current plan');
+  }
+
+  return {
+    ...entitlements,
+    usedTokens,
+    remainingTokens: Math.max(0, entitlements.limits.copilotTokensPerDay - (usedTokens + requestedTokens))
+  };
 }
 
 export async function requireAIAccess(tenantId: string) {

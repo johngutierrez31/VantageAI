@@ -8,10 +8,10 @@ datasource db {
 }
 
 enum TenantRole {
+  OWNER
   ADMIN
-  ANALYST
+  MEMBER
   VIEWER
-  CLIENT_VIEWER
 }
 
 enum MembershipStatus {
@@ -33,9 +33,11 @@ enum AssessmentStatus {
 }
 
 enum PlanTier {
+  FREE
   STARTER
   PRO
-  PARTNER
+  BUSINESS
+  ENTERPRISE
 }
 
 enum StorageProvider {
@@ -77,6 +79,31 @@ enum ReportFormat {
   PDF
 }
 
+enum TemplateQuestionType {
+  LIKERT
+  TEXT
+  MULTI
+}
+
+enum QuestionnaireOriginalFormat {
+  CSV
+  XLSX
+  DOCX
+  JSON
+}
+
+enum QuestionnaireMappingStatus {
+  MAPPED
+  UNMAPPED
+}
+
+enum TrustInboxStatus {
+  NEW
+  IN_REVIEW
+  DRAFT_READY
+  DELIVERED
+}
+
 enum TaskStatus {
   TODO
   IN_PROGRESS
@@ -104,17 +131,18 @@ enum EvidenceRequestStatus {
 }
 
 model Tenant {
-  id                    String                  @id @default(cuid())
+  id                    String                   @id @default(cuid())
   name                  String
-  slug                  String                  @unique
-  activeStorageProvider StorageProvider         @default(LOCAL)
-  activeVectorProvider  VectorProvider          @default(HASHED)
-  activeEmailProvider   EmailProvider           @default(RESEND)
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
+  slug                  String                   @unique
+  activeStorageProvider StorageProvider          @default(LOCAL)
+  activeVectorProvider  VectorProvider           @default(HASHED)
+  activeEmailProvider   EmailProvider            @default(RESEND)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
   memberships           Membership[]
   templates             Template[]
   templateVersions      TemplateVersion[]
+  templateSections      TemplateSection[]
   controls              Control[]
   questions             Question[]
   assessments           Assessment[]
@@ -130,6 +158,13 @@ model Tenant {
   reportExports         ReportExport[]
   tasks                 Task[]
   evidenceRequests      EvidenceRequest[]
+  questionnaireUploads  QuestionnaireUpload[]
+  questionnaireItems    QuestionnaireItem[]
+  questionnaireMappings QuestionnaireMapping[]
+  draftAnswers          DraftAnswer[]
+  trustInboxItems       TrustInboxItem[]
+  trustDocs             TrustDoc[]
+  trustInboxAttachments TrustInboxAttachment[]
   branding              TenantBranding?
   auditLogs             AuditLog[]
   stripeCustomers       StripeCustomer[]
@@ -138,13 +173,13 @@ model Tenant {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  email         String     @unique
+  id            String       @id @default(cuid())
+  email         String       @unique
   emailVerified DateTime?
   name          String?
   image         String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   memberships   Membership[]
   accounts      Account[]
   sessions      Session[]
@@ -165,16 +200,16 @@ model Membership {
 }
 
 model Template {
-  id               String          @id @default(cuid())
+  id               String            @id @default(cuid())
   tenantId         String
   name             String
   description      String?
-  status           TemplateStatus  @default(DRAFT)
+  status           TemplateStatus    @default(DRAFT)
   currentVersionId String?
   createdBy        String
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  tenant           Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   versions         TemplateVersion[]
   assessments      Assessment[]
 
@@ -182,17 +217,18 @@ model Template {
 }
 
 model TemplateVersion {
-  id          String       @id @default(cuid())
+  id          String            @id @default(cuid())
   tenantId    String
   templateId  String
   version     Int
   title       String
   notes       String?
-  isPublished Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  template    Template     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  isPublished Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template    Template          @relation(fields: [templateId], references: [id], onDelete: Cascade)
   controls    Control[]
+  sections    TemplateSection[]
 
   @@unique([templateId, version])
   @@index([tenantId, templateId])
@@ -217,39 +253,63 @@ model Control {
 }
 
 model Question {
-  id            String                   @id @default(cuid())
-  tenantId      String
-  controlId     String
-  prompt        String
-  rubric        String
-  weight        Float                    @default(1)
-  createdAt     DateTime                 @default(now())
-  tenant        Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  control       Control                  @relation(fields: [controlId], references: [id], onDelete: Cascade)
-  responses     Response[]
-  evidenceLinks EvidenceLink[]
-  importRows    QuestionnaireImportRow[]
+  id                    String                   @id @default(cuid())
+  tenantId              String
+  controlId             String
+  sectionId             String?
+  prompt                String
+  guidance              String?
+  answerType            TemplateQuestionType     @default(TEXT)
+  rubric                String
+  scoringRubricJson     Json?
+  order                 Int                      @default(0)
+  weight                Float                    @default(1)
+  createdAt             DateTime                 @default(now())
+  tenant                Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  control               Control                  @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  section               TemplateSection?         @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  responses             Response[]
+  evidenceLinks         EvidenceLink[]
+  importRows            QuestionnaireImportRow[]
+  questionnaireMappings QuestionnaireMapping[]
+
+  @@index([controlId, order])
+  @@index([sectionId, order])
+}
+
+model TemplateSection {
+  id                String          @id @default(cuid())
+  tenantId          String
+  templateVersionId String
+  title             String
+  order             Int             @default(0)
+  createdAt         DateTime        @default(now())
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  templateVersion   TemplateVersion @relation(fields: [templateVersionId], references: [id], onDelete: Cascade)
+  questions         Question[]
+
+  @@index([tenantId, templateVersionId, order])
 }
 
 model Assessment {
-  id                 String                  @id @default(cuid())
-  tenantId           String
-  templateId         String
-  templateVersionId  String
-  name               String
-  customerName       String
-  status             AssessmentStatus        @default(DRAFT)
-  createdBy          String
-  createdAt          DateTime                @default(now())
-  updatedAt          DateTime                @updatedAt
-  tenant             Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  template           Template                @relation(fields: [templateId], references: [id], onDelete: Restrict)
-  responses          Response[]
+  id                   String                @id @default(cuid())
+  tenantId             String
+  templateId           String
+  templateVersionId    String
+  name                 String
+  customerName         String
+  status               AssessmentStatus      @default(DRAFT)
+  createdBy            String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  tenant               Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template             Template              @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  responses            Response[]
   questionnaireImports QuestionnaireImport[]
-  reports            Report[]
-  tasks              Task[]
-  exceptions         Exception[]
-  evidenceRequests   EvidenceRequest[]
+  reports              Report[]
+  tasks                Task[]
+  exceptions           Exception[]
+  evidenceRequests     EvidenceRequest[]
 }
 
 model Response {
@@ -275,24 +335,26 @@ model Response {
 }
 
 model Evidence {
-  id             String          @id @default(cuid())
-  tenantId       String
-  name           String
-  storageKey     String
-  mimeType       String
-  byteSize       Int?
-  sha256         String?
-  sourceUri      String?
-  tags           String[]
-  extractedText  String?
-  ingestionStatus IngestionStatus @default(PENDING)
-  ingestionError String?
-  extractedAt    DateTime?
-  createdBy      String
-  createdAt      DateTime        @default(now())
-  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  links          EvidenceLink[]
-  chunks         EvidenceChunk[]
+  id                    String                 @id @default(cuid())
+  tenantId              String
+  name                  String
+  storageKey            String
+  mimeType              String
+  byteSize              Int?
+  sha256                String?
+  sourceUri             String?
+  tags                  String[]
+  extractedText         String?
+  ingestionStatus       IngestionStatus        @default(PENDING)
+  ingestionError        String?
+  extractedAt           DateTime?
+  createdBy             String
+  createdAt             DateTime               @default(now())
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links                 EvidenceLink[]
+  chunks                EvidenceChunk[]
+  trustDocs             TrustDoc[]
+  trustInboxAttachments TrustInboxAttachment[]
 }
 
 model EvidenceChunk {
@@ -342,7 +404,7 @@ model AISuggestion {
 }
 
 model Exception {
-  id           String   @id @default(cuid())
+  id           String          @id @default(cuid())
   tenantId     String
   assessmentId String
   controlCode  String
@@ -351,10 +413,10 @@ model Exception {
   owner        String?
   approver     String?
   dueDate      DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment   Assessment      @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, assessmentId, status])
   @@index([tenantId, dueDate])
@@ -402,45 +464,159 @@ model EvidenceRequest {
 }
 
 model QuestionnaireImport {
-  id           String                    @id @default(cuid())
-  tenantId     String
-  assessmentId String
-  sourceType   QuestionnaireSourceType
-  status       QuestionnaireImportStatus @default(PENDING)
-  rawPayload   Json
-  createdBy    String
-  createdAt    DateTime                  @default(now())
-  appliedAt    DateTime?
+  id            String                    @id @default(cuid())
+  tenantId      String
+  assessmentId  String
+  sourceType    QuestionnaireSourceType
+  status        QuestionnaireImportStatus @default(PENDING)
+  rawPayload    Json
+  createdBy     String
+  createdAt     DateTime                  @default(now())
+  appliedAt     DateTime?
   failureReason String?
-  tenant       Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assessment   Assessment                @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  rows         QuestionnaireImportRow[]
+  tenant        Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment    Assessment                @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  rows          QuestionnaireImportRow[]
 
   @@index([tenantId, assessmentId])
 }
 
 model QuestionnaireImportRow {
-  id              String               @id @default(cuid())
-  tenantId        String
-  importId        String
-  sourceQuestion  String
-  sourceAnswer    String?
-  sourceScore     Float?
-  sourceConfidence Float?
-  mappedQuestionId String?
-  matchScore      Float?
-  responseId      String?
-  createdAt       DateTime             @default(now())
-  tenant          Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id                  String              @id @default(cuid())
+  tenantId            String
+  importId            String
+  sourceQuestion      String
+  sourceAnswer        String?
+  sourceScore         Float?
+  sourceConfidence    Float?
+  mappedQuestionId    String?
+  matchScore          Float?
+  responseId          String?
+  createdAt           DateTime            @default(now())
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   questionnaireImport QuestionnaireImport @relation(fields: [importId], references: [id], onDelete: Cascade)
-  mappedQuestion  Question?            @relation(fields: [mappedQuestionId], references: [id], onDelete: SetNull)
-  response        Response?            @relation(fields: [responseId], references: [id], onDelete: SetNull)
+  mappedQuestion      Question?           @relation(fields: [mappedQuestionId], references: [id], onDelete: SetNull)
+  response            Response?           @relation(fields: [responseId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, importId])
 }
 
+model QuestionnaireUpload {
+  id             String                      @id @default(cuid())
+  tenantId       String
+  filename       String
+  originalFormat QuestionnaireOriginalFormat
+  parsedJson     Json
+  createdBy      String
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+  tenant         Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items          QuestionnaireItem[]
+  trustInboxItem TrustInboxItem?             @relation("TrustInboxUpload")
+
+  @@index([tenantId, createdAt])
+}
+
+model QuestionnaireItem {
+  id                    String                 @id @default(cuid())
+  tenantId              String
+  questionnaireUploadId String
+  rowKey                String
+  questionText          String
+  contextJson           Json?
+  createdAt             DateTime               @default(now())
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questionnaireUpload   QuestionnaireUpload    @relation(fields: [questionnaireUploadId], references: [id], onDelete: Cascade)
+  mappings              QuestionnaireMapping[]
+  draftAnswers          DraftAnswer[]
+
+  @@index([tenantId, questionnaireUploadId])
+  @@index([questionnaireUploadId, rowKey])
+}
+
+model QuestionnaireMapping {
+  id                  String                     @id @default(cuid())
+  tenantId            String
+  questionnaireItemId String
+  templateQuestionId  String?
+  confidence          Float                      @default(0)
+  status              QuestionnaireMappingStatus @default(UNMAPPED)
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  tenant              Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questionnaireItem   QuestionnaireItem          @relation(fields: [questionnaireItemId], references: [id], onDelete: Cascade)
+  templateQuestion    Question?                  @relation(fields: [templateQuestionId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+  @@index([tenantId, questionnaireItemId])
+}
+
+model DraftAnswer {
+  id                  String            @id @default(cuid())
+  tenantId            String
+  questionnaireItemId String
+  answerText          String
+  citationsJson       Json
+  model               String
+  createdBy           String
+  createdAt           DateTime          @default(now())
+  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questionnaireItem   QuestionnaireItem @relation(fields: [questionnaireItemId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, questionnaireItemId, createdAt])
+}
+
+model TrustInboxItem {
+  id                    String                 @id @default(cuid())
+  tenantId              String
+  title                 String
+  requesterEmail        String?
+  status                TrustInboxStatus       @default(NEW)
+  questionnaireUploadId String?
+  notes                 String?
+  createdBy             String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questionnaireUpload   QuestionnaireUpload?   @relation("TrustInboxUpload", fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
+  attachments           TrustInboxAttachment[]
+
+  @@unique([questionnaireUploadId])
+  @@index([tenantId, status, updatedAt])
+}
+
+model TrustDoc {
+  id         String   @id @default(cuid())
+  tenantId   String
+  category   String
+  evidenceId String
+  tagsJson   Json?
+  createdBy  String
+  createdAt  DateTime @default(now())
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  evidence   Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, evidenceId])
+  @@index([tenantId, category])
+}
+
+model TrustInboxAttachment {
+  id          String         @id @default(cuid())
+  tenantId    String
+  inboxItemId String
+  evidenceId  String
+  createdBy   String
+  createdAt   DateTime       @default(now())
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inboxItem   TrustInboxItem @relation(fields: [inboxItemId], references: [id], onDelete: Cascade)
+  evidence    Evidence       @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@unique([inboxItemId, evidenceId])
+  @@index([tenantId, inboxItemId])
+}
+
 model Report {
-  id           String       @id @default(cuid())
+  id           String         @id @default(cuid())
   tenantId     String
   assessmentId String
   title        String
@@ -448,9 +624,9 @@ model Report {
   markdown     String
   jsonPayload  Json
   generatedBy  String
-  createdAt    DateTime     @default(now())
-  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assessment   Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime       @default(now())
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment   Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   exports      ReportExport[]
 
   @@index([tenantId, assessmentId])
@@ -508,18 +684,18 @@ model StripeCustomer {
 }
 
 model Subscription {
-  id                   String   @id @default(cuid())
+  id                   String    @id @default(cuid())
   tenantId             String
-  plan                 PlanTier @default(STARTER)
-  stripeSubscriptionId String?  @unique
+  plan                 PlanTier  @default(STARTER)
+  stripeSubscriptionId String?   @unique
   status               String
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean  @default(false)
+  cancelAtPeriodEnd    Boolean   @default(false)
   endedAt              DateTime?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status])
 }

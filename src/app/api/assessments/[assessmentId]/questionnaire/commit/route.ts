@@ -20,7 +20,7 @@ function clampConfidence(value: number | null | undefined) {
 export async function POST(request: Request, { params }: { params: { assessmentId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     await requireQuestionnaireImportAccess(session.tenantId);
 
     const payload = questionnaireCommitSchema.parse(await request.json());

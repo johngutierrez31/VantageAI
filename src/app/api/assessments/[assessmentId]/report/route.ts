@@ -32,7 +32,7 @@ export async function GET(_: Request, { params }: { params: { assessmentId: stri
 export async function POST(_: Request, { params }: { params: { assessmentId: string } }) {
   try {
     const session = await getSessionContext();
-    requireRole(session, 'ANALYST');
+    requireRole(session, 'MEMBER');
     await requireBrandedReportAccess(session.tenantId);
 
     const result = await generateAssessmentReport({

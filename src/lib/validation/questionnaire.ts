@@ -18,3 +18,13 @@ export const questionnaireCommitSchema = z.object({
     )
     .optional()
 });
+
+export const questionnaireMapSchema = z.object({
+  templateId: z.string().min(1).optional(),
+  assessmentId: z.string().min(1).optional()
+});
+
+export const questionnaireDraftSchema = z.object({
+  itemIds: z.array(z.string().min(1)).max(500).optional(),
+  maxItems: z.number().int().min(1).max(500).optional()
+});
