@@ -29,6 +29,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       kind: 'policy' as const
     },
     {
+      id: 'cyber-range',
+      label: 'Cyber Range',
+      description: 'Design phased cyber range architectures and runbooks.',
+      href: '/app/cyber-range',
+      kind: 'range' as const
+    },
+    {
       id: 'settings-members',
       label: 'Settings: Members',
       description: 'Manage workspace members and roles.',
