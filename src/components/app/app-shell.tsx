@@ -325,38 +325,42 @@ export function AppShell({
                 </div>
               </div>
             ) : null}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex w-full max-w-xl items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="lg:hidden"
-                  onClick={() => setShowMobileNav((value) => !value)}
-                >
-                  <Menu className="h-4 w-4" />
-                </Button>
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
+              <div className="order-2 flex w-full items-center gap-2 md:order-1 md:max-w-xl">
                 <button
                   type="button"
                   className="flex w-full items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-left text-sm text-muted-foreground transition-colors duration-300 ease-out hover:border-primary/40 hover:bg-muted/50 hover:text-foreground"
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search className="h-4 w-4" />
-                  <span className="flex-1 truncate">Search copilot, cyber range, policy generator, settings</span>
-                  <span className="rounded bg-card px-2 py-0.5 font-display text-xs text-muted-foreground">
+                  <span className="flex-1 truncate sm:hidden">Search templates, assessments, controls</span>
+                  <span className="hidden flex-1 truncate sm:inline">Search copilot, cyber range, policy generator, settings</span>
+                  <span className="hidden rounded bg-card px-2 py-0.5 font-display text-xs text-muted-foreground sm:inline-flex">
                     Cmd+K / Ctrl+K
                   </span>
                 </button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="order-1 flex w-full items-center justify-between gap-2 md:order-2 md:w-auto md:justify-end">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="lg:hidden"
+                    onClick={() => setShowMobileNav((value) => !value)}
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
                 <Button
                   type="button"
                   size="sm"
+                  className="whitespace-nowrap px-2 sm:px-3"
                   variant={funMode ? 'destructive' : 'secondary'}
                   onClick={() => setFunMode((value) => !value)}
                 >
-                  Fun Mode: {funMode ? 'ON' : 'OFF'}
-                  {funMode ? <span className="retro-badge-hot ml-2">NEW!</span> : null}
+                  <span className="sm:hidden">Fun: {funMode ? 'ON' : 'OFF'}</span>
+                  <span className="hidden sm:inline">Fun Mode: {funMode ? 'ON' : 'OFF'}</span>
+                  {funMode ? <span className="retro-badge-hot ml-2 hidden sm:inline">NEW!</span> : null}
                 </Button>
                 <div className="relative">
                   <Button variant="ghost" size="icon" onClick={() => setShowNotifications((v) => !v)} type="button">
@@ -366,7 +370,7 @@ export function AppShell({
                     <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-warning" />
                   ) : null}
                   {showNotifications ? (
-                    <Card className="absolute right-0 mt-2 w-80">
+                    <Card className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1rem))]">
                       <CardContent className="space-y-2 p-3">
                         {notifications.length === 0 ? (
                           <p className="text-sm text-muted-foreground">No alerts right now.</p>
@@ -386,10 +390,17 @@ export function AppShell({
                     </Card>
                   ) : null}
                 </div>
+                </div>
                 <div className="relative">
-                  <Button variant="outline" size="sm" onClick={() => setShowUserMenu((v) => !v)} type="button">
-                    <User className="mr-1 h-4 w-4" />
-                    {role}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setShowUserMenu((v) => !v)}
+                    type="button"
+                  >
+                    <User className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">{role}</span>
                   </Button>
                   {showUserMenu ? (
                     <Card className="absolute right-0 mt-2 w-64">
