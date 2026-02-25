@@ -4,7 +4,6 @@ import { PageHeader } from '@/components/app/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getPageSessionContext } from '@/lib/auth/page-session';
-import { getInstalledSkills } from '@/lib/skills/catalog';
 
 const appTools = [
   {
@@ -50,10 +49,6 @@ const workflowCards = [
 
 export default async function ToolsHubPage() {
   await getPageSessionContext();
-  const installedSkills = await getInstalledSkills();
-  const securitySkills = installedSkills.filter((skill) =>
-    /security|cyber|incident|threat|policy|compliance/i.test(skill.name + ' ' + skill.description)
-  );
 
   return (
     <div className="space-y-6">
@@ -86,45 +81,23 @@ export default async function ToolsHubPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Integrated Workflows</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {workflowCards.map((workflow) => (
-              <div key={workflow.title} className="rounded-md border border-border p-3">
-                <p className="text-sm font-semibold">{workflow.title}</p>
-                <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-                  {workflow.steps.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Installed Security Skills</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {securitySkills.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No security skills detected.</p>
-            ) : (
-              securitySkills.slice(0, 12).map((skill) => (
-                <div key={skill.name} className="rounded-md border border-border bg-background/60 p-3">
-                  <p className="text-sm font-semibold">{skill.name}</p>
-                  <p className="text-xs text-muted-foreground">{skill.description}</p>
-                </div>
-              ))
-            )}
-            <Button asChild variant="outline" size="sm">
-              <Link href="/skills">Open Skills Catalog</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Integrated Workflows</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {workflowCards.map((workflow) => (
+            <div key={workflow.title} className="rounded-md border border-border p-3">
+              <p className="text-sm font-semibold">{workflow.title}</p>
+              <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+                {workflow.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
