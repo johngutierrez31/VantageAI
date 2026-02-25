@@ -1,10 +1,24 @@
 import './globals.css';
-import { IBM_Plex_Sans } from 'next/font/google';
+import { Cinzel, Cormorant_Garamond, Crimson_Pro } from 'next/font/google';
+import { cookies } from 'next/headers';
+import { cn } from '@/lib/utils';
 
-const ibmPlexSans = IBM_Plex_Sans({
+const headingFont = Cormorant_Garamond({
   subsets: ['latin'],
-  variable: '--font-plex',
+  variable: '--font-heading',
   weight: ['400', '500', '600', '700']
+});
+
+const bodyFont = Crimson_Pro({
+  subsets: ['latin'],
+  variable: '--font-body',
+  weight: ['400', '500', '600']
+});
+
+const displayFont = Cinzel({
+  subsets: ['latin'],
+  variable: '--font-display',
+  weight: ['400', '500', '600']
 });
 
 export const metadata = {
@@ -13,9 +27,11 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const funModeEnabled = cookies().get('vantage_fun_mode')?.value === 'true';
+
   return (
-    <html lang="en" className={ibmPlexSans.variable}>
-      <body className="font-sans antialiased">
+    <html lang="en" className={cn(headingFont.variable, bodyFont.variable, displayFont.variable)}>
+      <body className={cn('font-sans antialiased', funModeEnabled && 'fun-mode')}>
         <main>{children}</main>
       </body>
     </html>
