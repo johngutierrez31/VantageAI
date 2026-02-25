@@ -450,3 +450,8 @@ See `templates/` directory:
 See `scripts/` directory:
 - `health-check.py` - Range health verification script
 - `reset-orchestrator.py` - Automated range reset coordination
+
+## Related Skills
+| Skill | When to use |
+|------|-------------|
+| find-skills | Use to discover/install other skills via npx skills find <query> |
