@@ -9,17 +9,10 @@ import {
   Bell,
   Bot,
   ChevronRight,
-  ClipboardList,
   FileText,
-  FolderKanban,
-  LayoutDashboard,
-  Layers3,
-  ListChecks,
   Menu,
   Search,
   Settings,
-  ShieldAlert,
-  ShieldCheck,
   User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,7 +32,7 @@ type SearchItem = {
   label: string;
   description?: string;
   href: string;
-  kind: 'template' | 'assessment' | 'control' | 'questionnaire' | 'trust';
+  kind: 'copilot' | 'policy' | 'settings';
 };
 
 type NotificationItem = {
@@ -63,21 +56,19 @@ type Props = {
   userLabel: string;
   searchItems: SearchItem[];
   notifications: NotificationItem[];
+  initialFunMode: boolean;
   children: ReactNode;
 };
 
 const navItems: NavItem[] = [
-  { href: '/app/overview', label: 'Overview', icon: LayoutDashboard },
-  { href: '/app/assessments', label: 'Assessments', icon: ClipboardList },
-  { href: '/app/templates', label: 'Templates', icon: Layers3 },
-  { href: '/app/evidence', label: 'Evidence Vault', icon: FolderKanban },
-  { href: '/app/questionnaires', label: 'Questionnaire Inbox', icon: ListChecks },
-  { href: '/app/trust', label: 'Trust Packet', icon: ShieldCheck },
-  { href: '/app/findings', label: 'Findings / Gaps', icon: ShieldAlert },
-  { href: '/app/reports', label: 'Reports', icon: FileText },
   { href: '/app/copilot', label: 'Copilot', icon: Bot },
+  { href: '/app/policies', label: 'Policy Generator', icon: FileText },
   { href: '/app/settings/members', label: 'Settings', icon: Settings }
 ];
+
+const FUN_MODE_COOKIE = 'vantage_fun_mode';
+const FUN_MODE_STORAGE_KEY = 'vantage_fun_mode';
+const HIT_COUNTER_STORAGE_KEY = 'vantage_fun_hits';
 
 function SearchDialog({
   open,
@@ -116,7 +107,7 @@ function SearchDialog({
       <Card className="w-full max-w-2xl">
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Global search: templates, assessments, controls
+            Global search: copilot, policies, settings
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-4">
@@ -174,6 +165,7 @@ export function AppShell({
   userLabel,
   searchItems,
   notifications,
+  initialFunMode,
   children
 }: Props) {
   const router = useRouter();
@@ -184,10 +176,39 @@ export function AppShell({
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [currentTenantId, setCurrentTenantId] = useState(tenantId);
   const [switchBusy, setSwitchBusy] = useState(false);
+  const [funMode, setFunMode] = useState(initialFunMode);
+  const [hitCount, setHitCount] = useState(1337000);
 
   useEffect(() => {
     setCurrentTenantId(tenantId);
   }, [tenantId]);
+
+  useEffect(() => {
+    setFunMode(initialFunMode);
+  }, [initialFunMode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = window.localStorage.getItem(FUN_MODE_STORAGE_KEY);
+    if (stored === 'true') setFunMode(true);
+    if (stored === 'false') setFunMode(false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(FUN_MODE_STORAGE_KEY, funMode ? 'true' : 'false');
+    document.cookie = `${FUN_MODE_COOKIE}=${funMode ? 'true' : 'false'}; path=/; max-age=31536000; SameSite=Lax`;
+    document.body.classList.toggle('fun-mode', funMode);
+  }, [funMode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !funMode) return;
+    const raw = window.localStorage.getItem(HIT_COUNTER_STORAGE_KEY);
+    const baseline = Number.parseInt(raw ?? '1337000', 10);
+    const nextCount = Number.isFinite(baseline) ? baseline + 1 : 1337001;
+    window.localStorage.setItem(HIT_COUNTER_STORAGE_KEY, String(nextCount));
+    setHitCount(nextCount);
+  }, [funMode, pathname]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -222,13 +243,13 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={cn('academia-shell min-h-screen bg-background text-foreground', funMode && 'fun-mode')}>
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} items={searchItems} />
       <div className="mx-auto grid min-h-screen max-w-[1600px] grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-border bg-card/80 p-4 lg:block">
+        <aside className="hidden border-r border-border/80 bg-card/80 p-4 lg:block">
           <div className="mb-6">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Workspace</p>
-            <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/30 p-3">
+            <p className="font-display text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Workspace</p>
+            <div className="ornate-frame mt-2 space-y-2 rounded-md border border-border bg-muted/30 p-3">
               <Select
                 value={currentTenantId}
                 onChange={(event) => switchTenant(event.target.value)}
@@ -246,6 +267,11 @@ export function AppShell({
               </p>
               <p className="text-xs text-muted-foreground">{role}</p>
             </div>
+            {funMode ? (
+              <div className="retro-hits mt-3">
+                Visitors Since 1995: {String(hitCount).padStart(7, '0')}
+              </div>
+            ) : null}
           </div>
           <nav className="space-y-1">
             {navItems.map((item) => {
@@ -256,10 +282,10 @@ export function AppShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-serif transition-colors duration-300 ease-out',
                     active
-                      ? 'bg-primary/15 text-foreground ring-1 ring-primary/30'
-                      : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                      ? 'bg-primary/18 text-foreground ring-1 ring-primary/40'
+                      : 'text-muted-foreground hover:bg-muted/40 hover:text-primary'
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -268,9 +294,35 @@ export function AppShell({
               );
             })}
           </nav>
+          {funMode ? (
+            <>
+              <hr className="retro-hr my-4" />
+              <div className="retro-window space-y-3 p-2">
+                <p className="retro-rainbow text-center text-xs font-bold uppercase tracking-wide">Fun Mode Online</p>
+                <div className="retro-color-grid">
+                  <span style={{ backgroundColor: '#ff0000' }} />
+                  <span style={{ backgroundColor: '#00ff00' }} />
+                  <span style={{ backgroundColor: '#0000ff' }} />
+                  <span style={{ backgroundColor: '#ffff00' }} />
+                  <span style={{ backgroundColor: '#ff00ff' }} />
+                  <span style={{ backgroundColor: '#00ffff' }} />
+                </div>
+              </div>
+            </>
+          ) : null}
         </aside>
         <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-30 border-b border-border bg-background/95 px-4 py-3 backdrop-blur md:px-6">
+          <header className="sticky top-0 z-30 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:px-6">
+            {funMode ? (
+              <div className="retro-marquee" aria-live="polite">
+                <div className="retro-marquee-track">
+                  <span className="retro-marquee-item text-[#ff0000]">WELCOME TO FUN MODE</span>
+                  <span className="retro-marquee-item text-[#0000ff]">VANTAGECISO SECURITY CONSOLE 1997 EDITION</span>
+                  <span className="retro-marquee-item text-[#00aa00]">HOT: POLICY GENERATOR NOW LIVE</span>
+                  <span className="retro-marquee-item text-[#800080]">PRESS FUN MODE TO TOGGLE RETRO EXPERIENCE</span>
+                </div>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between gap-3">
               <div className="flex w-full max-w-xl items-center gap-2">
                 <Button
@@ -284,15 +336,26 @@ export function AppShell({
                 </Button>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/50"
+                  className="flex w-full items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-left text-sm text-muted-foreground transition-colors duration-300 ease-out hover:border-primary/40 hover:bg-muted/50 hover:text-foreground"
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search className="h-4 w-4" />
-                  <span className="flex-1 truncate">Search templates, assessments, controls</span>
-                  <span className="rounded bg-card px-2 py-0.5 text-xs text-muted-foreground">Cmd+K / Ctrl+K</span>
+                  <span className="flex-1 truncate">Search copilot, policy generator, settings</span>
+                  <span className="rounded bg-card px-2 py-0.5 font-display text-xs text-muted-foreground">
+                    Cmd+K / Ctrl+K
+                  </span>
                 </button>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={funMode ? 'destructive' : 'secondary'}
+                  onClick={() => setFunMode((value) => !value)}
+                >
+                  Fun Mode: {funMode ? 'ON' : 'OFF'}
+                  {funMode ? <span className="retro-badge-hot ml-2">NEW!</span> : null}
+                </Button>
                 <div className="relative">
                   <Button variant="ghost" size="icon" onClick={() => setShowNotifications((v) => !v)} type="button">
                     <Bell className="h-4 w-4" />
@@ -348,11 +411,16 @@ export function AppShell({
                 </div>
               </div>
             </div>
+            {funMode ? (
+              <div className="construction-stripe mt-3 p-2 text-center text-xs font-bold uppercase tracking-wide text-black">
+                UNDER CONSTRUCTION: RETRO MODE ACTIVE
+              </div>
+            ) : null}
           </header>
           {showMobileNav ? (
             <div className="border-b border-border bg-card/90 p-3 lg:hidden">
-              <div className="mb-3 space-y-2 rounded-md border border-border bg-muted/30 p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Workspace</p>
+              <div className="ornate-frame mb-3 space-y-2 rounded-md border border-border bg-muted/30 p-3">
+                <p className="font-display text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Workspace</p>
                 <Select
                   value={currentTenantId}
                   onChange={(event) => switchTenant(event.target.value)}
@@ -377,10 +445,10 @@ export function AppShell({
                       href={item.href}
                       onClick={() => setShowMobileNav(false)}
                       className={cn(
-                        'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+                        'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-serif transition-colors duration-300 ease-out',
                         active
-                          ? 'bg-primary/15 text-foreground ring-1 ring-primary/30'
-                          : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                          ? 'bg-primary/18 text-foreground ring-1 ring-primary/40'
+                          : 'text-muted-foreground hover:bg-muted/40 hover:text-primary'
                       )}
                     >
                       <Icon className="h-4 w-4" />
@@ -391,6 +459,11 @@ export function AppShell({
               </nav>
             </div>
           ) : null}
+          {funMode ? (
+            <hr className="retro-hr mx-4 md:mx-6 lg:mx-8" />
+          ) : (
+            <div aria-hidden="true" className="ornate-divider mx-4 md:mx-6 lg:mx-8" />
+          )}
           <main className="flex-1 px-4 py-5 md:px-6 lg:px-8">{children}</main>
         </div>
       </div>

@@ -14,6 +14,7 @@ type Props = {
   description?: string;
   primaryAction?: Action;
   secondaryActions?: Action[];
+  volumeLabel?: string;
   children?: ReactNode;
 };
 
@@ -38,13 +39,29 @@ function renderAction(action: Action, index: number, isPrimary = false) {
   );
 }
 
-export function PageHeader({ title, description, primaryAction, secondaryActions = [], children }: Props) {
+export function PageHeader({
+  title,
+  description,
+  primaryAction,
+  secondaryActions = [],
+  volumeLabel = 'Volume I',
+  children
+}: Props) {
+  const showDropCap = (description?.length ?? 0) > 90;
+
   return (
-    <div className="mb-6 rounded-lg border border-border bg-card p-6 shadow-panel">
+    <div className="ornate-frame mb-8 rounded-md border border-border bg-card/95 p-6 shadow-panel md:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
-          {description ? <p className="max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
+        <div className="space-y-3">
+          <p className="academia-volume">{volumeLabel}</p>
+          <h1 className="text-3xl font-medium tracking-tight text-foreground md:text-4xl">{title}</h1>
+          {description ? (
+            <p
+              className={`max-w-3xl text-base text-muted-foreground ${showDropCap ? 'academia-drop-cap' : 'italic'}`}
+            >
+              {description}
+            </p>
+          ) : null}
           {children}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -52,6 +69,7 @@ export function PageHeader({ title, description, primaryAction, secondaryActions
           {primaryAction ? renderAction(primaryAction, 0, true) : null}
         </div>
       </div>
+      <div aria-hidden="true" className="ornate-divider mt-6" />
     </div>
   );
 }
