@@ -10,6 +10,10 @@ export default async function CopilotPage() {
       <PageHeader
         title="Copilot"
         description="Generate practical plans, policy guidance, and control remediation steps with tenant-aware context."
+        secondaryActions={[
+          { label: 'Tools Hub', href: '/app/tools', variant: 'outline' },
+          { label: 'Security Analyst', href: '/app/security-analyst', variant: 'outline' }
+        ]}
       />
       <CopilotPanel tenantName={session.tenantName} />
     </div>

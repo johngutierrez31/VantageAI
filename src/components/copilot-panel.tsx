@@ -1,6 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Select } from '@/components/ui/select';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -15,11 +17,42 @@ type ChatMessage = {
   }>;
 };
 
-const starterPrompts = [
-  'Summarize what to do first for onboarding a new assessment.',
-  'Give me a 30/60/90 day governance plan for a small SaaS company.',
-  'What evidence should I collect first for access control and incident response?'
-];
+type CopilotMode = 'general' | 'incident_response' | 'threat_modeling' | 'compliance' | 'architecture';
+
+type RecommendedTool = {
+  id: 'security-analyst' | 'policies' | 'cyber-range' | 'assessments' | 'evidence';
+  label: string;
+  href: string;
+  reason: string;
+};
+
+const starterPromptsByMode: Record<CopilotMode, string[]> = {
+  general: [
+    'Summarize what to do first for onboarding a new assessment.',
+    'Give me a 30/60/90 day governance plan for a small SaaS company.',
+    'What evidence should I collect first for access control and incident response?'
+  ],
+  incident_response: [
+    'Help me triage a suspected credential compromise and provide a 24h response checklist.',
+    'What containment sequence should we use for a production web app breach?',
+    'Draft incident commander updates for leadership and engineering.'
+  ],
+  threat_modeling: [
+    'Threat model a tenant-facing admin API with STRIDE and prioritize controls.',
+    'List top attack paths for our assessment and evidence workflows.',
+    'What telemetry do we need to detect privilege escalation in this architecture?'
+  ],
+  compliance: [
+    'Map immediate SOC 2 priorities for access control, logging, and incident response.',
+    'What evidence set is required to support ISO 27001 audit readiness in 30 days?',
+    'Create a prioritized remediation backlog from common control gaps.'
+  ],
+  architecture: [
+    'Review our app architecture and identify highest-risk trust boundary weaknesses.',
+    'Design a phased zero-trust hardening plan for identity and segmentation.',
+    'What architectural controls should we implement first for SaaS multi-tenant security?'
+  ]
+};
 
 function renderAssistantContent(content: string) {
   const blocks = content
@@ -81,10 +114,13 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
     }
   ]);
   const [input, setInput] = useState('');
+  const [mode, setMode] = useState<CopilotMode>('general');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recommendedTools, setRecommendedTools] = useState<RecommendedTool[]>([]);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
   const disableSend = useMemo(() => loading || !input.trim(), [input, loading]);
+  const starterPrompts = useMemo(() => starterPromptsByMode[mode], [mode]);
 
   useEffect(() => {
     if (!messageContainerRef.current) return;
@@ -107,7 +143,7 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
       const response = await fetch('/api/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, history })
+        body: JSON.stringify({ message, history, mode })
       });
 
       let payload:
@@ -122,6 +158,7 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
               snippet: string;
               score: number;
             }>;
+            recommendedTools?: RecommendedTool[];
           }
         | null = null;
       try {
@@ -149,6 +186,7 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
           citations: payload?.citations ?? []
         }
       ]);
+      setRecommendedTools(payload?.recommendedTools ?? []);
     } catch {
       setError('Copilot request failed due to a network or server issue.');
     } finally {
@@ -160,6 +198,37 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
     <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
       <h3>AI Copilot</h3>
       <p className="text-sm text-muted-foreground">Tenant: {tenantName}</p>
+      <div className="mb-3 mt-3 grid gap-2 md:grid-cols-2">
+        <div className="space-y-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Mode</p>
+          <Select value={mode} onChange={(event) => setMode(event.target.value as CopilotMode)}>
+            <option value="general">General Advisor</option>
+            <option value="incident_response">Incident Response</option>
+            <option value="threat_modeling">Threat Modeling</option>
+            <option value="compliance">Compliance</option>
+            <option value="architecture">Architecture Review</option>
+          </Select>
+        </div>
+        {recommendedTools.length ? (
+          <div className="rounded-md border border-border bg-muted/20 p-2">
+            <p className="mb-1 text-xs font-semibold text-muted-foreground">Recommended Tools</p>
+            <div className="space-y-1">
+              {recommendedTools.map((tool) => (
+                <p key={tool.id} className="text-xs">
+                  <Link href={tool.href} className="font-semibold hover:underline">
+                    {tool.label}
+                  </Link>
+                  <span className="text-muted-foreground"> - {tool.reason}</span>
+                </p>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md border border-dashed border-border p-2 text-xs text-muted-foreground">
+            Ask a question to get tool routing suggestions.
+          </div>
+        )}
+      </div>
       <div className="mb-3 mt-3 flex flex-wrap gap-2">
         {starterPrompts.map((prompt) => (
           <button

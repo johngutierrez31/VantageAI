@@ -31,7 +31,7 @@ export function SessionNav({ isAuthenticated, activeTenantName, role, membership
   return (
     <nav className="card" style={{ display: 'flex', gap: 16, justifyContent: 'space-between', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: 16 }}>
-        <Link href="/app/templates">Templates</Link>
+        <Link href="/app/tools">Tools</Link>
         <Link href="/app/assessments">Assessments</Link>
         <Link href="/app/copilot">Copilot</Link>
       </div>

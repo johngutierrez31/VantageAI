@@ -15,11 +15,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const searchItems = [
     {
+      id: 'tools-hub',
+      label: 'Tools Hub',
+      description: 'Central launcher and workflow map across core security tools.',
+      href: '/app/tools',
+      kind: 'tools' as const
+    },
+    {
       id: 'copilot',
       label: 'Copilot',
       description: 'Ask governance and security questions with citations.',
       href: '/app/copilot',
       kind: 'copilot' as const
+    },
+    {
+      id: 'security-analyst',
+      label: 'Security Analyst',
+      description: 'Run structured threat, incident, and vulnerability analysis.',
+      href: '/app/security-analyst',
+      kind: 'analyst' as const
     },
     {
       id: 'policy-generator',

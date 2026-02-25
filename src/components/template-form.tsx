@@ -48,7 +48,7 @@ export function TemplateForm() {
       return;
     }
 
-    router.push('/app/templates');
+    router.push('/app/tools');
     router.refresh();
   }
 

@@ -461,3 +461,8 @@ Codex (using this skill):
 - **Static templates:** Based on SANS/CIS templates current as of 2023-2025
 
 **When to consult professionals:** Legal review, compliance certification, custom requirements, industry-specific regulations, multi-jurisdictional compliance
+
+## Related Skills
+| Skill | When to use |
+|------|-------------|
+| find-skills | Use to discover/install other skills via npx skills find <query> |
