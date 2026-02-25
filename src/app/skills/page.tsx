@@ -1,22 +1,42 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SkillsDemoWidget } from '@/components/skills/skills-demo-widget';
-import { getInstalledSkills } from '@/lib/skills/catalog';
 
 const FEATURED_SOURCE_URL =
   'https://skills.sh/rysweet/amplihack/cybersecurity-analyst';
+
+const curatedSkills = [
+  {
+    name: 'cybersecurity-analyst',
+    description: 'Analyze incidents, vulnerabilities, and architecture risk with prioritized actions.',
+    sourceUrl: 'https://skills.sh/rysweet/amplihack/cybersecurity-analyst'
+  },
+  {
+    name: 'security-reviewer',
+    description: 'Review security posture and identify code or infra findings with remediation guidance.',
+    sourceUrl: 'https://skills.sh/jeffallan/claude-skills/security-reviewer'
+  },
+  {
+    name: 'incident-response-plan',
+    description: 'Generate incident response procedures and response playbooks for active events.',
+    sourceUrl: 'https://skills.sh/aj-geddes/useful-ai-prompts/incident-response-plan'
+  },
+  {
+    name: 'threat-modeling-expert',
+    description: 'Run STRIDE-oriented threat modeling and risk prioritization for new systems.',
+    sourceUrl: 'https://skills.sh/sickn33/antigravity-awesome-skills/threat-modeling-expert'
+  }
+] as const;
 
 export const dynamic = 'force-static';
 
 export const metadata = {
   title: 'VantageAI Skills',
-  description: 'Installed Codex skills used by VantageAI.'
+  description: 'Curated security automation skills used by VantageAI workflows.'
 };
 
-export default async function SkillsPage() {
-  const installedSkills = await getInstalledSkills();
-  const featured = installedSkills.find((skill) => skill.name === 'cybersecurity-analyst');
-
+export default function SkillsPage() {
+  const featured = curatedSkills[0];
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 lg:px-8">
@@ -77,25 +97,25 @@ export default async function SkillsPage() {
         <section className="mt-10">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Installed Skills</CardTitle>
+              <CardTitle className="text-2xl">Recommended Skills</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Pulled from in-repo skill catalogs under <code>.codex/skills</code> and <code>.agents/skills</code>.
+                Publicly curated skills that align with VantageAI security workflows.
               </p>
             </CardHeader>
             <CardContent>
-              {installedSkills.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No skills found yet.</p>
-              ) : (
-                <div className="space-y-4">
-                  {installedSkills.map((skill) => (
-                    <div key={skill.name} className="rounded-md border border-border bg-background/60 p-4">
-                      <h3 className="text-xl">{skill.name}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{skill.description}</p>
-                      <p className="mt-2 text-xs text-muted-foreground">{skill.paths.join(' | ')}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="space-y-4">
+                {curatedSkills.map((skill) => (
+                  <div key={skill.name} className="rounded-md border border-border bg-background/60 p-4">
+                    <h3 className="text-xl">{skill.name}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{skill.description}</p>
+                    <p className="mt-2 text-xs">
+                      <a href={skill.sourceUrl} target="_blank" rel="noreferrer">
+                        Source
+                      </a>
+                    </p>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </section>
