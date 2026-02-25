@@ -22,6 +22,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       kind: 'copilot' as const
     },
     {
+      id: 'security-analyst',
+      label: 'Security Analyst',
+      description: 'Run structured threat, incident, and vulnerability analysis.',
+      href: '/app/security-analyst',
+      kind: 'analyst' as const
+    },
+    {
       id: 'policy-generator',
       label: 'Policy Generator',
       description: 'Generate cybersecurity policies from curated templates',

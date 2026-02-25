@@ -113,6 +113,7 @@ export default async function OverviewPage() {
         description="Monitor readiness outcomes, prioritized risk, and execution health across your security program."
         primaryAction={{ label: 'Create Assessment', href: '/app/assessments/new' }}
         secondaryActions={[
+          { label: 'Security Analyst', href: '/app/security-analyst', variant: 'outline' },
           { label: 'Import Questionnaire', href: '/app/questionnaires', variant: 'outline' },
           { label: 'Upload Evidence', href: '/app/evidence', variant: 'outline' },
           { label: 'Trust Inbox', href: '/app/trust/inbox', variant: 'outline' }

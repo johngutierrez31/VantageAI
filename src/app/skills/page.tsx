@@ -4,7 +4,7 @@ import { SkillsDemoWidget } from '@/components/skills/skills-demo-widget';
 import { getInstalledSkills } from '@/lib/skills/catalog';
 
 const FEATURED_SOURCE_URL =
-  'https://www.skillsdirectory.org/skills/2bbb0dd28b336ef3a37c6b2fe0a69fbdedfd382bcfd9a0102925156c0aadaa30';
+  'https://skills.sh/rysweet/amplihack/cybersecurity-analyst';
 
 export const dynamic = 'force-static';
 
@@ -15,7 +15,7 @@ export const metadata = {
 
 export default async function SkillsPage() {
   const installedSkills = await getInstalledSkills();
-  const featured = installedSkills.find((skill) => skill.name === 'cyber-range-design');
+  const featured = installedSkills.find((skill) => skill.name === 'cybersecurity-analyst');
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -45,22 +45,22 @@ export default async function SkillsPage() {
             <CardHeader>
               <CardTitle className="text-2xl">Featured Skill</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {featured?.name ?? 'cyber-range-design'} from SkillsDirectory
+                {featured?.name ?? 'cybersecurity-analyst'} from SkillsDirectory
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 {featured?.description ??
-                  'Design and operate high-fidelity cyber ranges for realistic security training and exercises.'}
+                  'Analyze incidents, vulnerabilities, and architecture risk using cybersecurity frameworks with prioritized actions.'}
               </p>
               <div>
                 <p className="mb-2 font-display text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                   What it helps with
                 </p>
                 <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
-                  <li>Cyber range architecture and zone planning</li>
-                  <li>Exercise implementation, reset strategy, and realism tuning</li>
-                  <li>Cloud vs on-prem range decisions and operations guidance</li>
+                  <li>Incident triage, threat hypotheses, and containment sequencing</li>
+                  <li>Threat-model and attack-surface analysis using STRIDE and ATT&CK</li>
+                  <li>Compliance gap detection with prioritized remediation planning</li>
                 </ul>
               </div>
               <p className="text-sm">
