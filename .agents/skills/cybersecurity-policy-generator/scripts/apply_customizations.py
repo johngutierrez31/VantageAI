@@ -104,9 +104,46 @@ def replace_placeholders(text: str, customizations: Dict[str, Any]) -> str:
     return result
 
 
-def customize_section(section: Dict[str, Any], customizations: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_sections(sections: Any) -> List[Dict[str, Any]]:
+    """Normalize section payloads to a list of {title, content, ...} dicts."""
+    if isinstance(sections, list):
+        normalized: List[Dict[str, Any]] = []
+        for idx, section in enumerate(sections, 1):
+            if isinstance(section, dict):
+                normalized.append(section)
+            else:
+                normalized.append({
+                    "title": f"Section {idx}",
+                    "content": str(section)
+                })
+        return normalized
+
+    if isinstance(sections, dict):
+        normalized = []
+        for key, value in sections.items():
+            if isinstance(value, dict):
+                section = value.copy()
+                section.setdefault("title", str(key).replace("_", " ").title())
+                normalized.append(section)
+            else:
+                normalized.append({
+                    "title": str(key).replace("_", " ").title(),
+                    "content": str(value)
+                })
+        return normalized
+
+    if isinstance(sections, str):
+        return [{"title": "Policy", "content": sections}]
+
+    return []
+
+
+def customize_section(section: Any, customizations: Dict[str, Any]) -> Dict[str, Any]:
     """Customize a policy section."""
-    customized = section.copy()
+    if isinstance(section, dict):
+        customized = section.copy()
+    else:
+        customized = {"title": "Section", "content": str(section)}
 
     # Replace placeholders in title
     if 'title' in customized:
@@ -118,9 +155,10 @@ def customize_section(section: Dict[str, Any], customizations: Dict[str, Any]) -
 
     # Replace placeholders in subsections
     if 'subsections' in customized:
+        subsection_items = normalize_sections(customized.get('subsections', []))
         customized['subsections'] = [
             customize_section(subsection, customizations)
-            for subsection in customized['subsections']
+            for subsection in subsection_items
         ]
 
     return customized
@@ -130,6 +168,22 @@ def add_compliance_section(policy: Dict[str, Any], customizations: Dict[str, Any
     """Add or enhance compliance section based on selected frameworks."""
     frameworks = customizations.get('frameworks', [])
     regulations = customizations.get('regulations', [])
+    framework_metadata = policy.get('frameworks', {})
+    iso_controls: List[str] = []
+    cis_control = 'N/A'
+
+    if isinstance(framework_metadata, dict):
+        iso_data = framework_metadata.get('iso27001', {})
+        if isinstance(iso_data, dict):
+            controls = iso_data.get('controls', [])
+            if isinstance(controls, list):
+                iso_controls = [str(control) for control in controls]
+
+        cis_data = framework_metadata.get('cisControls', {})
+        if isinstance(cis_data, dict):
+            cis_control = str(cis_data.get('control', 'N/A'))
+        elif isinstance(cis_data, str):
+            cis_control = cis_data
 
     if not frameworks and not regulations:
         return policy
@@ -141,8 +195,6 @@ def add_compliance_section(policy: Dict[str, Any], customizations: Dict[str, Any
         compliance_text += "**Frameworks:**\n"
         for framework in frameworks:
             if framework == "ISO 27001":
-                # Extract ISO controls from policy metadata
-                iso_controls = policy.get('frameworks', {}).get('iso27001', {}).get('controls', [])
                 controls_str = ', '.join(iso_controls) if iso_controls else "Multiple controls"
                 compliance_text += f"- **ISO 27001:** {controls_str}\n"
             elif framework == "SOC 2":
@@ -150,8 +202,6 @@ def add_compliance_section(policy: Dict[str, Any], customizations: Dict[str, Any
             elif framework == "NIST CSF":
                 compliance_text += f"- **NIST Cybersecurity Framework:** Identify, Protect, Detect, Respond, Recover\n"
             elif framework == "CIS Controls v8":
-                # Extract CIS control from policy metadata
-                cis_control = policy.get('frameworks', {}).get('cisControls', {}).get('control', 'N/A')
                 compliance_text += f"- **CIS Controls v8:** Control {cis_control}\n"
             elif framework == "GDPR":
                 compliance_text += f"- **GDPR:** Articles 5, 24, 25, 32 (Data Protection)\n"
@@ -166,7 +216,7 @@ def add_compliance_section(policy: Dict[str, Any], customizations: Dict[str, Any
                 compliance_text += f"- {regulation}\n"
 
     # Add compliance section to policy
-    sections = policy.get('sections', [])
+    sections = normalize_sections(policy.get('sections', []))
 
     # Check if compliance section exists
     compliance_exists = any(s.get('type') == 'compliance' for s in sections)
@@ -246,9 +296,10 @@ def apply_customizations(policy: Dict[str, Any], customizations: Dict[str, Any])
 
     # Customize sections
     if 'sections' in customized_policy:
+        section_items = normalize_sections(customized_policy['sections'])
         customized_policy['sections'] = [
             customize_section(section, customizations)
-            for section in customized_policy['sections']
+            for section in section_items
         ]
 
     # Add compliance information
@@ -332,7 +383,7 @@ Examples:
     # Validate customizations
     missing = validate_customizations(customizations)
     if missing:
-        print("⚠️  Customization Validation Warnings:")
+        print("WARNING: Customization Validation Warnings:")
         for field in missing:
             print(f"  - Missing field: {field}")
         print()
@@ -342,7 +393,7 @@ Examples:
             print("Validation failed: Missing required fields")
             sys.exit(1)
         else:
-            print("✓ Validation passed: All required fields present")
+            print("OK: Validation passed: All required fields present")
             sys.exit(0)
 
     # Require policy ID for customization
@@ -387,7 +438,7 @@ Examples:
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(customized_policy, f, indent=2, ensure_ascii=False)
 
-    print(f"✓ Customized policy saved to: {os.path.abspath(output_path)}")
+    print(f"OK: Customized policy saved to: {os.path.abspath(output_path)}")
     print(f"\nCustomization Summary:")
     print(f"  Organization: {customizations.get('company_name', 'N/A')}")
     print(f"  Industry: {customizations.get('industry', 'N/A')}")

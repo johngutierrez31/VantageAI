@@ -56,22 +56,60 @@ def format_metadata_header(policy: Dict[str, Any]) -> str:
     return header
 
 
-def format_section(section: Dict[str, Any], level: int = 2) -> str:
+def normalize_sections(sections: Any) -> List[Dict[str, Any]]:
+    """Normalize section payloads to a list of {title, content, ...} dicts."""
+    if isinstance(sections, list):
+        normalized: List[Dict[str, Any]] = []
+        for idx, section in enumerate(sections, 1):
+            if isinstance(section, dict):
+                normalized.append(section)
+            else:
+                normalized.append({
+                    "title": f"Section {idx}",
+                    "content": str(section)
+                })
+        return normalized
+
+    if isinstance(sections, dict):
+        normalized = []
+        for key, value in sections.items():
+            if isinstance(value, dict):
+                section = value.copy()
+                section.setdefault("title", str(key).replace("_", " ").title())
+                normalized.append(section)
+            else:
+                normalized.append({
+                    "title": str(key).replace("_", " ").title(),
+                    "content": str(value)
+                })
+        return normalized
+
+    if isinstance(sections, str):
+        return [{"title": "Policy", "content": sections}]
+
+    return []
+
+
+def format_section(section: Any, level: int = 2) -> str:
     """Format a policy section as Markdown."""
     markdown = ""
+    if isinstance(section, dict):
+        section_data = section
+    else:
+        section_data = {"title": "Section", "content": str(section)}
 
     # Section title
-    title = section.get('title', '')
+    title = section_data.get('title', '')
     if title:
         markdown += f"{'#' * level} {title}\n\n"
 
     # Section content
-    content = section.get('content', '')
+    content = section_data.get('content', '')
     if content:
         markdown += f"{content}\n\n"
 
     # Subsections
-    subsections = section.get('subsections', [])
+    subsections = normalize_sections(section_data.get('subsections', []))
     for subsection in subsections:
         markdown += format_section(subsection, level + 1)
 
@@ -190,9 +228,10 @@ def generate_markdown(policy: Dict[str, Any], include_toc: bool = True) -> str:
     # Metadata header
     markdown += format_metadata_header(policy)
 
+    sections = normalize_sections(policy.get('sections', []))
+
     # Table of contents
     if include_toc:
-        sections = policy.get('sections', [])
         if len(sections) > 3:  # Only add TOC if more than 3 sections
             markdown += generate_table_of_contents(sections)
 
@@ -202,7 +241,6 @@ def generate_markdown(policy: Dict[str, Any], include_toc: bool = True) -> str:
         markdown += f"{description}\n\n---\n\n"
 
     # Sections
-    sections = policy.get('sections', [])
     for section in sections:
         markdown += format_section(section)
 
@@ -306,7 +344,7 @@ Examples:
         print(f"\n{'='*80}")
         print(f"Markdown Policy Generated")
         print(f"{'='*80}\n")
-        print(f"✓ Output file: {os.path.abspath(args.output)}")
+        print(f"OK: Output file: {os.path.abspath(args.output)}")
         print(f"  Policy: {policy.get('title', 'Unknown')}")
         print(f"  Organization: {policy.get('customization', {}).get('organization', 'N/A')}")
         print(f"  File size: {len(markdown)} bytes")
