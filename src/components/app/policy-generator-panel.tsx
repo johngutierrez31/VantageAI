@@ -91,7 +91,6 @@ function openPrintWindow(htmlContent: string) {
   }, 150);
   return true;
 }
-
 export function PolicyGeneratorPanel({
   templates,
   categories,
