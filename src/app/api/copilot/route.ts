@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getSessionContext } from '@/lib/auth/session';
 import { handleRouteError } from '@/lib/http';
-import { copilotRequestSchema } from '@/lib/validation/copilot';
+import { copilotRequestSchema, type CopilotMode } from '@/lib/validation/copilot';
 import { writeAuditLog } from '@/lib/audit';
 import { buildSafetySystemPrompt, redactSecrets } from '@/lib/ai/safety';
 import { searchEvidenceChunks } from '@/lib/evidence/search';
@@ -20,6 +20,25 @@ type CopilotCitation = {
   chunkIndex: number;
   snippet: string;
   score: number;
+};
+
+type RecommendedTool = {
+  id: 'security-analyst' | 'policies' | 'cyber-range' | 'assessments' | 'evidence';
+  label: string;
+  href: string;
+  reason: string;
+};
+
+const copilotModePrompts: Record<CopilotMode, string> = {
+  general: 'Default assistant mode for mixed governance and execution tasks.',
+  incident_response:
+    'Incident response mode: prioritize containment, triage sequencing, and explicitly time-boxed 24h/7d/30d actions.',
+  threat_modeling:
+    'Threat modeling mode: structure output by assets, attack paths, controls, and residual risk with STRIDE/MITRE context.',
+  compliance:
+    'Compliance mode: map recommendations to control language, evidence requirements, and audit-readiness actions.',
+  architecture:
+    'Security architecture mode: evaluate trust boundaries, identity, segmentation, and defense-in-depth improvements.'
 };
 
 function estimateTokens(value: string) {
@@ -57,6 +76,7 @@ async function generateAnswer(args: {
   history: CopilotMessage[];
   message: string;
   citations: CopilotCitation[];
+  mode: CopilotMode;
 }) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -84,6 +104,7 @@ async function generateAnswer(args: {
           content: [
             `You are VantageCISO Copilot for tenant "${args.tenantName}".`,
             buildSafetySystemPrompt(),
+            copilotModePrompts[args.mode],
             'Use concise action-oriented language suitable for security and compliance teams.',
             'Cite evidence using [1], [2], etc. for claims based on provided snippets.'
           ].join(' ')
@@ -137,12 +158,64 @@ function buildFallbackAnswer(message: string, citations: CopilotCitation[]) {
   return `Based on current tenant evidence, here are relevant snippets:\n${snippets}\nUse these as the baseline for your next remediation plan.`;
 }
 
+function buildToolRecommendations(message: string, mode: CopilotMode): RecommendedTool[] {
+  const tools = new Map<RecommendedTool['id'], RecommendedTool>();
+  const normalized = message.toLowerCase();
+
+  const add = (tool: RecommendedTool) => {
+    if (!tools.has(tool.id)) tools.set(tool.id, tool);
+  };
+
+  add({
+    id: 'security-analyst',
+    label: 'Security Analyst',
+    href: '/app/security-analyst',
+    reason: 'Run a structured analysis workflow and export a report.'
+  });
+
+  if (mode === 'compliance' || /soc\s?2|iso|nist|audit|policy|control/.test(normalized)) {
+    add({
+      id: 'policies',
+      label: 'Policy Generator',
+      href: '/app/policies',
+      reason: 'Generate policy docs aligned to compliance frameworks.'
+    });
+    add({
+      id: 'assessments',
+      label: 'Assessments',
+      href: '/app/assessments',
+      reason: 'Track control scores, gaps, and reassessment trend.'
+    });
+  }
+
+  if (mode === 'incident_response' || /incident|breach|contain|forensic|alert/.test(normalized)) {
+    add({
+      id: 'evidence',
+      label: 'Evidence Vault',
+      href: '/app/evidence',
+      reason: 'Capture and index supporting artifacts for investigation.'
+    });
+  }
+
+  if (mode === 'threat_modeling' || mode === 'architecture' || /attack surface|architecture|segmentation|range/.test(normalized)) {
+    add({
+      id: 'cyber-range',
+      label: 'Cyber Range',
+      href: '/app/cyber-range',
+      reason: 'Design and test scenarios before production rollout.'
+    });
+  }
+
+  return Array.from(tools.values()).slice(0, 4);
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
     await requireAIAccess(session.tenantId);
 
     const payload = copilotRequestSchema.parse(await request.json());
+    const mode = payload.mode ?? 'general';
     const history = payload.history ?? [];
     const citations = (await searchEvidenceChunks(session.tenantId, payload.message, 6)).map((result) => ({
       evidenceId: result.evidenceId,
@@ -170,7 +243,8 @@ export async function POST(request: Request) {
         snapshot,
         history,
         message: payload.message,
-        citations
+        citations,
+        mode
       });
 
       if (generated) {
@@ -204,14 +278,18 @@ export async function POST(request: Request) {
       metadata: {
         model,
         citationCount: citations.length,
-        aiTokens
+        aiTokens,
+        mode
       }
     });
+
+    const recommendedTools = buildToolRecommendations(payload.message, mode);
 
     return NextResponse.json({
       answer,
       model,
-      citations
+      citations,
+      recommendedTools
     });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('OPENAI_REQUEST_FAILED')) {
