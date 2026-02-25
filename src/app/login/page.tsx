@@ -15,7 +15,7 @@ export default function LoginPage({ searchParams }: Props) {
     <div>
       {demoMode ? (
         <div className="card">
-          Demo mode is enabled. You can open <Link href="/app/templates">/app/templates</Link> without logging in.
+          Demo mode is enabled. You can open <Link href="/app/tools">/app/tools</Link> without logging in.
         </div>
       ) : null}
       {searchParams?.error === 'NoMembership' ? (

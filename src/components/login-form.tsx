@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/app/templates', [searchParams]);
+  const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/app/tools', [searchParams]);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
