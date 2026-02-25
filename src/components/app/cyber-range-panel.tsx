@@ -38,6 +38,59 @@ function downloadFile(fileName: string, mimeType: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildPrintablePlanHtml(plan: CyberRangePlan) {
+  return [
+    '<!doctype html>',
+    '<html lang="en">',
+    '<head>',
+    '  <meta charset="utf-8" />',
+    `  <title>${escapeHtml(plan.input.rangeName)}</title>`,
+    '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
+    '  <style>',
+    '    body { font-family: Arial, sans-serif; margin: 2rem auto; max-width: 980px; line-height: 1.45; color: #111827; }',
+    '    h1,h2,h3 { color: #0f172a; }',
+    '    .meta { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 0.5rem; }',
+    '    pre { white-space: pre-wrap; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; }',
+    '  </style>',
+    '</head>',
+    '<body>',
+    `  <h1>${escapeHtml(plan.input.rangeName)}</h1>`,
+    '  <div class="meta">',
+    `    <p><strong>Plan ID:</strong> ${escapeHtml(plan.planId)}</p>`,
+    `    <p><strong>Generated:</strong> ${escapeHtml(new Date(plan.generatedAt).toLocaleString())}</p>`,
+    `    <p><strong>Organization:</strong> ${escapeHtml(plan.input.organizationName)}</p>`,
+    `    <p><strong>Environment:</strong> ${escapeHtml(toLabel(plan.input.environment))}</p>`,
+    `    <p><strong>Fidelity:</strong> ${escapeHtml(plan.input.fidelity.toUpperCase())}</p>`,
+    '  </div>',
+    '  <h2>Range Plan</h2>',
+    `  <pre>${escapeHtml(plan.markdown)}</pre>`,
+    '</body>',
+    '</html>'
+  ].join('\n');
+}
+
+function openPrintWindow(htmlContent: string) {
+  const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+  if (!printWindow) return false;
+  printWindow.document.open();
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.focus();
+  window.setTimeout(() => {
+    printWindow.print();
+  }, 150);
+  return true;
+}
+
 export function CyberRangePanel() {
   const [rangeName, setRangeName] = useState('Quarterly Security Defense Range');
   const [organizationName, setOrganizationName] = useState('VantageCISO');
@@ -213,6 +266,31 @@ export function CyberRangePanel() {
                   }
                 >
                   Download JSON
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    downloadFile(
+                      `${plan.planId}.html`,
+                      'text/html; charset=utf-8',
+                      buildPrintablePlanHtml(plan)
+                    )
+                  }
+                >
+                  Download HTML
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const opened = openPrintWindow(buildPrintablePlanHtml(plan));
+                    if (!opened) {
+                      setError('Popup blocked. Allow popups for this site and try again.');
+                      return;
+                    }
+                    setMessage('Print dialog opened. Choose "Save as PDF".');
+                  }}
+                >
+                  Save PDF
                 </Button>
                 <Button variant="ghost" onClick={copyMarkdown}>
                   Copy Markdown

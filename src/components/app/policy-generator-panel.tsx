@@ -79,6 +79,19 @@ function pickByMatchers(templates: PolicyTemplateItem[], matchers: string[], lim
   return pickedIds;
 }
 
+function openPrintWindow(htmlContent: string) {
+  const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+  if (!printWindow) return false;
+  printWindow.document.open();
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.focus();
+  window.setTimeout(() => {
+    printWindow.print();
+  }, 150);
+  return true;
+}
+
 export function PolicyGeneratorPanel({
   templates,
   categories,
@@ -97,6 +110,7 @@ export function PolicyGeneratorPanel({
     html: true,
     json: false
   });
+  const [pdfEnabled, setPdfEnabled] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [industry, setIndustry] = useState('Technology');
   const [organizationSize, setOrganizationSize] = useState('50-500');
@@ -128,13 +142,17 @@ export function PolicyGeneratorPanel({
     });
   }, [templates, search, categoryFilter, frameworkFilter]);
 
-  const selectedFormats = useMemo(
-    () =>
-      (Object.entries(formats) as Array<[FormatType, boolean]>)
-        .filter(([, enabled]) => enabled)
-        .map(([format]) => format),
-    [formats]
-  );
+  const selectedFormats = useMemo(() => {
+    const enabled = (Object.entries(formats) as Array<[FormatType, boolean]>)
+      .filter(([, active]) => active)
+      .map(([format]) => format);
+
+    if (pdfEnabled && !enabled.includes('html')) {
+      enabled.push('html');
+    }
+
+    return enabled;
+  }, [formats, pdfEnabled]);
 
   const documentsByPolicy = useMemo(() => {
     const byPolicy = new Map<string, GeneratedDocument[]>();
@@ -391,9 +409,13 @@ export function PolicyGeneratorPanel({
               <input type="checkbox" checked={formats.json} onChange={() => toggleFormat('json')} />
               JSON (.json)
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={pdfEnabled} onChange={(event) => setPdfEnabled(event.target.checked)} />
+              PDF (.pdf via Print dialog)
+            </label>
           </div>
           <p className="text-xs text-muted-foreground">
-            DOCX/PDF conversion still lives in the vendored skill scripts and can be added later to the web runtime.
+            PDF export opens your browser print dialog from generated HTML. DOCX remains in vendored skill scripts.
           </p>
           <Button onClick={generatePolicies} disabled={busy}>
             {busy ? 'Generating...' : 'Generate Policy Documents'}
@@ -417,7 +439,9 @@ export function PolicyGeneratorPanel({
                 <div key={policyId} className="rounded-md border border-border p-3">
                   <p className="text-sm font-semibold">{policyDocuments[0]?.title}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {policyDocuments.map((document) => (
+                    {policyDocuments
+                      .filter((document) => document.format !== 'html' || formats.html)
+                      .map((document) => (
                       <Button
                         key={`${document.policyId}-${document.format}`}
                         variant="outline"
@@ -426,7 +450,28 @@ export function PolicyGeneratorPanel({
                       >
                         Download {document.format.toUpperCase()}
                       </Button>
-                    ))}
+                      ))}
+                    {pdfEnabled ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const htmlDocument = policyDocuments.find((document) => document.format === 'html');
+                          if (!htmlDocument) {
+                            setError('PDF export requires HTML output. Regenerate with PDF enabled.');
+                            return;
+                          }
+                          const opened = openPrintWindow(htmlDocument.content);
+                          if (!opened) {
+                            setError('Popup blocked. Allow popups for this site and try again.');
+                            return;
+                          }
+                          setMessage(`Print dialog opened for ${htmlDocument.title}. Choose "Save as PDF".`);
+                        }}
+                      >
+                        Save PDF
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               ))}
