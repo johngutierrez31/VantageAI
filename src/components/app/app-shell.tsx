@@ -34,7 +34,7 @@ type SearchItem = {
   label: string;
   description?: string;
   href: string;
-  kind: 'copilot' | 'analyst' | 'tools' | 'policy' | 'range' | 'settings';
+  kind: 'command' | 'copilot' | 'analyst' | 'tools' | 'policy' | 'range' | 'runbook' | 'settings';
 };
 
 type NotificationItem = {
@@ -63,10 +63,12 @@ type Props = {
 };
 
 const navItems: NavItem[] = [
+  { href: '/app/command-center', label: 'Command Center', icon: ShieldCheck },
   { href: '/app/tools', label: 'Tools Hub', icon: Menu },
   { href: '/app/copilot', label: 'Copilot', icon: Bot },
   { href: '/app/security-analyst', label: 'Security Analyst', icon: ShieldCheck },
   { href: '/app/cyber-range', label: 'Cyber Range', icon: Radar },
+  { href: '/app/runbooks', label: 'Runbooks', icon: FileText },
   { href: '/app/policies', label: 'Policy Generator', icon: FileText },
   { href: '/app/settings/members', label: 'Settings', icon: Settings }
 ];
@@ -109,10 +111,10 @@ function SearchDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-20 backdrop-blur-sm">
-      <Card className="w-full max-w-2xl">
+          <Card className="w-full max-w-2xl">
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Global search: tools hub, copilot, security analyst, cyber range, policies, settings
+            Global search: command center, tools hub, copilot, security analyst, runbooks, cyber range, policies, settings
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-4">
@@ -345,7 +347,7 @@ export function AppShell({
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search className="h-4 w-4" />
-                  <span className="flex-1 truncate">Search tools hub, copilot, security analyst, cyber range, policy generator, settings</span>
+                  <span className="flex-1 truncate">Search command center, tools hub, copilot, security analyst, runbooks, cyber range, policy generator, settings</span>
                   <span className="rounded bg-card px-2 py-0.5 font-display text-xs text-muted-foreground">
                     Cmd+K / Ctrl+K
                   </span>

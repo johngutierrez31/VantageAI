@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildReportExport } from '../src/lib/report/export';
 
 describe('branded report export workflow', () => {
-  it('renders branded HTML export payload', () => {
+  it('renders branded HTML export payload', async () => {
     const report = {
       id: 'rep_1',
       tenantId: 'tenant_demo',
@@ -27,7 +27,7 @@ describe('branded report export workflow', () => {
       updatedAt: new Date()
     } as any;
 
-    const payload = buildReportExport(report, branding, 'Demo Tenant', 'html');
+    const payload = await buildReportExport(report, branding, 'Demo Tenant', 'html');
 
     expect(payload.contentType).toContain('text/html');
     expect(payload.body).toContain('Acme Security');

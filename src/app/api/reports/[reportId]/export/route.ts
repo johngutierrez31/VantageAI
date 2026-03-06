@@ -37,7 +37,7 @@ export async function GET(request: Request, { params }: { params: { reportId: st
       where: { tenantId: session.tenantId }
     });
 
-    const exportPayload = buildReportExport(report, branding, session.tenantName, format, { view });
+    const exportPayload = await buildReportExport(report, branding, session.tenantName, format, { view });
 
     const fileNameBase = `${toSlug(report.title)}-${new Date().toISOString().slice(0, 10)}`;
     const fileName = `${fileNameBase}-${view}.${exportPayload.extension}`;

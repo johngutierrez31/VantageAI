@@ -1,6 +1,8 @@
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
 import { Report, TenantBranding } from '@prisma/client';
 
 type BrandingInput = TenantBranding | null;
+type ReportView = 'executive' | 'detailed';
 
 function escapeHtml(value: string) {
   return value
@@ -97,6 +99,229 @@ export function renderReportHtml(report: Report, branding: BrandingInput, tenant
 </html>`;
 }
 
+function normalizeMarkdownLines(markdown: string) {
+  return markdown
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((line) => line.trimEnd());
+}
+
+function getReportPayload(report: Report) {
+  if (!report.jsonPayload || typeof report.jsonPayload !== 'object' || Array.isArray(report.jsonPayload)) {
+    return {} as Record<string, unknown>;
+  }
+
+  return report.jsonPayload as Record<string, unknown>;
+}
+
+async function renderReportPdf(
+  report: Report,
+  branding: BrandingInput,
+  tenantName: string,
+  view: ReportView
+) {
+  const companyName = branding?.companyName ?? tenantName;
+  const primaryColor = branding?.primaryColor ?? '#0f172a';
+  const footerNote = branding?.footerNote ?? 'Not legal advice.';
+  const payload = getReportPayload(report);
+  const score = payload.score as
+    | {
+        overall?: number;
+        confidence?: number;
+        byDomain?: Record<string, number>;
+      }
+    | undefined;
+  const topGaps =
+    ((payload.topGaps as Array<{ controlCode?: string; score?: number; gap?: number }> | undefined) ?? []).slice(0, 6);
+
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(report.title);
+  pdf.setAuthor(companyName);
+  pdf.setSubject(`${view === 'executive' ? 'Executive' : 'Detailed'} assessment report`);
+
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const width = 612;
+  const height = 792;
+  const margin = 54;
+  const textColor = rgb(17 / 255, 24 / 255, 39 / 255);
+  const mutedColor = rgb(71 / 255, 85 / 255, 105 / 255);
+  const lineHeight = 15;
+
+  function toRgb(hex: string) {
+    const normalized = hex.replace('#', '');
+    if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+      return rgb(15 / 255, 23 / 255, 42 / 255);
+    }
+
+    return rgb(
+      Number.parseInt(normalized.slice(0, 2), 16) / 255,
+      Number.parseInt(normalized.slice(2, 4), 16) / 255,
+      Number.parseInt(normalized.slice(4, 6), 16) / 255
+    );
+  }
+
+  function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
+    const words = text.split(/\s+/).filter(Boolean);
+    if (!words.length) return [''];
+
+    const lines: string[] = [];
+    let current = '';
+
+    for (const word of words) {
+      const next = current ? `${current} ${word}` : word;
+      if (font.widthOfTextAtSize(next, size) <= maxWidth) {
+        current = next;
+      } else {
+        if (current) lines.push(current);
+        current = word;
+      }
+    }
+
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  let page = pdf.addPage([width, height]);
+  let cursorY = height - margin;
+  const primaryRgb = toRgb(primaryColor);
+
+  function newPage() {
+    page = pdf.addPage([width, height]);
+    cursorY = height - margin;
+  }
+
+  function ensureSpace(requiredHeight: number) {
+    if (cursorY - requiredHeight <= margin) {
+      newPage();
+    }
+  }
+
+  function drawTextBlock(text: string, font: PDFFont, size: number, color: ReturnType<typeof rgb>, indent = 0) {
+    const maxWidth = width - margin * 2 - indent;
+    const lines = wrapText(text, font, size, maxWidth);
+    for (const line of lines) {
+      ensureSpace(lineHeight + 2);
+      page.drawText(line, {
+        x: margin + indent,
+        y: cursorY,
+        size,
+        font,
+        color
+      });
+      cursorY -= lineHeight;
+    }
+  }
+
+  drawTextBlock(report.title, bold, 22, primaryRgb);
+  cursorY -= 4;
+  drawTextBlock(`${companyName} | ${new Date(report.createdAt).toLocaleString()}`, regular, 10, mutedColor);
+  cursorY -= 12;
+
+  ensureSpace(88);
+  page.drawRectangle({
+    x: margin,
+    y: cursorY - 64,
+    width: width - margin * 2,
+    height: 72,
+    borderColor: primaryRgb,
+    borderWidth: 1,
+    color: rgb(248 / 255, 250 / 255, 252 / 255)
+  });
+  page.drawText(view === 'executive' ? 'Executive Scorecard' : 'Assessment Snapshot', {
+    x: margin + 14,
+    y: cursorY - 18,
+    size: 12,
+    font: bold,
+    color: primaryRgb
+  });
+  page.drawText(`Overall Score: ${score?.overall ?? 'N/A'} / 4`, {
+    x: margin + 14,
+    y: cursorY - 36,
+    size: 10,
+    font: regular,
+    color: textColor
+  });
+  page.drawText(
+    `Confidence: ${typeof score?.confidence === 'number' ? `${Math.round(score.confidence * 100)}%` : 'N/A'}`,
+    {
+      x: margin + 14,
+      y: cursorY - 50,
+      size: 10,
+      font: regular,
+      color: textColor
+    }
+  );
+  page.drawText(`Report ID: ${report.id}`, {
+    x: margin + 14,
+    y: cursorY - 64,
+    size: 10,
+    font: regular,
+    color: textColor
+  });
+  cursorY -= 92;
+
+  if (view === 'executive') {
+    drawTextBlock('Top Gaps', bold, 14, primaryRgb);
+    cursorY -= 4;
+
+    if (topGaps.length === 0) {
+      drawTextBlock('No major gaps identified.', regular, 11, textColor);
+    } else {
+      for (const gap of topGaps) {
+        const label = gap.controlCode ?? 'Unknown control';
+        const gapScore = typeof gap.score === 'number' ? `${gap.score}/4` : 'unscored';
+        drawTextBlock(`- ${label} (${gapScore})`, regular, 11, textColor, 10);
+      }
+    }
+
+    const byDomain = Object.entries(score?.byDomain ?? {});
+    if (byDomain.length) {
+      cursorY -= 8;
+      drawTextBlock('Domain Scores', bold, 14, primaryRgb);
+      cursorY -= 4;
+      for (const [domain, value] of byDomain) {
+        drawTextBlock(`- ${domain}: ${value}/4`, regular, 11, textColor, 10);
+      }
+    }
+  } else {
+    drawTextBlock('Detailed Findings', bold, 14, primaryRgb);
+    cursorY -= 4;
+
+    for (const rawLine of normalizeMarkdownLines(report.markdown)) {
+      const line = rawLine.trim();
+      if (!line) {
+        cursorY -= 6;
+        continue;
+      }
+
+      if (line.startsWith('# ')) {
+        drawTextBlock(line.slice(2), bold, 16, primaryRgb);
+        cursorY -= 4;
+        continue;
+      }
+
+      if (line.startsWith('## ')) {
+        drawTextBlock(line.slice(3), bold, 14, primaryRgb);
+        cursorY -= 2;
+        continue;
+      }
+
+      if (line.startsWith('- ')) {
+        drawTextBlock(`- ${line.slice(2)}`, regular, 11, textColor, 10);
+        continue;
+      }
+
+      drawTextBlock(line, regular, 11, textColor);
+    }
+  }
+
+  cursorY -= 10;
+  drawTextBlock(footerNote, regular, 9, mutedColor);
+
+  return Buffer.from(await pdf.save());
+}
+
 function renderExecutiveHtml(report: Report, branding: BrandingInput, tenantName: string) {
   const payload = typeof report.jsonPayload === 'object' && report.jsonPayload ? (report.jsonPayload as Record<string, unknown>) : {};
   const score = payload.score as { overall?: number; confidence?: number; byDomain?: Record<string, number> } | undefined;
@@ -155,7 +380,7 @@ function renderExecutiveHtml(report: Report, branding: BrandingInput, tenantName
 </html>`;
 }
 
-export function buildReportExport(
+export async function buildReportExport(
   report: Report,
   branding: BrandingInput,
   tenantName: string,
@@ -182,10 +407,11 @@ export function buildReportExport(
   const html = view === 'executive' ? renderExecutiveHtml(report, branding, tenantName) : renderReportHtml(report, branding, tenantName);
 
   if (format === 'pdf') {
+    const pdf = await renderReportPdf(report, branding, tenantName, view);
     return {
-      body: html,
-      contentType: 'text/html; charset=utf-8',
-      extension: 'html'
+      body: pdf,
+      contentType: 'application/pdf',
+      extension: 'pdf'
     };
   }
 

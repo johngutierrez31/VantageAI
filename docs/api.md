@@ -46,6 +46,16 @@
 - `POST /api/billing/portal`
 - `POST /api/stripe/webhook`
 
+## Threat Intelligence and Operations
+
+- `GET /api/intel/trends` (trend signals + mapped solo-CISO capabilities)
+- `GET /api/intel/pulse` (tenant pulse + seven-day mission queue)
+- `GET /api/intel/mission` (mission queue + pulse snapshot)
+- `POST /api/intel/mission` (seed selected mission items as tasks)
+- `GET /api/intel/brief?format=markdown|html|json` (weekly solo-CISO brief export)
+- `GET /api/intel/runbooks` (available runbook templates)
+- `POST /api/intel/runbooks` (seed runbook tasks)
+
 ## Security and Tenancy
 
 - Middleware enforces authentication and active tenant membership on `/app/*` and protected `/api/*`.

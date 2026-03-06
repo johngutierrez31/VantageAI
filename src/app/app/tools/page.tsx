@@ -7,6 +7,12 @@ import { getPageSessionContext } from '@/lib/auth/page-session';
 
 const appTools = [
   {
+    id: 'command-center',
+    title: 'Command Center',
+    description: 'Threat trend radar, mission queue, and daily operating cadence for a solo security owner.',
+    href: '/app/command-center'
+  },
+  {
     id: 'copilot',
     title: 'Copilot',
     description: 'Chat assistant with evidence citations and mode-based guidance.',
@@ -17,6 +23,13 @@ const appTools = [
     title: 'Security Analyst',
     description: 'Structured incident, threat, and architecture analysis workflows.',
     href: '/app/security-analyst'
+  },
+  {
+    id: 'runbooks',
+    title: 'Runbooks',
+    description:
+      'Instantiate incident response task packs for identity compromise, ransomware, zero-day, and vendor breaches.',
+    href: '/app/runbooks'
   },
   {
     id: 'policy-generator',
@@ -34,16 +47,20 @@ const appTools = [
 
 const workflowCards = [
   {
-    title: 'Incident Readiness Flow',
-    steps: ['Run Security Analyst triage', 'Collect artifacts in Evidence Vault', 'Generate IR policy update']
+    title: 'Fast Breach Containment Flow',
+    steps: [
+      'Start in Command Center mission queue',
+      'Instantiate runbook task pack',
+      'Run Security Analyst triage and execute containment'
+    ]
   },
   {
-    title: 'Audit Readiness Flow',
-    steps: ['Run compliance mode in Copilot', 'Generate policies', 'Launch assessments and capture evidence']
+    title: 'Exploit-Driven Remediation Flow',
+    steps: ['Prioritize findings by exploitability', 'Track remediations in Findings workbench', 'Re-score with Assessments']
   },
   {
-    title: 'Architecture Hardening Flow',
-    steps: ['Threat-model in Copilot', 'Create Cyber Range validation plan', 'Track prioritized findings']
+    title: 'Trust and Compliance Flow',
+    steps: ['Refresh policy artifacts', 'Maintain Trust Inbox packets', 'Respond to questionnaires with linked evidence']
   }
 ] as const;
 
@@ -54,15 +71,17 @@ export default async function ToolsHubPage() {
     <div className="space-y-6">
       <PageHeader
         title="Tools Hub"
-        description="Operate Copilot, Security Analyst, Policy Generator, and Cyber Range as one integrated workflow."
+        description="Operate the full solo-CISO toolchain: command center, analyst workflows, policy automation, cyber-range validation, and trust operations."
         primaryAction={{ label: 'Open Copilot', href: '/app/copilot' }}
         secondaryActions={[
+          { label: 'Command Center', href: '/app/command-center', variant: 'outline' },
+          { label: 'Runbooks', href: '/app/runbooks', variant: 'outline' },
           { label: 'Security Analyst', href: '/app/security-analyst', variant: 'outline' },
           { label: 'Policy Generator', href: '/app/policies', variant: 'outline' }
         ]}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {appTools.map((tool) => (
           <Card key={tool.id}>
             <CardHeader>

@@ -31,7 +31,7 @@ export function SkillsDemoWidget() {
   const [copied, setCopied] = useState('');
 
   const findCommand = useMemo(() => `npx skills find ${normalizeQuery(query)}`, [query]);
-  const addCommand = 'npx skills add vercel-labs/skills --skill find-skills';
+  const addCommand = 'npx skills add openai/skills@security-threat-model';
 
   async function handleCopy(value: string, label: string) {
     await copyText(value);

@@ -23,7 +23,7 @@ type CopilotCitation = {
 };
 
 type RecommendedTool = {
-  id: 'security-analyst' | 'policies' | 'cyber-range' | 'assessments' | 'evidence';
+  id: 'command-center' | 'security-analyst' | 'policies' | 'cyber-range' | 'assessments' | 'evidence';
   label: string;
   href: string;
   reason: string;
@@ -165,6 +165,13 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
   const add = (tool: RecommendedTool) => {
     if (!tools.has(tool.id)) tools.set(tool.id, tool);
   };
+
+  add({
+    id: 'command-center',
+    label: 'Command Center',
+    href: '/app/command-center',
+    reason: 'Review daily mission queue and trend-informed priorities.'
+  });
 
   add({
     id: 'security-analyst',
