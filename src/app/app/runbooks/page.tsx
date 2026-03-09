@@ -10,17 +10,15 @@ export default async function RunbooksPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Response Runbooks"
-        description="Pre-built incident and resilience runbooks that can be instantiated into task packs for immediate execution."
+        title="Runbooks"
+        description="Pre-built response and resilience workflows that can be instantiated into task packs for immediate execution."
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
           { label: 'Security Analyst', href: '/app/security-analyst', variant: 'outline' },
           { label: 'Findings', href: '/app/findings', variant: 'outline' }
         ]}
-        volumeLabel="Volume II"
       />
       <RunbooksPanel runbooks={runbooks} />
     </div>
   );
 }
-

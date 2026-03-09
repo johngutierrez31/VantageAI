@@ -1,7 +1,7 @@
 import { getSessionContext } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
-import { buildQuestionnaireCsv } from '@/lib/questionnaire/export';
-import { handleRouteError, notFound } from '@/lib/http';
+import { buildApprovedQuestionnaireExportRows, buildQuestionnaireCsv } from '@/lib/questionnaire/export';
+import { handleRouteError, notFound, badRequest } from '@/lib/http';
 import { writeAuditLog } from '@/lib/audit';
 
 function toCsvFileName(filename: string) {
@@ -30,18 +30,23 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
               take: 1
             },
             draftAnswers: {
+              where: { status: 'APPROVED' },
               orderBy: { createdAt: 'desc' },
               take: 1
             }
           },
-          orderBy: { createdAt: 'asc' }
+          orderBy: { rowOrder: 'asc' }
         }
       }
     });
 
     if (!upload) return notFound('Questionnaire upload not found');
+    const approvedCount = upload.items.filter((item) => item.draftAnswers[0]).length;
+    if (!approvedCount) {
+      return badRequest('No approved questionnaire answers are available to export');
+    }
 
-    const csv = buildQuestionnaireCsv(
+    const exportRows = buildApprovedQuestionnaireExportRows(
       upload.items.map((item) => {
         const latestMapping = item.mappings[0];
         const latestDraft = item.draftAnswers[0];
@@ -52,12 +57,29 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
         return {
           rowKey: item.rowKey,
           questionText: item.questionText,
+          normalizedQuestion: item.normalizedQuestion,
           mappedPrompt: latestMapping?.templateQuestion?.prompt ?? null,
-          answerText: latestDraft?.answerText ?? null,
-          citations
+          draft: latestDraft
+            ? {
+                answerText: latestDraft.answerText,
+                status: latestDraft.status,
+                confidenceScore: latestDraft.confidenceScore,
+                mappedControlIds: latestDraft.mappedControlIds,
+                supportingEvidenceIds: latestDraft.supportingEvidenceIds,
+                citations
+              }
+            : null
         };
       })
     );
+    const csv = buildQuestionnaireCsv(exportRows);
+
+    await prisma.questionnaireUpload.update({
+      where: { id: upload.id },
+      data: {
+        status: 'EXPORTED'
+      }
+    });
 
     await writeAuditLog({
       tenantId: session.tenantId,
@@ -66,7 +88,8 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
       entityId: upload.id,
       action: 'export',
       metadata: {
-        itemCount: upload.items.length
+        itemCount: exportRows.length,
+        approvedCount
       }
     });
 

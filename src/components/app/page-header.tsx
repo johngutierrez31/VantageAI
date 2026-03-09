@@ -44,7 +44,7 @@ export function PageHeader({
   description,
   primaryAction,
   secondaryActions = [],
-  volumeLabel = 'Volume I',
+  volumeLabel,
   children
 }: Props) {
   const showDropCap = (description?.length ?? 0) > 90;
@@ -53,7 +53,7 @@ export function PageHeader({
     <div className="ornate-frame mb-8 rounded-md border border-border bg-card/95 p-6 shadow-panel md:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">
-          <p className="academia-volume">{volumeLabel}</p>
+          {volumeLabel ? <p className="academia-volume">{volumeLabel}</p> : null}
           <h1 className="text-3xl font-medium tracking-tight text-foreground md:text-4xl">{title}</h1>
           {description ? (
             <p

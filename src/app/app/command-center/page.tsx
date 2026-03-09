@@ -34,16 +34,19 @@ export default async function CommandCenterPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Solo CISO Command Center"
-        description="Run your one-person cybersecurity operating system: threat trend radar, priority mission queue, and execution workflows in one place."
+        title="Command Center"
+        description="Run the VantageAI security operating system from one cross-module surface: open work, executive carry-over, trust pressure, incident activity, and guided next actions."
         primaryAction={{ label: 'Open Copilot', href: '/app/copilot' }}
         secondaryActions={[
+          { label: 'Pulse', href: '/app/pulse', variant: 'outline' },
+          { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
+          { label: 'Response Ops', href: '/app/response-ops', variant: 'outline' },
+          { label: 'TrustOps', href: '/app/trust', variant: 'outline' },
           { label: 'Security Analyst', href: '/app/security-analyst', variant: 'outline' },
           { label: 'Runbooks', href: '/app/runbooks', variant: 'outline' },
           { label: 'Findings Workbench', href: '/app/findings', variant: 'outline' },
-          { label: 'Trust Inbox', href: '/app/trust/inbox', variant: 'outline' }
+          { label: 'Billing & Packaging', href: '/app/settings/billing', variant: 'outline' }
         ]}
-        volumeLabel="Volume II"
       >
         <p className="text-xs text-muted-foreground">
           Workspace: {session.tenantName} | Pulse captured at {new Date(pulse.capturedAt).toLocaleString()}
@@ -76,6 +79,216 @@ export default async function CommandCenterPage() {
           icon={<TrendingUp className="h-5 w-5" />}
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pulse Executive Layer</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <KpiCard
+            label="Current Posture Score"
+            value={pulse.currentPostureScore === null ? 'N/A' : pulse.currentPostureScore.toFixed(1)}
+            hint={
+              pulse.postureDelta === null
+                ? 'Generate the first Pulse snapshot'
+                : `${pulse.postureDelta >= 0 ? '+' : ''}${pulse.postureDelta.toFixed(1)} vs prior snapshot`
+            }
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Open Top Risks"
+            value={String(pulse.openTopRisks)}
+            hint="High and critical risk-register items"
+            icon={<AlertTriangle className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Overdue Roadmap Items"
+            value={String(pulse.overdueRoadmapItems)}
+            hint="30/60/90 plan items past target date"
+            icon={<CalendarClock className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Open Trust Carry-Over"
+            value={String(pulse.openTrustFindings)}
+            hint="TrustOps gaps still affecting posture"
+            icon={<Shield className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Executive Workflow"
+            value={pulse.latestBoardBriefId ? 'Live' : 'Ready'}
+            hint="Open Pulse to manage scorecards, risks, roadmap, and board reporting"
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-5">
+            <Button asChild size="sm" variant="outline">
+              <Link href={pulse.latestPulseSnapshotId ? `/app/pulse/snapshots/${pulse.latestPulseSnapshotId}` : '/app/pulse'}>
+                Pulse Snapshot
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/pulse/risks">Risk Register</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/pulse/roadmap">Roadmap</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href={pulse.latestBoardBriefId ? `/app/pulse/board-briefs/${pulse.latestBoardBriefId}` : '/app/pulse'}>
+                Board Brief
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link
+                href={
+                  pulse.latestQuarterlyReviewId
+                    ? `/app/pulse/quarterly-reviews/${pulse.latestQuarterlyReviewId}`
+                    : '/app/pulse'
+                }
+              >
+                Quarterly Review
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Governance Operational Layer</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <KpiCard
+            label="Open AI Reviews"
+            value={String(pulse.openAiReviews)}
+            hint="Use case and vendor approvals still in queue"
+            icon={<CalendarClock className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="High-Risk AI Items"
+            value={String(pulse.highRiskAiUseCases)}
+            hint="High and critical AI workflows or vendor reviews"
+            icon={<AlertTriangle className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Rejected AI Items"
+            value={String(pulse.rejectedAiUseCases)}
+            hint="AI workflows or vendor reviews blocked from approval"
+            icon={<Shield className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Conditional Approvals"
+            value={String(pulse.conditionalAiApprovalsPending)}
+            hint="AI approvals with follow-up conditions still pending"
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Vendor Reviews Pending"
+            value={String(pulse.aiVendorsPendingReview)}
+            hint="AI vendor intake records awaiting decision"
+            icon={<CalendarClock className="h-5 w-5" />}
+          />
+          <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-5">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/ai-governance">AI Governance Dashboard</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/ai-governance/use-cases">AI Use Cases</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/ai-governance/vendors">Vendor Intake</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/ai-governance/reviews">AI Review Queue</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Response Ops Operational Layer</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <KpiCard
+            label="Active Incidents"
+            value={String(pulse.activeIncidents)}
+            hint={`${pulse.triageIncidents} incident(s) still in triage`}
+            icon={<AlertTriangle className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Overdue Incident Actions"
+            value={String(pulse.overdueIncidentActions)}
+            hint="Incident-linked tasks that are past due"
+            icon={<CalendarClock className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Post-Incident Actions"
+            value={String(pulse.openPostIncidentActions)}
+            hint="After-action follow-ups still open"
+            icon={<Shield className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Upcoming Tabletops"
+            value={String(pulse.upcomingTabletops)}
+            hint="Draft exercises in the next 30 days"
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="After-Action Reports"
+            value={String(pulse.recentAfterActionReports)}
+            hint="Durable review artifacts already captured"
+            icon={<Shield className="h-5 w-5" />}
+          />
+          <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-5">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/response-ops">Response Ops Dashboard</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/runbooks">Runbooks</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/findings">Findings Workbench</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>TrustOps Operational Pulse</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <KpiCard
+            label="Questionnaires Awaiting Review"
+            value={String(pulse.trustQuestionnairesAwaitingReview)}
+            hint="Drafted or needs-review trust responses"
+            icon={<CalendarClock className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Overdue Trust Reviews"
+            value={String(pulse.trustOverdueReviews)}
+            hint="Questionnaire, evidence-map, and packet SLAs"
+            icon={<AlertTriangle className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Open TrustOps Findings"
+            value={String(pulse.openTrustFindings)}
+            hint="Evidence gaps and rejected trust answers"
+            icon={<Shield className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Answer Reuse Count"
+            value={String(pulse.answerLibraryReuseCount)}
+            hint="Approved-answer library reuses recorded"
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Trust Packets"
+            value={String(pulse.trustPacketsCreated)}
+            hint={`${pulse.trustPacketsExported} exported buyer package(s)`}
+            icon={<Shield className="h-5 w-5" />}
+          />
+        </CardContent>
+      </Card>
 
       <CommandCenterOperations missions={missionQueue} />
 
@@ -123,7 +336,7 @@ export default async function CommandCenterPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Solo Operator Capability Stack</CardTitle>
+            <CardTitle>Module Launch Map</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {capabilities.map((capability) => (

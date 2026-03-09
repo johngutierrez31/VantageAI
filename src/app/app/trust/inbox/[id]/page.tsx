@@ -11,6 +11,13 @@ export default async function TrustInboxDetailPage({ params }: { params: { id: s
     include: {
       questionnaireUpload: {
         include: {
+          evidenceMap: {
+            select: {
+              id: true,
+              status: true,
+              reviewDueAt: true
+            }
+          },
           items: {
             include: {
               draftAnswers: {
@@ -18,7 +25,7 @@ export default async function TrustInboxDetailPage({ params }: { params: { id: s
                 take: 1
               }
             },
-            orderBy: { createdAt: 'asc' }
+            orderBy: { rowOrder: 'asc' }
           }
         }
       },
@@ -37,7 +44,7 @@ export default async function TrustInboxDetailPage({ params }: { params: { id: s
 
   if (!item) notFound();
 
-  const [timeline, suggestedDocs] = await Promise.all([
+  const [timeline, suggestedDocs, packets] = await Promise.all([
     prisma.auditLog.findMany({
       where: {
         tenantId: session.tenantId,
@@ -60,6 +67,11 @@ export default async function TrustInboxDetailPage({ params }: { params: { id: s
       },
       orderBy: { createdAt: 'desc' },
       take: 100
+    }),
+    prisma.trustPacket.findMany({
+      where: { tenantId: session.tenantId, trustInboxItemId: item.id },
+      orderBy: { updatedAt: 'desc' },
+      take: 20
     })
   ]);
 
@@ -81,13 +93,25 @@ export default async function TrustInboxDetailPage({ params }: { params: { id: s
         })),
         questionnaireUpload: item.questionnaireUpload
           ? {
+              id: item.questionnaireUpload.id,
               filename: item.questionnaireUpload.filename,
+              status: item.questionnaireUpload.status,
+              organizationName: item.questionnaireUpload.organizationName,
+              evidenceMap: item.questionnaireUpload.evidenceMap
+                ? {
+                    id: item.questionnaireUpload.evidenceMap.id,
+                    status: item.questionnaireUpload.evidenceMap.status,
+                    reviewDueAt: item.questionnaireUpload.evidenceMap.reviewDueAt?.toISOString() ?? null
+                  }
+                : null,
               items: item.questionnaireUpload.items.map((row) => ({
                 id: row.id,
                 rowKey: row.rowKey,
                 questionText: row.questionText,
                 draftAnswers: row.draftAnswers.map((draft) => ({
-                  answerText: draft.answerText
+                  answerText: draft.answerText,
+                  status: draft.status,
+                  confidenceScore: draft.confidenceScore
                 }))
               }))
             }
@@ -104,6 +128,18 @@ export default async function TrustInboxDetailPage({ params }: { params: { id: s
           id: doc.evidence.id,
           name: doc.evidence.name
         }
+      }))}
+      packets={packets.map((packet) => ({
+        id: packet.id,
+        name: packet.name,
+        status: packet.status,
+        shareMode: packet.shareMode,
+        reviewerRequired: packet.reviewerRequired,
+        includedArtifactCount: packet.includedArtifactIds.length,
+        staleArtifactCount: packet.staleArtifactIds.length,
+        evidenceMapId: packet.evidenceMapId,
+        exportCount: packet.exportCount,
+        lastExportedAt: packet.lastExportedAt?.toISOString() ?? null
       }))}
     />
   );

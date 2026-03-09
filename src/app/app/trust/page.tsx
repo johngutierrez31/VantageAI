@@ -4,7 +4,7 @@ import { TrustPacketPanel } from '@/components/app/trust-packet-panel';
 
 export default async function TrustPacketPage() {
   const session = await getPageSessionContext();
-  const [docs, inbox, evidenceOptions] = await Promise.all([
+  const [docs, inbox, evidenceOptions, packets, evidenceMaps] = await Promise.all([
     prisma.trustDoc.findMany({
       where: { tenantId: session.tenantId },
       include: {
@@ -36,6 +36,30 @@ export default async function TrustPacketPage() {
       select: { id: true, name: true },
       orderBy: { createdAt: 'desc' },
       take: 200
+    }),
+    prisma.trustPacket.findMany({
+      where: { tenantId: session.tenantId },
+      orderBy: { updatedAt: 'desc' },
+      take: 25
+    }),
+    prisma.evidenceMap.findMany({
+      where: { tenantId: session.tenantId },
+      include: {
+        questionnaireUpload: {
+          select: {
+            id: true,
+            filename: true,
+            organizationName: true
+          }
+        },
+        _count: {
+          select: {
+            items: true
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 25
     })
   ]);
 
@@ -59,6 +83,25 @@ export default async function TrustPacketPage() {
         updatedAt: item.updatedAt.toISOString()
       }))}
       evidenceOptions={evidenceOptions}
+      evidenceMaps={evidenceMaps.map((map) => ({
+        id: map.id,
+        name: map.name,
+        status: map.status,
+        itemCount: map._count.items,
+        questionnaireLabel: map.questionnaireUpload.organizationName ?? map.questionnaireUpload.filename
+      }))}
+      packets={packets.map((packet) => ({
+        id: packet.id,
+        name: packet.name,
+        status: packet.status,
+        shareMode: packet.shareMode,
+        reviewerRequired: packet.reviewerRequired,
+        includedArtifactCount: packet.includedArtifactIds.length,
+        staleArtifactCount: packet.staleArtifactIds.length,
+        createdAt: packet.createdAt.toISOString(),
+        evidenceMapId: packet.evidenceMapId,
+        exportCount: packet.exportCount
+      }))}
     />
   );
 }

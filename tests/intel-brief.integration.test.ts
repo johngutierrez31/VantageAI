@@ -15,7 +15,32 @@ describe('weekly brief rendering', () => {
       expiringExceptionsNext7Days: 1,
       staleEvidenceOver90Days: 4,
       pendingEvidenceRequests: 2,
-      trustInboxBacklog: 1
+      trustInboxBacklog: 1,
+      trustQuestionnairesAwaitingReview: 2,
+      trustOverdueReviews: 1,
+      openTrustFindings: 3,
+      answerLibraryReuseCount: 6,
+      trustPacketsCreated: 2,
+      trustPacketsExported: 1,
+      currentPostureScore: 71.5,
+      postureDelta: 4.2,
+      openTopRisks: 3,
+      overdueRoadmapItems: 2,
+      openAiReviews: 1,
+      highRiskAiUseCases: 1,
+      rejectedAiUseCases: 0,
+      conditionalAiApprovalsPending: 1,
+      aiVendorsPendingReview: 1,
+      activeIncidents: 1,
+      triageIncidents: 1,
+      overdueIncidentActions: 2,
+      openPostIncidentActions: 3,
+      upcomingTabletops: 1,
+      recentAfterActionReports: 1,
+      latestPulseSnapshotId: 'snapshot-1',
+      latestRoadmapId: 'roadmap-1',
+      latestBoardBriefId: 'brief-1',
+      latestQuarterlyReviewId: 'review-1'
     };
 
     const missionQueue: MissionPlanItem[] = [
@@ -46,11 +71,10 @@ describe('weekly brief rendering', () => {
     const html = renderWeeklyBriefHtml(brief);
 
     expect(brief.executiveSummary.length).toBeGreaterThan(20);
-    expect(markdown).toContain('Weekly Solo CISO Brief');
+    expect(markdown).toContain('VantageAI Weekly Brief');
     expect(markdown).toContain('Day 1 [P0] Close critical blockers');
     expect(html).toContain('<html');
     expect(html).toContain('Executive Summary');
     expect(html).toContain('Trend Radar');
   });
 });
-

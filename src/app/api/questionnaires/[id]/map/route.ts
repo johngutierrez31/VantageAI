@@ -3,7 +3,7 @@ import { getSessionContext } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
 import { requireRole } from '@/lib/rbac/authorize';
 import { questionnaireMapSchema } from '@/lib/validation/questionnaire';
-import { mapQuestionnaireRows } from '@/lib/questionnaire/mapping';
+import { mapQuestionnaireRows, normalizeQuestionText } from '@/lib/questionnaire/mapping';
 import { handleRouteError, notFound, badRequest } from '@/lib/http';
 import { writeAuditLog } from '@/lib/audit';
 
@@ -64,7 +64,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       where: { id: params.id, tenantId: session.tenantId },
       include: {
         items: {
-          orderBy: { createdAt: 'asc' }
+          orderBy: { rowOrder: 'asc' }
         }
       }
     });
@@ -89,6 +89,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
     );
 
     await prisma.$transaction(async (tx) => {
+      await tx.questionnaireUpload.update({
+        where: { id: upload.id },
+        data: {
+          status: 'MAPPED'
+        }
+      });
+
       await tx.questionnaireMapping.deleteMany({
         where: {
           tenantId: session.tenantId,
@@ -99,6 +106,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
       for (let index = 0; index < upload.items.length; index += 1) {
         const item = upload.items[index];
         const mapping = mappings[index];
+
+        await tx.questionnaireItem.update({
+          where: { id: item.id },
+          data: {
+            normalizedQuestion: mapping.normalizedQuestion || normalizeQuestionText(item.questionText)
+          }
+        });
 
         await tx.questionnaireMapping.create({
           data: {
@@ -128,7 +142,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
           take: 1
         }
       },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { rowOrder: 'asc' }
     });
 
     await writeAuditLog({

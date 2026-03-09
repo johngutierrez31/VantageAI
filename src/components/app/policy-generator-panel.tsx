@@ -258,8 +258,8 @@ export function PolicyGeneratorPanel({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Policy Generator"
-        description="Create customized cybersecurity policy documents using the vendored template library in this repository."
+        title="Policies"
+        description="Generate customized policy packages using the vendored template library in this repository."
       />
 
       <Card>

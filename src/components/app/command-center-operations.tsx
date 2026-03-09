@@ -93,9 +93,9 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
       }
 
       if (format === 'markdown') {
-        downloadFile('weekly-solo-ciso-brief.md', 'text/markdown; charset=utf-8', text);
+        downloadFile('vantageai-weekly-brief.md', 'text/markdown; charset=utf-8', text);
       } else {
-        downloadFile('weekly-solo-ciso-brief.html', 'text/html; charset=utf-8', text);
+        downloadFile('vantageai-weekly-brief.html', 'text/html; charset=utf-8', text);
       }
 
       setMessage(`Exported weekly brief as ${format.toUpperCase()}.`);
@@ -165,4 +165,3 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
     </Card>
   );
 }
-

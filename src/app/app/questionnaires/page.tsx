@@ -10,6 +10,12 @@ export default async function QuestionnairesPage() {
       _count: {
         select: { items: true }
       },
+      evidenceMap: {
+        select: {
+          id: true,
+          status: true
+        }
+      },
       trustInboxItem: {
         select: {
           id: true,
@@ -26,10 +32,20 @@ export default async function QuestionnairesPage() {
     <QuestionnaireUploadsPanel
       uploads={uploads.map((upload) => ({
         id: upload.id,
+        organizationName: upload.organizationName,
         filename: upload.filename,
         originalFormat: upload.originalFormat,
+        status: upload.status,
+        assignedReviewerUserId: upload.assignedReviewerUserId,
+        reviewDueAt: upload.reviewDueAt?.toISOString() ?? null,
         createdAt: upload.createdAt.toISOString(),
         itemCount: upload._count.items,
+        evidenceMap: upload.evidenceMap
+          ? {
+              id: upload.evidenceMap.id,
+              status: upload.evidenceMap.status
+            }
+          : null,
         trustInboxItem: upload.trustInboxItem
           ? {
               id: upload.trustInboxItem.id,

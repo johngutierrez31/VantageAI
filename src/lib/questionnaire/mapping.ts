@@ -7,6 +7,7 @@ type QuestionTarget = {
 
 export type MappingResult = {
   sourceQuestion: string;
+  normalizedQuestion: string;
   sourceAnswer?: string;
   sourceScore?: number;
   sourceConfidence?: number;
@@ -15,15 +16,21 @@ export type MappingResult = {
   matchScore: number;
 };
 
-function tokenize(value: string) {
+export function normalizeQuestionText(value: string) {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function tokenize(value: string) {
+  return normalizeQuestionText(value)
     .split(/\s+/)
     .filter((token) => token.length > 1);
 }
 
-function jaccardScore(a: string, b: string) {
+export function jaccardScore(a: string, b: string) {
   const setA = new Set(tokenize(a));
   const setB = new Set(tokenize(b));
 
@@ -53,6 +60,7 @@ export function mapQuestionnaireRows(rows: ImportedQuestionRow[], targets: Quest
 
     return {
       sourceQuestion: row.question,
+      normalizedQuestion: normalizeQuestionText(row.question),
       sourceAnswer: row.answer,
       sourceScore: row.score,
       sourceConfidence: row.confidence,

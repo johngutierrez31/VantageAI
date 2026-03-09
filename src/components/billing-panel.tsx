@@ -3,9 +3,15 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
+import {
+  MODULE_CATALOG,
+  formatPlanLabel,
+  getModuleCommercialState,
+  type CommercialPlanTier
+} from '@/lib/product/module-catalog';
 
 type Entitlements = {
-  plan: string;
+  plan: CommercialPlanTier;
   status: string;
   limits: {
     maxTemplates: number;
@@ -72,12 +78,30 @@ export function BillingPanel() {
   return (
     <div className="space-y-2">
       <p className="text-sm font-semibold">
-        Plan: {entitlements?.plan ?? 'FREE'} ({entitlements?.status ?? 'active'})
+        Plan: {entitlements ? formatPlanLabel(entitlements.plan) : 'Free'} ({entitlements?.status ?? 'active'})
       </p>
       <p className="text-sm text-muted-foreground">
         AI: {entitlements?.limits?.canUseAI ? 'Enabled' : 'Disabled'} | PDF Export:{' '}
         {entitlements?.limits?.canExportPdf ? 'Enabled' : 'Disabled'}
       </p>
+      {entitlements ? (
+        <div className="grid gap-2 rounded-md border border-border p-3 md:grid-cols-2">
+          {MODULE_CATALOG.map((module) => {
+            const commercialState = getModuleCommercialState(entitlements.plan, module);
+            return (
+              <div key={module.id} className="rounded-md border border-border bg-background/60 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold">{module.label}</p>
+                  <span className="rounded border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium">
+                    {commercialState.badge}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{module.premiumLabel}</p>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <Select
           value={plan}

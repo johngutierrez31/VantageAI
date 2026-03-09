@@ -14,6 +14,12 @@ export async function GET() {
             items: true
           }
         },
+        evidenceMap: {
+          select: {
+            id: true,
+            status: true
+          }
+        },
         trustInboxItem: {
           select: {
             id: true,
@@ -29,10 +35,17 @@ export async function GET() {
     return NextResponse.json(
       uploads.map((upload) => ({
         id: upload.id,
+        organizationName: upload.organizationName,
         filename: upload.filename,
         originalFormat: upload.originalFormat,
+        status: upload.status,
+        assignedReviewerUserId: upload.assignedReviewerUserId,
+        reviewDueAt: upload.reviewDueAt,
+        reviewerUserId: upload.reviewerUserId,
+        reviewedAt: upload.reviewedAt,
         createdAt: upload.createdAt,
         itemCount: upload._count.items,
+        evidenceMap: upload.evidenceMap,
         trustInboxItem: upload.trustInboxItem
       }))
     );

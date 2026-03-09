@@ -12,6 +12,31 @@ export type TenantSecurityPulse = {
   staleEvidenceOver90Days: number;
   pendingEvidenceRequests: number;
   trustInboxBacklog: number;
+  trustQuestionnairesAwaitingReview: number;
+  trustOverdueReviews: number;
+  openTrustFindings: number;
+  answerLibraryReuseCount: number;
+  trustPacketsCreated: number;
+  trustPacketsExported: number;
+  currentPostureScore: number | null;
+  postureDelta: number | null;
+  openTopRisks: number;
+  overdueRoadmapItems: number;
+  openAiReviews: number;
+  highRiskAiUseCases: number;
+  rejectedAiUseCases: number;
+  conditionalAiApprovalsPending: number;
+  aiVendorsPendingReview: number;
+  activeIncidents: number;
+  triageIncidents: number;
+  overdueIncidentActions: number;
+  openPostIncidentActions: number;
+  upcomingTabletops: number;
+  recentAfterActionReports: number;
+  latestPulseSnapshotId: string | null;
+  latestRoadmapId: string | null;
+  latestBoardBriefId: string | null;
+  latestQuarterlyReviewId: string | null;
 };
 
 export type MissionPriority = 'P0' | 'P1' | 'P2';
@@ -53,7 +78,34 @@ export async function getTenantSecurityPulse(tenantId: string): Promise<TenantSe
     expiringExceptionsNext7Days,
     staleEvidenceOver90Days,
     pendingEvidenceRequests,
-    trustInboxBacklog
+    trustInboxBacklog,
+    trustQuestionnairesAwaitingReview,
+    overdueQuestionnaireReviews,
+    overdueEvidenceMapReviews,
+    overdueTrustPacketReviews,
+    openTrustFindings,
+    answerLibraryUsage,
+    trustPacketsCreated,
+    trustPacketsExported,
+    latestPulseSnapshot,
+    openTopRisks,
+    overdueRoadmapItems,
+    latestRoadmap,
+    latestBoardBrief,
+    latestQuarterlyReview,
+    pendingAiUseCases,
+    pendingAiVendorReviews,
+    highRiskAiUseCases,
+    highRiskAiVendorReviews,
+    rejectedAiUseCases,
+    rejectedAiVendorReviews,
+    conditionalAiApprovalsPending,
+    activeIncidents,
+    triageIncidents,
+    overdueIncidentActions,
+    openPostIncidentActions,
+    upcomingTabletops,
+    recentAfterActionReports
   ] = await Promise.all([
     prisma.task.count({
       where: {
@@ -114,8 +166,219 @@ export async function getTenantSecurityPulse(tenantId: string): Promise<TenantSe
         tenantId,
         status: { in: ['NEW', 'IN_REVIEW', 'DRAFT_READY'] }
       }
+    }),
+    prisma.questionnaireUpload.count({
+      where: {
+        tenantId,
+        status: { in: ['DRAFTED', 'NEEDS_REVIEW'] }
+      }
+    }),
+    prisma.questionnaireUpload.count({
+      where: {
+        tenantId,
+        status: { in: ['UPLOADED', 'MAPPED', 'DRAFTED', 'NEEDS_REVIEW', 'APPROVED'] },
+        reviewDueAt: { lt: now }
+      }
+    }),
+    prisma.evidenceMap.count({
+      where: {
+        tenantId,
+        status: { in: ['DRAFT', 'NEEDS_REVIEW', 'APPROVED'] },
+        reviewDueAt: { lt: now }
+      }
+    }),
+    prisma.trustPacket.count({
+      where: {
+        tenantId,
+        status: { in: ['DRAFT', 'READY_FOR_REVIEW', 'READY_TO_SHARE'] },
+        reviewDueAt: { lt: now }
+      }
+    }),
+    prisma.finding.count({
+      where: {
+        tenantId,
+        sourceType: {
+          in: ['TRUSTOPS_EVIDENCE_GAP', 'TRUSTOPS_REJECTION', 'TRUSTOPS_EVIDENCE_MAP']
+        },
+        status: { in: ['OPEN', 'IN_PROGRESS'] }
+      }
+    }),
+    prisma.approvedAnswer.aggregate({
+      where: {
+        tenantId,
+        status: 'ACTIVE'
+      },
+      _sum: {
+        usageCount: true
+      }
+    }),
+    prisma.trustPacket.count({
+      where: {
+        tenantId
+      }
+    }),
+    prisma.trustPacket.count({
+      where: {
+        tenantId,
+        lastExportedAt: { not: null }
+      }
+    }),
+    prisma.pulseSnapshot.findFirst({
+      where: {
+        tenantId
+      },
+      select: {
+        id: true,
+        overallScore: true,
+        overallDelta: true
+      },
+      orderBy: {
+        snapshotDate: 'desc'
+      }
+    }),
+    prisma.riskRegisterItem.count({
+      where: {
+        tenantId,
+        status: { in: ['OPEN', 'IN_REVIEW', 'MITIGATING', 'ACCEPTED'] },
+        severity: { in: ['HIGH', 'CRITICAL'] }
+      }
+    }),
+    prisma.roadmapItem.count({
+      where: {
+        tenantId,
+        status: { in: ['PLANNED', 'IN_PROGRESS', 'BLOCKED'] },
+        dueAt: { lt: now }
+      }
+    }),
+    prisma.pulseRoadmap.findFirst({
+      where: {
+        tenantId
+      },
+      select: {
+        id: true
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      }
+    }),
+    prisma.boardBrief.findFirst({
+      where: {
+        tenantId
+      },
+      select: {
+        id: true
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      }
+    }),
+    prisma.quarterlyReview.findFirst({
+      where: {
+        tenantId
+      },
+      select: {
+        id: true
+      },
+      orderBy: {
+        reviewDate: 'desc'
+      }
+    }),
+    prisma.aIUseCase.count({
+      where: {
+        tenantId,
+        status: { in: ['DRAFT', 'NEEDS_REVIEW'] }
+      }
+    }),
+    prisma.aIVendorReview.count({
+      where: {
+        tenantId,
+        status: { in: ['DRAFT', 'NEEDS_REVIEW'] }
+      }
+    }),
+    prisma.aIUseCase.count({
+      where: {
+        tenantId,
+        riskTier: { in: ['HIGH', 'CRITICAL'] },
+        status: { not: 'ARCHIVED' }
+      }
+    }),
+    prisma.aIVendorReview.count({
+      where: {
+        tenantId,
+        riskTier: { in: ['HIGH', 'CRITICAL'] },
+        status: { not: 'ARCHIVED' }
+      }
+    }),
+    prisma.aIUseCase.count({
+      where: {
+        tenantId,
+        status: 'REJECTED'
+      }
+    }),
+    prisma.aIVendorReview.count({
+      where: {
+        tenantId,
+        status: 'REJECTED'
+      }
+    }),
+    prisma.$transaction([
+      prisma.aIUseCase.count({
+        where: {
+          tenantId,
+          status: 'APPROVED_WITH_CONDITIONS'
+        }
+      }),
+      prisma.aIVendorReview.count({
+        where: {
+          tenantId,
+          status: 'APPROVED_WITH_CONDITIONS'
+        }
+      })
+    ]).then(([useCaseCount, vendorCount]) => useCaseCount + vendorCount),
+    prisma.incident.count({
+      where: {
+        tenantId,
+        status: { in: ['NEW', 'TRIAGE', 'ACTIVE', 'CONTAINED', 'RECOVERING'] }
+      }
+    }),
+    prisma.incident.count({
+      where: {
+        tenantId,
+        status: { in: ['NEW', 'TRIAGE'] }
+      }
+    }),
+    prisma.task.count({
+      where: {
+        tenantId,
+        incidentId: { not: null },
+        status: { not: 'DONE' },
+        dueDate: { lt: now }
+      }
+    }),
+    prisma.task.count({
+      where: {
+        tenantId,
+        incidentId: { not: null },
+        responseOpsPhase: 'POST_INCIDENT_REVIEW',
+        status: { not: 'DONE' }
+      }
+    }),
+    prisma.tabletopExercise.count({
+      where: {
+        tenantId,
+        status: 'DRAFT',
+        exerciseDate: {
+          gte: now,
+          lte: addDays(now, 30)
+        }
+      }
+    }),
+    prisma.afterActionReport.count({
+      where: { tenantId }
     })
   ]);
+
+  const openAiReviews = pendingAiUseCases + pendingAiVendorReviews;
 
   return {
     capturedAt: now.toISOString(),
@@ -127,7 +390,33 @@ export async function getTenantSecurityPulse(tenantId: string): Promise<TenantSe
     expiringExceptionsNext7Days,
     staleEvidenceOver90Days,
     pendingEvidenceRequests,
-    trustInboxBacklog
+    trustInboxBacklog,
+    trustQuestionnairesAwaitingReview,
+    trustOverdueReviews:
+      overdueQuestionnaireReviews + overdueEvidenceMapReviews + overdueTrustPacketReviews,
+    openTrustFindings,
+    answerLibraryReuseCount: answerLibraryUsage._sum.usageCount ?? 0,
+    trustPacketsCreated,
+    trustPacketsExported,
+    currentPostureScore: latestPulseSnapshot?.overallScore ?? null,
+    postureDelta: latestPulseSnapshot?.overallDelta ?? null,
+    openTopRisks,
+    overdueRoadmapItems,
+    openAiReviews,
+    highRiskAiUseCases: highRiskAiUseCases + highRiskAiVendorReviews,
+    rejectedAiUseCases: rejectedAiUseCases + rejectedAiVendorReviews,
+    conditionalAiApprovalsPending,
+    aiVendorsPendingReview: pendingAiVendorReviews,
+    activeIncidents,
+    triageIncidents,
+    overdueIncidentActions,
+    openPostIncidentActions,
+    upcomingTabletops,
+    recentAfterActionReports,
+    latestPulseSnapshotId: latestPulseSnapshot?.id ?? null,
+    latestRoadmapId: latestRoadmap?.id ?? null,
+    latestBoardBriefId: latestBoardBrief?.id ?? null,
+    latestQuarterlyReviewId: latestQuarterlyReview?.id ?? null
   };
 }
 
@@ -180,6 +469,22 @@ export function buildSevenDayMissionQueue(
     });
   }
 
+  if (pulse.activeIncidents > 0 || pulse.overdueIncidentActions > 0) {
+    plans.push({
+      id: 'response-ops-incident-command',
+      title: 'Work active incident command and overdue response actions',
+      priority: 'P0',
+      why: `${pulse.activeIncidents} active incident(s) and ${pulse.overdueIncidentActions} overdue incident action(s) need immediate operator attention.`,
+      linkedRoute: '/app/response-ops',
+      actions: [
+        'Update current incident status, ownership, and next update checkpoints.',
+        'Launch or refresh incident-linked runbook packs where work is still manual.',
+        'Capture timeline decisions and stage the after-action review artifact early.'
+      ],
+      mappedTrendIds: ['breakout-speed', 'ransomware-extortion-economics']
+    });
+  }
+
   plans.push({
     id: 'identity-hardening-sprint',
     title: 'Execute an identity hardening sprint',
@@ -208,19 +513,41 @@ export function buildSevenDayMissionQueue(
     mappedTrendIds: ['breakout-speed', 'ransomware-extortion-economics']
   });
 
-  if (pulse.staleEvidenceOver90Days > 0 || pulse.pendingEvidenceRequests > 0 || pulse.trustInboxBacklog > 0) {
+  if (
+    pulse.staleEvidenceOver90Days > 0 ||
+    pulse.pendingEvidenceRequests > 0 ||
+    pulse.trustInboxBacklog > 0 ||
+    pulse.trustQuestionnairesAwaitingReview > 0 ||
+    pulse.trustOverdueReviews > 0
+  ) {
     plans.push({
       id: 'trust-packet-refresh',
       title: 'Refresh trust packet and evidence backlog',
       priority: 'P1',
-      why: `${pulse.staleEvidenceOver90Days} stale evidence items, ${pulse.pendingEvidenceRequests} pending evidence requests, and ${pulse.trustInboxBacklog} trust inbox items need attention.`,
+      why: `${pulse.staleEvidenceOver90Days} stale evidence items, ${pulse.pendingEvidenceRequests} pending evidence requests, ${pulse.trustInboxBacklog} trust inbox items, and ${pulse.trustOverdueReviews} overdue reviews need attention.`,
       linkedRoute: '/app/trust/inbox',
       actions: [
         'Refresh stale artifacts for top controls.',
         'Resolve pending customer evidence requests.',
-        'Export and stage a standard trust packet for faster responses.'
+        'Assign overdue TrustOps reviews and stage a standard trust packet for faster responses.'
       ],
       mappedTrendIds: ['third-party-concentration']
+    });
+  }
+
+  if (pulse.openAiReviews > 0 || pulse.highRiskAiUseCases > 0 || pulse.conditionalAiApprovalsPending > 0) {
+    plans.push({
+      id: 'ai-governance-review-sprint',
+      title: 'Work the AI governance approval queue',
+      priority: pulse.highRiskAiUseCases > 0 ? 'P0' : 'P1',
+      why: `${pulse.openAiReviews} AI reviews are open, ${pulse.highRiskAiUseCases} AI item(s) are high risk, and ${pulse.conditionalAiApprovalsPending} approval(s) still carry conditions.`,
+      linkedRoute: '/app/ai-governance/reviews',
+      actions: [
+        'Assign reviewers and due dates for AI use cases and vendor intakes.',
+        'Resolve approval blockers around data classes, retention, and external access.',
+        'Push rejected or high-risk AI items into owned remediation and Pulse follow-up.'
+      ],
+      mappedTrendIds: ['cloud-and-saas-abuse']
     });
   }
 
@@ -259,4 +586,3 @@ export function buildSevenDayMissionQueue(
     day: nextDayLabel(index)
   }));
 }
-

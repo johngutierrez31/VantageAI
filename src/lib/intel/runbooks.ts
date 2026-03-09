@@ -1,10 +1,12 @@
-import { TaskPriority } from '@prisma/client';
+import { type ResponseOpsPhase, TaskPriority } from '@prisma/client';
 
 export type RunbookTaskTemplate = {
   title: string;
   details: string;
   priority: TaskPriority;
   dueOffsetDays: number;
+  dueOffsetHours?: number;
+  phase?: ResponseOpsPhase;
 };
 
 export type SecurityRunbook = {
@@ -30,19 +32,24 @@ const runbooks: SecurityRunbook[] = [
         title: 'Disable compromised identity and revoke active sessions',
         details: 'Disable user, revoke refresh tokens, and rotate privileged credentials immediately.',
         priority: 'CRITICAL',
-        dueOffsetDays: 0
+        dueOffsetDays: 0,
+        dueOffsetHours: 1,
+        phase: 'TRIAGE'
       },
       {
         title: 'Collect identity logs and suspicious sign-in artifacts',
         details: 'Capture auth logs, IP addresses, MFA events, and role changes for investigation.',
         priority: 'HIGH',
-        dueOffsetDays: 1
+        dueOffsetDays: 1,
+        dueOffsetHours: 2,
+        phase: 'EVIDENCE_COLLECTION'
       },
       {
         title: 'Run post-incident access review',
         details: 'Review privilege assignments and close unnecessary elevated access.',
         priority: 'HIGH',
-        dueOffsetDays: 2
+        dueOffsetDays: 2,
+        phase: 'POST_INCIDENT_REVIEW'
       }
     ]
   },
@@ -58,19 +65,25 @@ const runbooks: SecurityRunbook[] = [
         title: 'Isolate affected hosts and high-risk segments',
         details: 'Execute host isolation and block known C2/exfiltration paths.',
         priority: 'CRITICAL',
-        dueOffsetDays: 0
+        dueOffsetDays: 0,
+        dueOffsetHours: 1,
+        phase: 'CONTAINMENT'
       },
       {
         title: 'Validate backup integrity and restoration path',
         details: 'Confirm immutable backups and test restore sequence for critical systems.',
         priority: 'HIGH',
-        dueOffsetDays: 1
+        dueOffsetDays: 1,
+        dueOffsetHours: 4,
+        phase: 'RECOVERY'
       },
       {
         title: 'Prepare legal and customer communication package',
         details: 'Coordinate incident narrative, notification obligations, and executive updates.',
         priority: 'HIGH',
-        dueOffsetDays: 1
+        dueOffsetDays: 1,
+        dueOffsetHours: 3,
+        phase: 'COMMUNICATIONS'
       }
     ]
   },
@@ -86,19 +99,24 @@ const runbooks: SecurityRunbook[] = [
         title: 'Identify all impacted internet-facing assets',
         details: 'Map affected software versions and prioritize externally reachable systems.',
         priority: 'CRITICAL',
-        dueOffsetDays: 0
+        dueOffsetDays: 0,
+        dueOffsetHours: 2,
+        phase: 'TRIAGE'
       },
       {
         title: 'Apply emergency mitigation or patch',
         details: 'Patch where possible; otherwise apply compensating controls and restrictions.',
         priority: 'HIGH',
-        dueOffsetDays: 1
+        dueOffsetDays: 1,
+        dueOffsetHours: 6,
+        phase: 'CONTAINMENT'
       },
       {
         title: 'Verify remediation and monitor exploit indicators',
         details: 'Run follow-up scans and monitor suspicious traffic for regression.',
         priority: 'HIGH',
-        dueOffsetDays: 2
+        dueOffsetDays: 2,
+        phase: 'RECOVERY'
       }
     ]
   },
@@ -114,19 +132,24 @@ const runbooks: SecurityRunbook[] = [
         title: 'Assess blast radius of impacted vendor integrations',
         details: 'Identify data flows, credentials, and dependencies tied to affected provider.',
         priority: 'HIGH',
-        dueOffsetDays: 0
+        dueOffsetDays: 0,
+        dueOffsetHours: 2,
+        phase: 'TRIAGE'
       },
       {
         title: 'Rotate shared secrets and integration credentials',
         details: 'Revoke and re-issue tokens, API keys, and service credentials linked to vendor.',
         priority: 'HIGH',
-        dueOffsetDays: 1
+        dueOffsetDays: 1,
+        dueOffsetHours: 4,
+        phase: 'CONTAINMENT'
       },
       {
         title: 'Update trust packet and customer communication notes',
         details: 'Prepare concise impact and response summary for customers and auditors.',
         priority: 'MEDIUM',
-        dueOffsetDays: 2
+        dueOffsetDays: 2,
+        phase: 'COMMUNICATIONS'
       }
     ]
   }
@@ -139,4 +162,3 @@ export function getSecurityRunbooks() {
 export function getSecurityRunbookById(runbookId: string) {
   return runbooks.find((runbook) => runbook.id === runbookId) ?? null;
 }
-

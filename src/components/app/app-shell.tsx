@@ -10,11 +10,14 @@ import {
   Bot,
   ChevronRight,
   FileText,
+  Flame,
   Menu,
   Radar,
   Search,
   Settings,
   ShieldCheck,
+  ClipboardList,
+  TrendingUp,
   User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { formatPlanLabel, type CommercialPlanTier } from '@/lib/product/module-catalog';
 
 type NavItem = {
   href: string;
@@ -34,7 +38,30 @@ type SearchItem = {
   label: string;
   description?: string;
   href: string;
-  kind: 'command' | 'copilot' | 'analyst' | 'tools' | 'policy' | 'range' | 'runbook' | 'settings';
+  kind:
+    | 'command'
+    | 'copilot'
+    | 'analyst'
+    | 'tools'
+    | 'policy'
+    | 'range'
+    | 'runbook'
+    | 'settings'
+    | 'trustops'
+    | 'pulse'
+    | 'ai'
+    | 'vendor'
+    | 'questionnaire'
+    | 'review'
+    | 'library'
+    | 'evidencemap'
+    | 'risk'
+    | 'roadmap'
+    | 'brief'
+    | 'quarterly'
+    | 'responseops'
+    | 'incident'
+    | 'tabletop';
 };
 
 type NotificationItem = {
@@ -58,24 +85,25 @@ type Props = {
   userLabel: string;
   searchItems: SearchItem[];
   notifications: NotificationItem[];
-  initialFunMode: boolean;
+  currentPlan: CommercialPlanTier;
   children: ReactNode;
 };
 
 const navItems: NavItem[] = [
   { href: '/app/command-center', label: 'Command Center', icon: ShieldCheck },
+  { href: '/app/pulse', label: 'Pulse', icon: TrendingUp },
+  { href: '/app/ai-governance', label: 'AI Governance', icon: Bot },
+  { href: '/app/response-ops', label: 'Response Ops', icon: Flame },
+  { href: '/app/trust', label: 'TrustOps', icon: ClipboardList },
+  { href: '/app/questionnaires', label: 'Questionnaires', icon: FileText },
   { href: '/app/tools', label: 'Tools Hub', icon: Menu },
   { href: '/app/copilot', label: 'Copilot', icon: Bot },
   { href: '/app/security-analyst', label: 'Security Analyst', icon: ShieldCheck },
   { href: '/app/cyber-range', label: 'Cyber Range', icon: Radar },
   { href: '/app/runbooks', label: 'Runbooks', icon: FileText },
-  { href: '/app/policies', label: 'Policy Generator', icon: FileText },
+  { href: '/app/policies', label: 'Policies', icon: FileText },
   { href: '/app/settings/members', label: 'Settings', icon: Settings }
 ];
-
-const FUN_MODE_COOKIE = 'vantage_fun_mode';
-const FUN_MODE_STORAGE_KEY = 'vantage_fun_mode';
-const HIT_COUNTER_STORAGE_KEY = 'vantage_fun_hits';
 
 function SearchDialog({
   open,
@@ -114,7 +142,7 @@ function SearchDialog({
           <Card className="w-full max-w-2xl">
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Global search: command center, tools hub, copilot, security analyst, runbooks, cyber range, policies, settings
+            Search modules, workflows, exports, and operations across the VantageAI suite.
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-4">
@@ -172,7 +200,7 @@ export function AppShell({
   userLabel,
   searchItems,
   notifications,
-  initialFunMode,
+  currentPlan,
   children
 }: Props) {
   const router = useRouter();
@@ -183,39 +211,10 @@ export function AppShell({
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [currentTenantId, setCurrentTenantId] = useState(tenantId);
   const [switchBusy, setSwitchBusy] = useState(false);
-  const [funMode, setFunMode] = useState(initialFunMode);
-  const [hitCount, setHitCount] = useState(1337000);
 
   useEffect(() => {
     setCurrentTenantId(tenantId);
   }, [tenantId]);
-
-  useEffect(() => {
-    setFunMode(initialFunMode);
-  }, [initialFunMode]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = window.localStorage.getItem(FUN_MODE_STORAGE_KEY);
-    if (stored === 'true') setFunMode(true);
-    if (stored === 'false') setFunMode(false);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(FUN_MODE_STORAGE_KEY, funMode ? 'true' : 'false');
-    document.cookie = `${FUN_MODE_COOKIE}=${funMode ? 'true' : 'false'}; path=/; max-age=31536000; SameSite=Lax`;
-    document.body.classList.toggle('fun-mode', funMode);
-  }, [funMode]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !funMode) return;
-    const raw = window.localStorage.getItem(HIT_COUNTER_STORAGE_KEY);
-    const baseline = Number.parseInt(raw ?? '1337000', 10);
-    const nextCount = Number.isFinite(baseline) ? baseline + 1 : 1337001;
-    window.localStorage.setItem(HIT_COUNTER_STORAGE_KEY, String(nextCount));
-    setHitCount(nextCount);
-  }, [funMode, pathname]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -250,7 +249,7 @@ export function AppShell({
   }
 
   return (
-    <div className={cn('academia-shell min-h-screen bg-background text-foreground', funMode && 'fun-mode')}>
+    <div className="academia-shell min-h-screen bg-background text-foreground">
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} items={searchItems} />
       <div className="mx-auto grid min-h-screen max-w-[1600px] grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="hidden border-r border-border/80 bg-card/80 p-4 lg:block">
@@ -272,13 +271,13 @@ export function AppShell({
               <p className="text-xs text-muted-foreground">
                 {memberships.length > 1 ? 'Switch tenant workspace' : tenantName}
               </p>
-              <p className="text-xs text-muted-foreground">{role}</p>
-            </div>
-            {funMode ? (
-              <div className="retro-hits mt-3">
-                Visitors Since 1995: {String(hitCount).padStart(7, '0')}
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span>{role}</span>
+                <span className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground">
+                  {formatPlanLabel(currentPlan)}
+                </span>
               </div>
-            ) : null}
+            </div>
           </div>
           <nav className="space-y-1">
             {navItems.map((item) => {
@@ -301,35 +300,9 @@ export function AppShell({
               );
             })}
           </nav>
-          {funMode ? (
-            <>
-              <hr className="retro-hr my-4" />
-              <div className="retro-window space-y-3 p-2">
-                <p className="retro-rainbow text-center text-xs font-bold uppercase tracking-wide">Fun Mode Online</p>
-                <div className="retro-color-grid">
-                  <span style={{ backgroundColor: '#ff0000' }} />
-                  <span style={{ backgroundColor: '#00ff00' }} />
-                  <span style={{ backgroundColor: '#0000ff' }} />
-                  <span style={{ backgroundColor: '#ffff00' }} />
-                  <span style={{ backgroundColor: '#ff00ff' }} />
-                  <span style={{ backgroundColor: '#00ffff' }} />
-                </div>
-              </div>
-            </>
-          ) : null}
         </aside>
         <div className="flex min-h-screen flex-col">
           <header className="sticky top-0 z-30 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:px-6">
-            {funMode ? (
-              <div className="retro-marquee" aria-live="polite">
-                <div className="retro-marquee-track">
-                  <span className="retro-marquee-item text-[#ff0000]">WELCOME TO FUN MODE</span>
-                  <span className="retro-marquee-item text-[#0000ff]">VANTAGECISO SECURITY CONSOLE 1997 EDITION</span>
-                  <span className="retro-marquee-item text-[#00aa00]">HOT: POLICY GENERATOR NOW LIVE</span>
-                  <span className="retro-marquee-item text-[#800080]">PRESS FUN MODE TO TOGGLE RETRO EXPERIENCE</span>
-                </div>
-              </div>
-            ) : null}
             <div className="flex items-center justify-between gap-3">
               <div className="flex w-full max-w-xl items-center gap-2">
                 <Button
@@ -347,22 +320,13 @@ export function AppShell({
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search className="h-4 w-4" />
-                  <span className="flex-1 truncate">Search command center, tools hub, copilot, security analyst, runbooks, cyber range, policy generator, settings</span>
+                  <span className="flex-1 truncate">Search modules, workflows, exports, and settings</span>
                   <span className="rounded bg-card px-2 py-0.5 font-display text-xs text-muted-foreground">
                     Cmd+K / Ctrl+K
                   </span>
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={funMode ? 'destructive' : 'secondary'}
-                  onClick={() => setFunMode((value) => !value)}
-                >
-                  Fun Mode: {funMode ? 'ON' : 'OFF'}
-                  {funMode ? <span className="retro-badge-hot ml-2">NEW!</span> : null}
-                </Button>
                 <div className="relative">
                   <Button variant="ghost" size="icon" onClick={() => setShowNotifications((v) => !v)} type="button">
                     <Bell className="h-4 w-4" />
@@ -401,6 +365,7 @@ export function AppShell({
                       <CardContent className="space-y-2 p-3">
                         <p className="text-sm font-medium">{userLabel}</p>
                         <p className="text-xs text-muted-foreground">{tenantName}</p>
+                        <p className="text-xs text-muted-foreground">Plan: {formatPlanLabel(currentPlan)}</p>
                         <p className="text-xs text-muted-foreground">{demoMode ? 'Demo mode access' : 'Authenticated access'}</p>
                         {!demoMode ? (
                           <Button
@@ -418,11 +383,6 @@ export function AppShell({
                 </div>
               </div>
             </div>
-            {funMode ? (
-              <div className="construction-stripe mt-3 p-2 text-center text-xs font-bold uppercase tracking-wide text-black">
-                UNDER CONSTRUCTION: RETRO MODE ACTIVE
-              </div>
-            ) : null}
           </header>
           {showMobileNav ? (
             <div className="border-b border-border bg-card/90 p-3 lg:hidden">
@@ -440,7 +400,12 @@ export function AppShell({
                     </option>
                   ))}
                 </Select>
-                <p className="text-xs text-muted-foreground">{role}</p>
+                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>{role}</span>
+                  <span className="rounded border border-border bg-background px-2 py-0.5 text-[11px] font-medium text-foreground">
+                    {formatPlanLabel(currentPlan)}
+                  </span>
+                </div>
               </div>
               <nav className="grid gap-1">
                 {navItems.map((item) => {
@@ -466,11 +431,7 @@ export function AppShell({
               </nav>
             </div>
           ) : null}
-          {funMode ? (
-            <hr className="retro-hr mx-4 md:mx-6 lg:mx-8" />
-          ) : (
-            <div aria-hidden="true" className="ornate-divider mx-4 md:mx-6 lg:mx-8" />
-          )}
+          <div aria-hidden="true" className="ornate-divider mx-4 md:mx-6 lg:mx-8" />
           <main className="flex-1 px-4 py-5 md:px-6 lg:px-8">{children}</main>
         </div>
       </div>

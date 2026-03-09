@@ -26,5 +26,19 @@ export const questionnaireMapSchema = z.object({
 
 export const questionnaireDraftSchema = z.object({
   itemIds: z.array(z.string().min(1)).max(500).optional(),
-  maxItems: z.number().int().min(1).max(500).optional()
+  maxItems: z.number().int().min(1).max(500).optional(),
+  createFollowUpTasks: z.boolean().optional()
+});
+
+export const questionnaireReviewSchema = z.object({
+  itemId: z.string().min(1),
+  decision: z.enum(['APPROVED', 'REJECTED']),
+  reviewerNotes: z.string().min(2).max(4000),
+  saveToLibrary: z.boolean().optional(),
+  libraryScope: z.enum(['REUSABLE', 'TENANT_SPECIFIC']).optional()
+});
+
+export const questionnaireAssignmentSchema = z.object({
+  assignedReviewerUserId: z.string().min(1).nullable().optional(),
+  reviewDueAt: z.string().datetime().nullable().optional()
 });

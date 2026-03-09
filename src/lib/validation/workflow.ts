@@ -17,6 +17,12 @@ export const taskUpdateSchema = z.object({
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional()
 });
 
+export const findingUpdateSchema = z.object({
+  status: z.enum(['OPEN', 'IN_PROGRESS', 'RESOLVED', 'ARCHIVED']).optional(),
+  ownerUserId: z.string().min(1).nullable().optional(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional()
+});
+
 export const exceptionCreateSchema = z.object({
   assessmentId: z.string().min(1),
   controlCode: z.string().min(1),

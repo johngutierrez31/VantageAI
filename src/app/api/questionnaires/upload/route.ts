@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSessionContext } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
 import { parseCsvQuestionnaire, parseJsonQuestionnaire } from '@/lib/questionnaire/parser';
+import { normalizeQuestionText } from '@/lib/questionnaire/mapping';
 import { requireRole } from '@/lib/rbac/authorize';
 import { getTenantEntitlements, requireQuestionnaireImportAccess } from '@/lib/billing/entitlements';
 import { handleRouteError, badRequest, paymentRequired } from '@/lib/http';
@@ -9,6 +10,7 @@ import { writeAuditLog } from '@/lib/audit';
 
 type ParsedUpload = {
   filename: string;
+  organizationName?: string | null;
   format: 'CSV' | 'JSON';
   rows: Array<{ question: string; answer?: string; score?: number; confidence?: number }>;
 };
@@ -19,6 +21,7 @@ async function parseUploadRequest(request: Request): Promise<ParsedUpload> {
   if (contentType.includes('multipart/form-data')) {
     const formData = await request.formData();
     const fileEntry = formData.get('file');
+    const organizationName = String(formData.get('organizationName') ?? '').trim() || null;
     if (!(fileEntry instanceof File)) {
       throw new Error('file is required');
     }
@@ -30,12 +33,18 @@ async function parseUploadRequest(request: Request): Promise<ParsedUpload> {
 
     return {
       filename: fileEntry.name,
+      organizationName,
       format,
       rows
     };
   }
 
-  const json = (await request.json()) as { filename?: string; format?: string; content?: string };
+  const json = (await request.json()) as {
+    filename?: string;
+    format?: string;
+    content?: string;
+    organizationName?: string;
+  };
   if (!json.content || typeof json.content !== 'string') {
     throw new Error('content is required');
   }
@@ -44,6 +53,7 @@ async function parseUploadRequest(request: Request): Promise<ParsedUpload> {
   const rows = format === 'JSON' ? parseJsonQuestionnaire(json.content) : parseCsvQuestionnaire(json.content);
   return {
     filename: json.filename?.trim() || `questionnaire-${Date.now()}.${format === 'JSON' ? 'json' : 'csv'}`,
+    organizationName: json.organizationName?.trim() || null,
     format,
     rows
   };
@@ -72,17 +82,23 @@ export async function POST(request: Request) {
     const upload = await prisma.questionnaireUpload.create({
       data: {
         tenantId: session.tenantId,
+        organizationName: parsed.organizationName,
         filename: parsed.filename,
         originalFormat: parsed.format,
+        status: 'UPLOADED',
         parsedJson: {
-          rowCount: parsed.rows.length
+          rowCount: parsed.rows.length,
+          organizationName: parsed.organizationName,
+          importedAt: new Date().toISOString()
         },
         createdBy: session.userId,
         items: {
           create: parsed.rows.map((row, index) => ({
             tenantId: session.tenantId,
             rowKey: `row-${index + 1}`,
+            rowOrder: index + 1,
             questionText: row.question,
+            normalizedQuestion: normalizeQuestionText(row.question),
             contextJson: {
               sourceAnswer: row.answer ?? null,
               sourceScore: row.score ?? null,
@@ -104,6 +120,7 @@ export async function POST(request: Request) {
       action: 'upload',
       metadata: {
         filename: upload.filename,
+        organizationName: upload.organizationName,
         rowCount: upload.items.length
       }
     });
@@ -112,7 +129,9 @@ export async function POST(request: Request) {
       {
         id: upload.id,
         filename: upload.filename,
+        organizationName: upload.organizationName,
         originalFormat: upload.originalFormat,
+        status: upload.status,
         itemCount: upload.items.length
       },
       { status: 201 }

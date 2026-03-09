@@ -12,8 +12,23 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
         tenantId: session.tenantId
       },
       include: {
+        evidenceMap: {
+          include: {
+            _count: {
+              select: {
+                items: true
+              }
+            }
+          }
+        },
         items: {
           include: {
+            _count: {
+              select: {
+                tasks: true,
+                findings: true
+              }
+            },
             mappings: {
               orderBy: { updatedAt: 'desc' },
               include: {
@@ -30,7 +45,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
               take: 1
             }
           },
-          orderBy: { createdAt: 'asc' }
+          orderBy: { rowOrder: 'asc' }
         },
         trustInboxItem: {
           select: {

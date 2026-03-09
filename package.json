@@ -9,6 +9,7 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit --incremental false",
     "test": "vitest run",
     "test:runtime": "node scripts/runtime-smoke.mjs",
     "test:deep": "npm run test && npm run build && npm run test:runtime",

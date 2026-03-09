@@ -23,7 +23,30 @@ type CopilotCitation = {
 };
 
 type RecommendedTool = {
-  id: 'command-center' | 'security-analyst' | 'policies' | 'cyber-range' | 'assessments' | 'evidence';
+  id:
+    | 'command-center'
+    | 'security-analyst'
+    | 'policies'
+    | 'cyber-range'
+    | 'assessments'
+    | 'evidence'
+    | 'trustops'
+    | 'questionnaires'
+    | 'review-queue'
+    | 'answer-library'
+    | 'evidence-maps'
+    | 'pulse'
+    | 'ai-governance'
+    | 'ai-use-cases'
+    | 'ai-vendors'
+    | 'ai-reviews'
+    | 'risk-register'
+    | 'roadmap'
+    | 'board-brief'
+    | 'quarterly-review'
+    | 'response-ops'
+    | 'incident-triage'
+    | 'tabletops';
   label: string;
   href: string;
   reason: string;
@@ -60,14 +83,19 @@ function parseAssistantText(payload: unknown) {
 }
 
 async function getTenantSnapshot(tenantId: string) {
-  const [templateCount, assessmentCount, inProgressCount, evidenceCount] = await Promise.all([
+  const [templateCount, assessmentCount, inProgressCount, evidenceCount, aiUseCaseCount, aiPendingReviews] = await Promise.all([
     prisma.template.count({ where: { tenantId } }),
     prisma.assessment.count({ where: { tenantId } }),
     prisma.assessment.count({ where: { tenantId, status: 'IN_PROGRESS' } }),
-    prisma.evidence.count({ where: { tenantId } })
+    prisma.evidence.count({ where: { tenantId } }),
+    prisma.aIUseCase.count({ where: { tenantId } }),
+    prisma.$transaction([
+      prisma.aIUseCase.count({ where: { tenantId, status: { in: ['DRAFT', 'NEEDS_REVIEW'] } } }),
+      prisma.aIVendorReview.count({ where: { tenantId, status: { in: ['DRAFT', 'NEEDS_REVIEW'] } } })
+    ]).then(([useCaseCount, vendorCount]) => useCaseCount + vendorCount)
   ]);
 
-  return `Templates: ${templateCount}; Assessments: ${assessmentCount}; In Progress: ${inProgressCount}; Evidence Files: ${evidenceCount}.`;
+  return `Templates: ${templateCount}; Assessments: ${assessmentCount}; In Progress: ${inProgressCount}; Evidence Files: ${evidenceCount}; AI Use Cases: ${aiUseCaseCount}; Open AI Reviews: ${aiPendingReviews}.`;
 }
 
 async function generateAnswer(args: {
@@ -173,6 +201,54 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     reason: 'Review daily mission queue and trend-informed priorities.'
   });
 
+  if (mode === 'general' || /board|executive|leadership|roadmap|risk register|quarterly|scorecard|posture/.test(normalized)) {
+    add({
+      id: 'pulse',
+      label: 'Pulse',
+      href: '/app/pulse',
+      reason: 'Open executive scorecards, risk register, roadmap, board brief, and quarterly review workflows.'
+    });
+    add({
+      id: 'risk-register',
+      label: 'Risk Register',
+      href: '/app/pulse/risks',
+      reason: 'Normalize and manage material cyber risks with owners, status, and target dates.'
+    });
+    add({
+      id: 'roadmap',
+      label: 'Pulse Roadmap',
+      href: '/app/pulse/roadmap',
+      reason: 'Translate risks and weak posture categories into a 30/60/90 plan.'
+    });
+  }
+
+  if (mode === 'general' || mode === 'compliance' || /ai governance|ai use case|ai vendor|llm|model|prompt|rag|agent|vendor intake|retention|training on customer data/.test(normalized)) {
+    add({
+      id: 'ai-governance',
+      label: 'AI Governance',
+      href: '/app/ai-governance',
+      reason: 'Open the AI governance dashboard for use cases, vendor reviews, policy mapping, and Pulse hooks.'
+    });
+    add({
+      id: 'ai-use-cases',
+      label: 'AI Use Cases',
+      href: '/app/ai-governance/use-cases',
+      reason: 'Register or review AI workflows with data classes, conditions, and decision state.'
+    });
+    add({
+      id: 'ai-vendors',
+      label: 'AI Vendor Intake',
+      href: '/app/ai-governance/vendors',
+      reason: 'Review AI vendor retention, training behavior, logging, and DPA status.'
+    });
+    add({
+      id: 'ai-reviews',
+      label: 'AI Review Queue',
+      href: '/app/ai-governance/reviews',
+      reason: 'Assign reviewers, set due dates, and work overdue AI governance decisions.'
+    });
+  }
+
   add({
     id: 'security-analyst',
     label: 'Security Analyst',
@@ -180,12 +256,66 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     reason: 'Run a structured analysis workflow and export a report.'
   });
 
+  if (mode === 'compliance' || /questionnaire|diligence|trust packet|security review|evidence map|procurement|buyer/.test(normalized)) {
+    add({
+      id: 'trustops',
+      label: 'TrustOps',
+      href: '/app/trust',
+      reason: 'Manage trust packets, evidence linking, and buyer-facing response workflows.'
+    });
+    add({
+      id: 'questionnaires',
+      label: 'Questionnaires',
+      href: '/app/questionnaires',
+      reason: 'Draft, review, and approve questionnaire responses with evidence citations.'
+    });
+    add({
+      id: 'review-queue',
+      label: 'TrustOps Review Queue',
+      href: '/app/trust/reviews',
+      reason: 'Assign reviewers, manage due dates, and keep TrustOps work inside SLA.'
+    });
+    add({
+      id: 'answer-library',
+      label: 'Answer Library',
+      href: '/app/trust/answer-library',
+      reason: 'Promote and govern reusable approved answers for faster buyer diligence.'
+    });
+  }
+
+  if (mode === 'compliance' || /evidence map|support strength|missing evidence|trust packet/.test(normalized)) {
+    add({
+      id: 'evidence-maps',
+      label: 'Evidence Maps',
+      href: '/app/questionnaires',
+      reason: 'Build or review persisted evidence maps with support strength and next actions.'
+    });
+  }
+
+  if (/board brief|leadership update|executive brief|board deck/.test(normalized)) {
+    add({
+      id: 'board-brief',
+      label: 'Board Brief',
+      href: '/app/pulse',
+      reason: 'Draft and review a persisted executive brief with export controls.'
+    });
+  }
+
+  if (/quarterly review|qbr|quarterly cadence/.test(normalized)) {
+    add({
+      id: 'quarterly-review',
+      label: 'Quarterly Review',
+      href: '/app/pulse',
+      reason: 'Prepare the recurring leadership review from the latest scorecard, roadmap, and board brief.'
+    });
+  }
+
   if (mode === 'compliance' || /soc\s?2|iso|nist|audit|policy|control/.test(normalized)) {
     add({
       id: 'policies',
-      label: 'Policy Generator',
+      label: 'Policies',
       href: '/app/policies',
-      reason: 'Generate policy docs aligned to compliance frameworks.'
+      reason: 'Generate policy packages aligned to compliance frameworks.'
     });
     add({
       id: 'assessments',
@@ -197,10 +327,31 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
 
   if (mode === 'incident_response' || /incident|breach|contain|forensic|alert/.test(normalized)) {
     add({
+      id: 'response-ops',
+      label: 'Response Ops',
+      href: '/app/response-ops',
+      reason: 'Open incident triage, runbook packs, after-action reporting, and tabletop workflows.'
+    });
+    add({
+      id: 'incident-triage',
+      label: 'Incident Triage',
+      href: '/app/response-ops',
+      reason: 'Start the first-hour incident record, checklist, and decision trail.'
+    });
+    add({
       id: 'evidence',
       label: 'Evidence Vault',
       href: '/app/evidence',
       reason: 'Capture and index supporting artifacts for investigation.'
+    });
+  }
+
+  if (/tabletop|exercise|drill|after action|post incident/.test(normalized)) {
+    add({
+      id: 'tabletops',
+      label: 'Tabletop Exercises',
+      href: '/app/response-ops',
+      reason: 'Prepare or complete a tabletop exercise and convert gaps into tasks, findings, and risks.'
     });
   }
 
@@ -213,7 +364,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     });
   }
 
-  return Array.from(tools.values()).slice(0, 4);
+  return Array.from(tools.values()).slice(0, 6);
 }
 
 export async function POST(request: Request) {

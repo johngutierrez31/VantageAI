@@ -97,11 +97,63 @@ enum QuestionnaireMappingStatus {
   UNMAPPED
 }
 
+enum QuestionnaireUploadStatus {
+  UPLOADED
+  MAPPED
+  DRAFTED
+  NEEDS_REVIEW
+  APPROVED
+  EXPORTED
+}
+
+enum DraftAnswerStatus {
+  DRAFT
+  NEEDS_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ApprovedAnswerScope {
+  REUSABLE
+  TENANT_SPECIFIC
+}
+
+enum ApprovedAnswerStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 enum TrustInboxStatus {
   NEW
   IN_REVIEW
   DRAFT_READY
   DELIVERED
+}
+
+enum TrustPacketStatus {
+  DRAFT
+  READY_FOR_REVIEW
+  READY_TO_SHARE
+  SHARED
+}
+
+enum TrustPacketShareMode {
+  INTERNAL_REVIEW
+  EXTERNAL_SHARE
+}
+
+enum EvidenceMapStatus {
+  DRAFT
+  NEEDS_REVIEW
+  APPROVED
+  ARCHIVED
+}
+
+enum EvidenceMapSupportStrength {
+  STRONG
+  MODERATE
+  WEAK
+  MISSING
 }
 
 enum TaskStatus {
@@ -128,6 +180,274 @@ enum EvidenceRequestStatus {
   REQUESTED
   RECEIVED
   COMPLETE
+}
+
+enum FindingStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  ARCHIVED
+}
+
+enum FindingSourceType {
+  TRUSTOPS_EVIDENCE_GAP
+  TRUSTOPS_REJECTION
+  TRUSTOPS_EVIDENCE_MAP
+  AI_GOVERNANCE_HIGH_RISK
+  AI_GOVERNANCE_REJECTION
+  AI_VENDOR_REVIEW
+  RESPONSE_OPS_INCIDENT
+  RESPONSE_OPS_AFTER_ACTION
+  RESPONSE_OPS_TABLETOP
+}
+
+enum PulseSnapshotPeriodType {
+  MONTHLY
+  QUARTERLY
+}
+
+enum PulseSnapshotStatus {
+  DRAFT
+  NEEDS_REVIEW
+  APPROVED
+  PUBLISHED
+}
+
+enum PulseSourceModule {
+  TRUSTOPS
+  ASSESSMENTS
+  FINDINGS
+  TASKS
+  PULSE
+  AI_GOVERNANCE
+  RESPONSE_OPS
+  MANUAL
+}
+
+enum RiskRegisterSourceType {
+  MANUAL
+  FINDING
+  TRUSTOPS_EVIDENCE_GAP
+  TRUSTOPS_REJECTION
+  TRUSTOPS_EVIDENCE_MAP
+  ASSESSMENT_GAP
+  TASK
+  PULSE_CATEGORY
+  AI_USE_CASE
+  AI_VENDOR_REVIEW
+  INCIDENT
+  TABLETOP
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RiskRegisterStatus {
+  OPEN
+  IN_REVIEW
+  MITIGATING
+  ACCEPTED
+  CLOSED
+}
+
+enum RoadmapStatus {
+  DRAFT
+  NEEDS_REVIEW
+  APPROVED
+  ARCHIVED
+}
+
+enum RoadmapHorizon {
+  DAYS_30
+  DAYS_60
+  DAYS_90
+}
+
+enum RoadmapItemStatus {
+  PLANNED
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum BoardBriefStatus {
+  DRAFT
+  NEEDS_REVIEW
+  APPROVED
+}
+
+enum QuarterlyReviewStatus {
+  DRAFT
+  FINALIZED
+}
+
+enum IncidentStatus {
+  NEW
+  TRIAGE
+  ACTIVE
+  CONTAINED
+  RECOVERING
+  RESOLVED
+  POST_INCIDENT_REVIEW
+  ARCHIVED
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentType {
+  IDENTITY_COMPROMISE
+  RANSOMWARE
+  PHISHING
+  THIRD_PARTY_BREACH
+  CLOUD_EXPOSURE
+  LOST_DEVICE
+  AI_MISUSE
+  OTHER
+}
+
+enum ResponseOpsPhase {
+  TRIAGE
+  EVIDENCE_COLLECTION
+  CONTAINMENT
+  ERADICATION
+  RECOVERY
+  COMMUNICATIONS
+  POST_INCIDENT_REVIEW
+}
+
+enum IncidentRunbookPackStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum IncidentTimelineEventType {
+  CREATED
+  TRIAGE_STARTED
+  STATUS_CHANGED
+  RUNBOOK_LAUNCHED
+  COMMUNICATION_SENT
+  CONTAINMENT_COMPLETED
+  DECISION_LOG
+  NOTE
+  AFTER_ACTION_GENERATED
+  TABLETOP_LINKED
+}
+
+enum AfterActionReportStatus {
+  DRAFT
+  NEEDS_REVIEW
+  APPROVED
+}
+
+enum TabletopExerciseStatus {
+  DRAFT
+  COMPLETED
+  ARCHIVED
+}
+
+enum AIGovernanceStatus {
+  DRAFT
+  NEEDS_REVIEW
+  APPROVED
+  APPROVED_WITH_CONDITIONS
+  REJECTED
+  ARCHIVED
+}
+
+enum AIUseCaseType {
+  INTERNAL_PRODUCTIVITY
+  CUSTOMER_FACING
+  SECURITY_WORKFLOW
+  ENGINEERING_WORKFLOW
+  CONTENT_WORKFLOW
+  ANALYTICS_WORKFLOW
+  OTHER
+}
+
+enum AIWorkflowType {
+  ASSISTANT
+  CHATBOT
+  AUTOMATION
+  AGENT
+  RAG
+  ANALYTICS
+  CONTENT_GENERATION
+  OTHER
+}
+
+enum AIDeploymentContext {
+  SAAS
+  INTERNAL
+  HYBRID
+  API
+  LOCAL_MODEL
+  OTHER
+}
+
+enum AIRiskTier {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+enum AIYesNoUnknown {
+  YES
+  NO
+  UNKNOWN
+}
+
+enum AIRetentionStatus {
+  KNOWN
+  UNKNOWN
+  NO_RETENTION
+}
+
+enum AIDpaStatus {
+  NOT_STARTED
+  REQUESTED
+  RECEIVED
+  SIGNED
+  NOT_REQUIRED
+}
+
+enum AIDataClass {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  CUSTOMER_DATA
+  CUSTOMER_CONTENT
+  CUSTOMER_METADATA
+  PII
+  PHI
+  PCI
+  FINANCIAL
+  SOURCE_CODE
+  SECRETS
+  SECURITY_LOGS
+  HR
+}
+
+enum AIPolicyRequirement {
+  HUMAN_REVIEW_REQUIRED
+  APPROVED_VENDOR_ONLY
+  NO_CUSTOMER_SECRETS
+  NO_REGULATED_DATA
+  NO_INTERNET_ACCESS
+  NO_EXTERNAL_TOOL_INVOCATION
+  LOGGING_REQUIRED
+  RETENTION_MUST_BE_KNOWN
 }
 
 model Tenant {
@@ -162,9 +482,28 @@ model Tenant {
   questionnaireItems    QuestionnaireItem[]
   questionnaireMappings QuestionnaireMapping[]
   draftAnswers          DraftAnswer[]
+  approvedAnswers       ApprovedAnswer[]
+  evidenceMaps          EvidenceMap[]
+  evidenceMapItems      EvidenceMapItem[]
   trustInboxItems       TrustInboxItem[]
   trustDocs             TrustDoc[]
   trustInboxAttachments TrustInboxAttachment[]
+  trustPackets          TrustPacket[]
+  findings              Finding[]
+  pulseSnapshots        PulseSnapshot[]
+  pulseCategoryScores   PulseCategoryScore[]
+  riskRegisterItems     RiskRegisterItem[]
+  pulseRoadmaps         PulseRoadmap[]
+  roadmapItems          RoadmapItem[]
+  boardBriefs           BoardBrief[]
+  quarterlyReviews      QuarterlyReview[]
+  aiUseCases            AIUseCase[]
+  aiVendorReviews       AIVendorReview[]
+  incidents             Incident[]
+  incidentRunbookPacks  IncidentRunbookPack[]
+  incidentTimelineEvents IncidentTimelineEvent[]
+  afterActionReports    AfterActionReport[]
+  tabletopExercises     TabletopExercise[]
   branding              TenantBranding?
   auditLogs             AuditLog[]
   stripeCustomers       StripeCustomer[]
@@ -423,24 +762,51 @@ model Exception {
 }
 
 model Task {
-  id           String       @id @default(cuid())
-  tenantId     String
-  assessmentId String?
-  title        String
-  controlCode  String?
-  description  String?
-  assignee     String?
-  dueDate      DateTime?
-  status       TaskStatus   @default(TODO)
-  priority     TaskPriority @default(MEDIUM)
-  createdBy    String
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assessment   Assessment?  @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+  id                    String               @id @default(cuid())
+  tenantId              String
+  assessmentId          String?
+  questionnaireUploadId String?
+  questionnaireItemId   String?
+  trustInboxItemId      String?
+  aiUseCaseId           String?
+  aiVendorReviewId      String?
+  incidentId            String?
+  incidentRunbookPackId String?
+  tabletopExerciseId    String?
+  title                 String
+  controlCode           String?
+  description           String?
+  assignee              String?
+  dueDate               DateTime?
+  status                TaskStatus           @default(TODO)
+  priority              TaskPriority         @default(MEDIUM)
+  responseOpsPhase      ResponseOpsPhase?
+  responseOpsOrder      Int?
+  createdBy             String
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  tenant                Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assessment            Assessment?          @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+  questionnaireUpload   QuestionnaireUpload? @relation(fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
+  questionnaireItem     QuestionnaireItem?   @relation(fields: [questionnaireItemId], references: [id], onDelete: SetNull)
+  trustInboxItem        TrustInboxItem?      @relation(fields: [trustInboxItemId], references: [id], onDelete: SetNull)
+  aiUseCase             AIUseCase?           @relation(fields: [aiUseCaseId], references: [id], onDelete: SetNull)
+  aiVendorReview        AIVendorReview?      @relation(fields: [aiVendorReviewId], references: [id], onDelete: SetNull)
+  incident              Incident?            @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  incidentRunbookPack   IncidentRunbookPack? @relation(fields: [incidentRunbookPackId], references: [id], onDelete: SetNull)
+  tabletopExercise      TabletopExercise?    @relation(fields: [tabletopExerciseId], references: [id], onDelete: SetNull)
+  findings              Finding[]
 
   @@index([tenantId, status])
   @@index([tenantId, assessmentId])
+  @@index([tenantId, questionnaireUploadId])
+  @@index([tenantId, questionnaireItemId])
+  @@index([tenantId, trustInboxItemId])
+  @@index([tenantId, aiUseCaseId])
+  @@index([tenantId, aiVendorReviewId])
+  @@index([tenantId, incidentId])
+  @@index([tenantId, incidentRunbookPackId])
+  @@index([tenantId, tabletopExerciseId])
   @@index([tenantId, dueDate])
 }
 
@@ -502,18 +868,32 @@ model QuestionnaireImportRow {
 }
 
 model QuestionnaireUpload {
-  id             String                      @id @default(cuid())
-  tenantId       String
-  filename       String
-  originalFormat QuestionnaireOriginalFormat
-  parsedJson     Json
-  createdBy      String
-  createdAt      DateTime                    @default(now())
-  updatedAt      DateTime                    @updatedAt
-  tenant         Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items          QuestionnaireItem[]
-  trustInboxItem TrustInboxItem?             @relation("TrustInboxUpload")
+  id                     String                      @id @default(cuid())
+  tenantId               String
+  organizationName       String?
+  filename               String
+  originalFormat         QuestionnaireOriginalFormat
+  status                 QuestionnaireUploadStatus   @default(UPLOADED)
+  parsedJson             Json
+  createdBy              String
+  assignedReviewerUserId String?
+  reviewerUserId         String?
+  reviewDueAt            DateTime?
+  reviewedAt             DateTime?
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+  tenant                 Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items                  QuestionnaireItem[]
+  tasks                  Task[]
+  trustPackets           TrustPacket[]
+  evidenceMap            EvidenceMap?
+  sourceApprovedAnswers  ApprovedAnswer[]
+  findings               Finding[]
+  trustInboxItem         TrustInboxItem?             @relation("TrustInboxUpload")
+  incidents              Incident[]
 
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, assignedReviewerUserId, reviewDueAt])
   @@index([tenantId, createdAt])
 }
 
@@ -522,15 +902,23 @@ model QuestionnaireItem {
   tenantId              String
   questionnaireUploadId String
   rowKey                String
+  rowOrder              Int
   questionText          String
+  normalizedQuestion    String?
   contextJson           Json?
   createdAt             DateTime               @default(now())
   tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   questionnaireUpload   QuestionnaireUpload    @relation(fields: [questionnaireUploadId], references: [id], onDelete: Cascade)
   mappings              QuestionnaireMapping[]
   draftAnswers          DraftAnswer[]
+  tasks                 Task[]
+  sourceApprovedAnswers ApprovedAnswer[]
+  evidenceMapItems      EvidenceMapItem[]
+  findings              Finding[]
 
+  @@unique([questionnaireUploadId, rowOrder])
   @@index([tenantId, questionnaireUploadId])
+  @@index([tenantId, normalizedQuestion])
   @@index([questionnaireUploadId, rowKey])
 }
 
@@ -552,18 +940,63 @@ model QuestionnaireMapping {
 }
 
 model DraftAnswer {
-  id                  String            @id @default(cuid())
-  tenantId            String
-  questionnaireItemId String
-  answerText          String
-  citationsJson       Json
-  model               String
-  createdBy           String
-  createdAt           DateTime          @default(now())
-  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  questionnaireItem   QuestionnaireItem @relation(fields: [questionnaireItemId], references: [id], onDelete: Cascade)
+  id                    String            @id @default(cuid())
+  tenantId              String
+  questionnaireItemId   String
+  normalizedQuestion    String            @default("")
+  mappedControlIds      String[]          @default([])
+  supportingEvidenceIds String[]          @default([])
+  answerText            String
+  citationsJson         Json
+  model                 String
+  confidenceScore       Float             @default(0)
+  reviewRequired        Boolean           @default(true)
+  status                DraftAnswerStatus @default(DRAFT)
+  reviewReason          String?
+  notesForReviewer      String?
+  reviewerNotes         String?
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  createdBy             String
+  createdAt             DateTime          @default(now())
+  tenant                Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questionnaireItem     QuestionnaireItem @relation(fields: [questionnaireItemId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, status, createdAt])
   @@index([tenantId, questionnaireItemId, createdAt])
+}
+
+model ApprovedAnswer {
+  id                          String               @id @default(cuid())
+  tenantId                    String
+  normalizedQuestion          String
+  questionText                String
+  answerText                  String
+  mappedControlIds            String[]             @default([])
+  supportingEvidenceIds       String[]             @default([])
+  status                      ApprovedAnswerStatus @default(ACTIVE)
+  scope                       ApprovedAnswerScope  @default(REUSABLE)
+  sourceDraftAnswerId         String?
+  sourceQuestionnaireUploadId String?
+  sourceQuestionnaireItemId   String?
+  ownerUserId                 String?
+  reviewerUserId              String?
+  reviewedAt                  DateTime?
+  lastUsedAt                  DateTime?
+  usageCount                  Int                  @default(0)
+  archivedAt                  DateTime?
+  archivedBy                  String?
+  createdBy                   String
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  tenant                      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sourceQuestionnaireUpload   QuestionnaireUpload? @relation(fields: [sourceQuestionnaireUploadId], references: [id], onDelete: SetNull)
+  sourceQuestionnaireItem     QuestionnaireItem?   @relation(fields: [sourceQuestionnaireItemId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, normalizedQuestion, scope])
+  @@index([tenantId, normalizedQuestion])
+  @@index([tenantId, status, scope, updatedAt])
+  @@index([tenantId, scope, updatedAt])
 }
 
 model TrustInboxItem {
@@ -580,9 +1013,634 @@ model TrustInboxItem {
   tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   questionnaireUpload   QuestionnaireUpload?   @relation("TrustInboxUpload", fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
   attachments           TrustInboxAttachment[]
+  tasks                 Task[]
+  evidenceMaps          EvidenceMap[]
+  trustPackets          TrustPacket[]
+  incidents             Incident[]
 
   @@unique([questionnaireUploadId])
   @@index([tenantId, status, updatedAt])
+}
+
+model TrustPacket {
+  id                     String               @id @default(cuid())
+  tenantId               String
+  trustInboxItemId       String?
+  questionnaireUploadId  String?
+  evidenceMapId          String?
+  name                   String
+  status                 TrustPacketStatus    @default(DRAFT)
+  shareMode              TrustPacketShareMode @default(INTERNAL_REVIEW)
+  packetSections         Json
+  packageManifestJson    Json?
+  includedArtifactIds    String[]             @default([])
+  excludedArtifactIds    String[]             @default([])
+  staleArtifactIds       String[]             @default([])
+  reviewerRequired       Boolean              @default(false)
+  assignedReviewerUserId String?
+  reviewDueAt            DateTime?
+  reviewerNotes          String?
+  reviewedBy             String?
+  reviewedAt             DateTime?
+  approvedContactName    String?
+  approvedContactEmail   String?
+  lastExportedAt         DateTime?
+  exportCount            Int                  @default(0)
+  createdBy              String
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  tenant                 Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  trustInboxItem         TrustInboxItem?      @relation(fields: [trustInboxItemId], references: [id], onDelete: SetNull)
+  questionnaireUpload    QuestionnaireUpload? @relation(fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
+  evidenceMap            EvidenceMap?         @relation(fields: [evidenceMapId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, assignedReviewerUserId, reviewDueAt])
+  @@index([tenantId, trustInboxItemId])
+  @@index([tenantId, questionnaireUploadId])
+}
+
+model EvidenceMap {
+  id                     String              @id @default(cuid())
+  tenantId               String
+  questionnaireUploadId  String              @unique
+  trustInboxItemId       String?
+  name                   String
+  status                 EvidenceMapStatus   @default(DRAFT)
+  assignedReviewerUserId String?
+  reviewDueAt            DateTime?
+  reviewerNotes          String?
+  reviewedBy             String?
+  reviewedAt             DateTime?
+  createdBy              String
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  tenant                 Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questionnaireUpload    QuestionnaireUpload @relation(fields: [questionnaireUploadId], references: [id], onDelete: Cascade)
+  trustInboxItem         TrustInboxItem?     @relation(fields: [trustInboxItemId], references: [id], onDelete: SetNull)
+  items                  EvidenceMapItem[]
+  trustPackets           TrustPacket[]
+  findings               Finding[]
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, assignedReviewerUserId, reviewDueAt])
+  @@index([tenantId, trustInboxItemId])
+}
+
+model EvidenceMapItem {
+  id                    String                     @id @default(cuid())
+  tenantId              String
+  evidenceMapId         String
+  questionnaireItemId   String?
+  questionCluster       String
+  normalizedQuestion    String
+  relatedControlIds     String[]                   @default([])
+  evidenceArtifactIds   String[]                   @default([])
+  ownerIds              String[]                   @default([])
+  supportStrength       EvidenceMapSupportStrength
+  buyerSafeSummary      String
+  recommendedNextAction String
+  relatedTaskId         String?
+  relatedFindingId      String?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  tenant                Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  evidenceMap           EvidenceMap                @relation(fields: [evidenceMapId], references: [id], onDelete: Cascade)
+  questionnaireItem     QuestionnaireItem?         @relation(fields: [questionnaireItemId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, evidenceMapId])
+  @@index([tenantId, questionnaireItemId])
+  @@index([tenantId, supportStrength])
+}
+
+model Finding {
+  id                    String                      @id @default(cuid())
+  tenantId              String
+  sourceType            FindingSourceType
+  status                FindingStatus               @default(OPEN)
+  priority              TaskPriority                @default(MEDIUM)
+  title                 String
+  description           String
+  controlCode           String?
+  supportStrength       EvidenceMapSupportStrength?
+  ownerUserId           String?
+  questionnaireUploadId String?
+  questionnaireItemId   String?
+  evidenceMapId         String?
+  evidenceMapItemId     String?
+  taskId                String?
+  aiUseCaseId           String?
+  aiVendorReviewId      String?
+  incidentId            String?
+  tabletopExerciseId    String?
+  createdBy             String
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  tenant                Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  questionnaireUpload   QuestionnaireUpload?        @relation(fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
+  questionnaireItem     QuestionnaireItem?          @relation(fields: [questionnaireItemId], references: [id], onDelete: SetNull)
+  evidenceMap           EvidenceMap?                @relation(fields: [evidenceMapId], references: [id], onDelete: SetNull)
+  task                  Task?                       @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  aiUseCase             AIUseCase?                  @relation(fields: [aiUseCaseId], references: [id], onDelete: SetNull)
+  aiVendorReview        AIVendorReview?             @relation(fields: [aiVendorReviewId], references: [id], onDelete: SetNull)
+  incident              Incident?                   @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  tabletopExercise      TabletopExercise?           @relation(fields: [tabletopExerciseId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status, priority, updatedAt])
+  @@index([tenantId, questionnaireUploadId])
+  @@index([tenantId, questionnaireItemId])
+  @@index([tenantId, evidenceMapId])
+  @@index([tenantId, aiUseCaseId])
+  @@index([tenantId, aiVendorReviewId])
+  @@index([tenantId, incidentId])
+  @@index([tenantId, tabletopExerciseId])
+}
+
+model PulseSnapshot {
+  id                        String                  @id @default(cuid())
+  tenantId                  String
+  name                      String
+  periodType                PulseSnapshotPeriodType
+  reportingPeriod           String
+  snapshotDate              DateTime
+  status                    PulseSnapshotStatus     @default(DRAFT)
+  overallScore              Float
+  overallDelta              Float?
+  assessmentSignalScore     Float
+  findingsSignalScore       Float
+  remediationSignalScore    Float
+  trustSignalScore          Float
+  readinessSignalScore      Float
+  openFindingsCount         Int                     @default(0)
+  overdueFindingsCount      Int                     @default(0)
+  overdueTasksCount         Int                     @default(0)
+  openEvidenceGapCount      Int                     @default(0)
+  trustReviewBacklogCount   Int                     @default(0)
+  answerReuseCount          Int                     @default(0)
+  trustPacketsExportedCount Int                     @default(0)
+  assessedControlCount      Int                     @default(0)
+  summaryText               String
+  measuredInputsJson        Json
+  createdBy                 String
+  reviewedBy                String?
+  approvedBy                String?
+  reviewedAt                DateTime?
+  approvedAt                DateTime?
+  publishedAt               DateTime?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+  tenant                    Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoryScores            PulseCategoryScore[]
+  roadmaps                  PulseRoadmap[]
+  boardBriefs               BoardBrief[]
+  quarterlyReviews          QuarterlyReview[]
+
+  @@unique([tenantId, periodType, reportingPeriod])
+  @@index([tenantId, snapshotDate])
+  @@index([tenantId, status, updatedAt])
+}
+
+model PulseCategoryScore {
+  id             String        @id @default(cuid())
+  tenantId       String
+  snapshotId     String
+  categoryKey    String
+  label          String
+  score          Float
+  delta          Float?
+  weight         Float         @default(1)
+  measuredValue  Float
+  benchmarkValue Float?
+  summaryText    String
+  createdAt      DateTime      @default(now())
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  snapshot       PulseSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, categoryKey])
+  @@index([tenantId, snapshotId])
+}
+
+model RiskRegisterItem {
+  id                      String                 @id @default(cuid())
+  tenantId                String
+  title                   String
+  normalizedRiskStatement String
+  description             String
+  businessImpactSummary   String
+  sourceType              RiskRegisterSourceType
+  sourceModule            PulseSourceModule
+  sourceKey               String
+  sourceReference         String?
+  severity                RiskLevel
+  likelihood              RiskLevel
+  impact                  RiskLevel
+  status                  RiskRegisterStatus     @default(OPEN)
+  ownerUserId             String?
+  targetDueAt             DateTime?
+  linkedControlIds        String[]               @default([])
+  linkedFindingIds        String[]               @default([])
+  linkedTaskIds           String[]               @default([])
+  linkedQuestionnaireIds  String[]               @default([])
+  linkedEvidenceMapIds    String[]               @default([])
+  linkedTrustPacketIds    String[]               @default([])
+  linkedAssessmentIds     String[]               @default([])
+  linkedAiUseCaseIds      String[]               @default([])
+  linkedAiVendorReviewIds String[]               @default([])
+  linkedIncidentIds       String[]               @default([])
+  linkedTabletopIds       String[]               @default([])
+  reviewNotes             String?
+  reviewedBy              String?
+  reviewedAt              DateTime?
+  createdBy               String
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  tenant                  Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, sourceKey])
+  @@index([tenantId, status, severity, updatedAt])
+  @@index([tenantId, ownerUserId, targetDueAt])
+  @@index([tenantId, sourceModule, updatedAt])
+}
+
+model AIUseCase {
+  id                     String               @id @default(cuid())
+  tenantId               String
+  vendorReviewId         String?
+  name                   String
+  description            String
+  businessOwner          String
+  department             String?
+  useCaseType            AIUseCaseType
+  workflowType           AIWorkflowType
+  vendorName             String?
+  modelFamily            String?
+  deploymentContext      AIDeploymentContext
+  dataClasses            AIDataClass[]        @default([])
+  allowedDataClasses     AIDataClass[]        @default([])
+  restrictedDataClasses  AIDataClass[]        @default([])
+  prohibitedDataClasses  AIDataClass[]        @default([])
+  customerDataInvolved   AIYesNoUnknown       @default(UNKNOWN)
+  regulatedDataInvolved  AIYesNoUnknown       @default(UNKNOWN)
+  secretsInvolved        AIYesNoUnknown       @default(UNKNOWN)
+  externalToolAccess     AIYesNoUnknown       @default(UNKNOWN)
+  internetAccess         AIYesNoUnknown       @default(UNKNOWN)
+  humanReviewRequired    Boolean              @default(true)
+  riskTier               AIRiskTier           @default(MODERATE)
+  status                 AIGovernanceStatus   @default(DRAFT)
+  linkedPolicyIds        String[]             @default([])
+  matchedPolicyIds       String[]             @default([])
+  requiredConditions     AIPolicyRequirement[] @default([])
+  unmetRequirements      AIPolicyRequirement[] @default([])
+  approvalBlockers       AIPolicyRequirement[] @default([])
+  decisionConditions     String[]             @default([])
+  primaryRisks           String[]             @default([])
+  requiredControls       String[]             @default([])
+  evidenceArtifactIds    String[]             @default([])
+  assignedReviewerUserId String?
+  reviewDueAt            DateTime?
+  reviewerNotes          String?
+  reviewedBy             String?
+  approvedBy             String?
+  reviewedAt             DateTime?
+  approvedAt             DateTime?
+  linkedFindingIds       String[]             @default([])
+  linkedRiskIds          String[]             @default([])
+  linkedTaskIds          String[]             @default([])
+  createdBy              String
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  tenant                 Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vendorReview           AIVendorReview?      @relation(fields: [vendorReviewId], references: [id], onDelete: SetNull)
+  tasks                  Task[]
+  findings               Finding[]
+  incidents              Incident[]
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, riskTier, updatedAt])
+  @@index([tenantId, assignedReviewerUserId, reviewDueAt])
+  @@index([tenantId, vendorReviewId])
+  @@index([tenantId, name])
+}
+
+model AIVendorReview {
+  id                     String               @id @default(cuid())
+  tenantId               String
+  vendorName             String
+  productName            String
+  primaryUseCase         String
+  modelProvider          String?
+  deploymentType         AIDeploymentContext
+  authenticationSupport  AIYesNoUnknown       @default(UNKNOWN)
+  loggingSupport         AIYesNoUnknown       @default(UNKNOWN)
+  retentionPolicyStatus  AIRetentionStatus    @default(UNKNOWN)
+  trainsOnCustomerData   AIYesNoUnknown       @default(UNKNOWN)
+  subprocessorsStatus    AIYesNoUnknown       @default(UNKNOWN)
+  dpaStatus              AIDpaStatus          @default(NOT_STARTED)
+  securityDocsRequested  Boolean              @default(false)
+  securityDocsReceived   Boolean              @default(false)
+  dataClasses            AIDataClass[]        @default([])
+  linkedPolicyIds        String[]             @default([])
+  matchedPolicyIds       String[]             @default([])
+  requiredConditions     AIPolicyRequirement[] @default([])
+  unmetRequirements      AIPolicyRequirement[] @default([])
+  approvalBlockers       AIPolicyRequirement[] @default([])
+  decisionConditions     String[]             @default([])
+  riskNotes              String?
+  primaryRisks           String[]             @default([])
+  requiredControls       String[]             @default([])
+  ownerUserId            String?
+  assignedReviewerUserId String?
+  reviewDueAt            DateTime?
+  reviewerNotes          String?
+  riskTier               AIRiskTier           @default(MODERATE)
+  status                 AIGovernanceStatus   @default(DRAFT)
+  reviewedBy             String?
+  approvedBy             String?
+  reviewedAt             DateTime?
+  approvedAt             DateTime?
+  evidenceArtifactIds    String[]             @default([])
+  linkedFindingIds       String[]             @default([])
+  linkedRiskIds          String[]             @default([])
+  linkedTaskIds          String[]             @default([])
+  createdBy              String
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  tenant                 Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  useCases               AIUseCase[]
+  tasks                  Task[]
+  findings               Finding[]
+  incidents              Incident[]
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, riskTier, updatedAt])
+  @@index([tenantId, assignedReviewerUserId, reviewDueAt])
+  @@index([tenantId, ownerUserId, reviewDueAt])
+  @@index([tenantId, vendorName, productName])
+}
+
+model PulseRoadmap {
+  id               String            @id @default(cuid())
+  tenantId         String
+  snapshotId       String            @unique
+  name             String
+  reportingPeriod  String
+  status           RoadmapStatus     @default(DRAFT)
+  reviewerNotes    String?
+  createdBy        String
+  reviewedBy       String?
+  approvedBy       String?
+  reviewedAt       DateTime?
+  approvedAt       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  snapshot         PulseSnapshot     @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  items            RoadmapItem[]
+  boardBriefs      BoardBrief[]
+  quarterlyReviews QuarterlyReview[]
+
+  @@index([tenantId, status, updatedAt])
+}
+
+model RoadmapItem {
+  id               String            @id @default(cuid())
+  tenantId         String
+  roadmapId        String
+  title            String
+  horizon          RoadmapHorizon
+  ownerUserId      String?
+  dueAt            DateTime?
+  status           RoadmapItemStatus @default(PLANNED)
+  rationale        String
+  expectedImpact   String
+  linkedRiskIds    String[]          @default([])
+  linkedFindingIds String[]          @default([])
+  linkedTaskIds    String[]          @default([])
+  linkedControlIds String[]          @default([])
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roadmap          PulseRoadmap      @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, roadmapId, horizon])
+  @@index([tenantId, status, dueAt])
+}
+
+model BoardBrief {
+  id                        String            @id @default(cuid())
+  tenantId                  String
+  snapshotId                String
+  roadmapId                 String
+  title                     String
+  reportingPeriod           String
+  status                    BoardBriefStatus  @default(DRAFT)
+  overallPostureSummary     String
+  topRiskIds                String[]          @default([])
+  notableImprovements       String[]          @default([])
+  overdueActions            String[]          @default([])
+  leadershipDecisionsNeeded String[]          @default([])
+  roadmap30Days             String[]          @default([])
+  roadmap60Days             String[]          @default([])
+  roadmap90Days             String[]          @default([])
+  reviewerNotes             String?
+  createdBy                 String
+  reviewedBy                String?
+  approvedBy                String?
+  reviewedAt                DateTime?
+  approvedAt                DateTime?
+  lastExportedAt            DateTime?
+  exportCount               Int               @default(0)
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  tenant                    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  snapshot                  PulseSnapshot     @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  roadmap                   PulseRoadmap      @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  quarterlyReviews          QuarterlyReview[]
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, snapshotId, updatedAt])
+}
+
+model QuarterlyReview {
+  id              String                @id @default(cuid())
+  tenantId        String
+  snapshotId      String
+  roadmapId       String
+  boardBriefId    String
+  reviewPeriod    String
+  reviewDate      DateTime
+  attendeeNames   String[]              @default([])
+  notes           String?
+  decisionsMade   String[]              @default([])
+  followUpActions String[]              @default([])
+  topRiskIds      String[]              @default([])
+  status          QuarterlyReviewStatus @default(DRAFT)
+  createdBy       String
+  finalizedBy     String?
+  finalizedAt     DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  snapshot        PulseSnapshot         @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  roadmap         PulseRoadmap          @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  boardBrief      BoardBrief            @relation(fields: [boardBriefId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, reviewPeriod])
+  @@index([tenantId, status, reviewDate])
+}
+
+model Incident {
+  id                      String             @id @default(cuid())
+  tenantId                String
+  title                   String
+  description             String
+  incidentType            IncidentType
+  severity                IncidentSeverity
+  status                  IncidentStatus     @default(NEW)
+  detectionSource         String?
+  reportedBy              String?
+  incidentOwnerUserId     String?
+  communicationsOwnerUserId String?
+  affectedSystems         String[]           @default([])
+  affectedServices        String[]           @default([])
+  affectedVendorNames     String[]           @default([])
+  aiUseCaseId             String?
+  aiVendorReviewId        String?
+  questionnaireUploadId   String?
+  trustInboxItemId        String?
+  startedAt               DateTime           @default(now())
+  declaredAt              DateTime?
+  containedAt             DateTime?
+  resolvedAt              DateTime?
+  nextUpdateDueAt         DateTime?
+  executiveSummary        String?
+  internalNotes           String?
+  linkedFindingIds        String[]           @default([])
+  linkedRiskIds           String[]           @default([])
+  linkedBoardBriefIds     String[]           @default([])
+  linkedQuarterlyReviewIds String[]          @default([])
+  createdBy               String
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  tenant                  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  aiUseCase               AIUseCase?         @relation(fields: [aiUseCaseId], references: [id], onDelete: SetNull)
+  aiVendorReview          AIVendorReview?    @relation(fields: [aiVendorReviewId], references: [id], onDelete: SetNull)
+  questionnaireUpload     QuestionnaireUpload? @relation(fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
+  trustInboxItem          TrustInboxItem?    @relation(fields: [trustInboxItemId], references: [id], onDelete: SetNull)
+  tasks                   Task[]
+  findings                Finding[]
+  timelineEvents          IncidentTimelineEvent[]
+  runbookPacks            IncidentRunbookPack[]
+  afterActionReports      AfterActionReport[]
+
+  @@index([tenantId, status, severity, updatedAt])
+  @@index([tenantId, incidentOwnerUserId, nextUpdateDueAt])
+  @@index([tenantId, incidentType, createdAt])
+  @@index([tenantId, aiUseCaseId])
+  @@index([tenantId, aiVendorReviewId])
+}
+
+model IncidentRunbookPack {
+  id          String                    @id @default(cuid())
+  tenantId    String
+  incidentId  String
+  runbookId   String
+  title       String
+  summary     String?
+  status      IncidentRunbookPackStatus @default(ACTIVE)
+  createdBy   String
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  tenant      Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  incident    Incident                  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@index([tenantId, incidentId, updatedAt])
+  @@index([tenantId, status, updatedAt])
+}
+
+model IncidentTimelineEvent {
+  id          String                    @id @default(cuid())
+  tenantId    String
+  incidentId  String
+  eventType   IncidentTimelineEventType
+  title       String
+  detail      String?
+  isShareable Boolean                   @default(false)
+  createdBy   String
+  createdAt   DateTime                  @default(now())
+  tenant      Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  incident    Incident                  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, incidentId, createdAt])
+  @@index([tenantId, eventType, createdAt])
+}
+
+model AfterActionReport {
+  id               String                  @id @default(cuid())
+  tenantId         String
+  incidentId       String                  @unique
+  title            String
+  status           AfterActionReportStatus @default(DRAFT)
+  summary          String
+  affectedScope    String
+  timelineSummary  String[]                @default([])
+  actionsTaken     String[]                @default([])
+  currentStatus    String
+  lessonsLearned   String[]                @default([])
+  followUpActions  String[]                @default([])
+  decisionsNeeded  String[]                @default([])
+  linkedFindingIds String[]                @default([])
+  linkedRiskIds    String[]                @default([])
+  linkedTaskIds    String[]                @default([])
+  reviewerNotes    String?
+  createdBy        String
+  reviewedBy       String?
+  approvedBy       String?
+  reviewedAt       DateTime?
+  approvedAt       DateTime?
+  lastExportedAt   DateTime?
+  exportCount      Int                     @default(0)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  tenant           Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  incident         Incident                @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, incidentId, updatedAt])
+}
+
+model TabletopExercise {
+  id               String                @id @default(cuid())
+  tenantId         String
+  title            String
+  scenarioType     IncidentType
+  status           TabletopExerciseStatus @default(DRAFT)
+  exerciseDate     DateTime
+  participantNames String[]              @default([])
+  participantRoles String[]              @default([])
+  scenarioSummary  String
+  exerciseObjectives String[]            @default([])
+  expectedDecisions String[]             @default([])
+  exerciseNotes    String?
+  decisionsMade    String[]              @default([])
+  gapsIdentified   String[]              @default([])
+  followUpActions  String[]              @default([])
+  linkedFindingIds String[]              @default([])
+  linkedRiskIds    String[]              @default([])
+  linkedTaskIds    String[]              @default([])
+  reviewerNotes    String?
+  createdBy        String
+  completedBy      String?
+  completedAt      DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  tenant           Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tasks            Task[]
+  findings         Finding[]
+
+  @@index([tenantId, status, exerciseDate])
+  @@index([tenantId, scenarioType, updatedAt])
 }
 
 model TrustDoc {

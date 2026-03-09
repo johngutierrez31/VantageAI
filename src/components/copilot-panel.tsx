@@ -20,7 +20,26 @@ type ChatMessage = {
 type CopilotMode = 'general' | 'incident_response' | 'threat_modeling' | 'compliance' | 'architecture';
 
 type RecommendedTool = {
-  id: 'security-analyst' | 'policies' | 'cyber-range' | 'assessments' | 'evidence';
+  id:
+    | 'command-center'
+    | 'security-analyst'
+    | 'policies'
+    | 'cyber-range'
+    | 'assessments'
+    | 'evidence'
+    | 'trustops'
+    | 'questionnaires'
+    | 'review-queue'
+    | 'answer-library'
+    | 'evidence-maps'
+    | 'pulse'
+    | 'risk-register'
+    | 'roadmap'
+    | 'board-brief'
+    | 'quarterly-review'
+    | 'response-ops'
+    | 'incident-triage'
+    | 'tabletops';
   label: string;
   href: string;
   reason: string;
@@ -196,8 +215,8 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-5 shadow-panel">
-      <h3>AI Copilot</h3>
-      <p className="text-sm text-muted-foreground">Tenant: {tenantName}</p>
+      <h3>Copilot</h3>
+      <p className="text-sm text-muted-foreground">Tenant: {tenantName} | Workflow launcher and evidence-aware guidance.</p>
       <div className="mb-3 mt-3 grid gap-2 md:grid-cols-2">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Mode</p>
@@ -289,7 +308,7 @@ export function CopilotPanel({ tenantName }: { tenantName: string }) {
       <form onSubmit={sendMessage} className="grid">
         <textarea
           rows={4}
-          placeholder="Ask for practical next steps, evidence checklists, or roadmap plans..."
+          placeholder="Ask for a guided workflow, next step, evidence checklist, or roadmap plan..."
           value={input}
           onChange={(event) => setInput(event.target.value)}
           required

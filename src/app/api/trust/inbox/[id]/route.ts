@@ -21,7 +21,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                   take: 1
                 }
               },
-              orderBy: { createdAt: 'asc' }
+              orderBy: { rowOrder: 'asc' }
             }
           }
         },

@@ -23,6 +23,7 @@ function buildExecutiveSummary(pulse: TenantSecurityPulse, trends: TrendSignal[]
     `Open remediation tasks: ${pulse.openTasks} (${pulse.criticalTasks} critical, ${pulse.overdueTasks} overdue).`,
     `Active assessments: ${pulse.assessmentsInProgress}.`,
     `Trust/evidence pressure: ${pulse.pendingEvidenceRequests} requests and ${pulse.trustInboxBacklog} trust backlog items.`,
+    `Response pressure: ${pulse.activeIncidents} active incidents, ${pulse.overdueIncidentActions} overdue incident actions, and ${pulse.upcomingTabletops} upcoming tabletop exercises.`,
     `External pressure: ${criticalTrendCount} critical and ${
       trends.filter((trend) => trend.severity === 'high').length
     } high trend signals are currently tracked.`
@@ -38,6 +39,10 @@ function buildNowActions(pulse: TenantSecurityPulse, missionQueue: MissionPlanIt
 
   if (pulse.expiringExceptionsNext7Days > 0) {
     actions.push('Resolve expiring risk exceptions before due date.');
+  }
+
+  if (pulse.activeIncidents > 0 || pulse.overdueIncidentActions > 0) {
+    actions.push('Work active incident command and clear overdue incident actions.');
   }
 
   const p0Missions = missionQueue.filter((mission) => mission.priority === 'P0').slice(0, 2);
@@ -85,7 +90,7 @@ export function buildWeeklyBrief(
 
 export function renderWeeklyBriefMarkdown(brief: WeeklyBrief) {
   return [
-    '# Weekly Solo CISO Brief',
+    '# VantageAI Weekly Brief',
     '',
     `Generated: ${brief.generatedAt}`,
     '',
@@ -131,7 +136,7 @@ export function renderWeeklyBriefHtml(brief: WeeklyBrief) {
     '<head>',
     '  <meta charset="utf-8" />',
     '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
-    '  <title>Weekly Solo CISO Brief</title>',
+    '  <title>VantageAI Weekly Brief</title>',
     '  <style>',
     '    body { font-family: Arial, sans-serif; max-width: 960px; margin: 2rem auto; color: #0f172a; line-height: 1.5; }',
     '    h1, h2 { color: #0f172a; }',
@@ -139,7 +144,7 @@ export function renderWeeklyBriefHtml(brief: WeeklyBrief) {
     '  </style>',
     '</head>',
     '<body>',
-    '  <h1>Weekly Solo CISO Brief</h1>',
+    '  <h1>VantageAI Weekly Brief</h1>',
     `  <p><strong>Generated:</strong> ${escapeHtml(brief.generatedAt)}</p>`,
     '  <div class="panel">',
     '    <h2>Executive Summary</h2>',
@@ -164,4 +169,3 @@ export function renderWeeklyBriefHtml(brief: WeeklyBrief) {
     '</html>'
   ].join('\n');
 }
-

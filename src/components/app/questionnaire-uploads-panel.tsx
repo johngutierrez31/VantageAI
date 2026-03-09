@@ -12,10 +12,18 @@ import { Select } from '@/components/ui/select';
 
 type UploadRow = {
   id: string;
+  organizationName?: string | null;
   filename: string;
   originalFormat: string;
+  status: string;
+  assignedReviewerUserId?: string | null;
+  reviewDueAt?: string | null;
   createdAt: string;
   itemCount: number;
+  evidenceMap?: {
+    id: string;
+    status: string;
+  } | null;
   trustInboxItem?: {
     id: string;
     title: string;
@@ -28,6 +36,7 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState<'csv' | 'json'>('csv');
+  const [organizationName, setOrganizationName] = useState('');
   const [inlineContent, setInlineContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +48,7 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
     if (file) {
       const formData = new FormData();
       formData.set('file', file);
+      formData.set('organizationName', organizationName);
       response = await fetch('/api/questionnaires/upload', {
         method: 'POST',
         body: formData
@@ -50,7 +60,8 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
         body: JSON.stringify({
           filename: `questionnaire-${Date.now()}.${format}`,
           format,
-          content: inlineContent
+          content: inlineContent,
+          organizationName
         })
       });
     }
@@ -64,6 +75,7 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
     }
 
     setFile(null);
+    setOrganizationName('');
     setInlineContent('');
     router.refresh();
   }
@@ -80,6 +92,11 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
           <CardTitle>Upload Questionnaire</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          <Input
+            value={organizationName}
+            onChange={(event) => setOrganizationName(event.target.value)}
+            placeholder="Customer or buyer organization"
+          />
           <Input
             type="file"
             accept=".csv,.json,.txt"
@@ -124,13 +141,23 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
                       {upload.itemCount} items | {upload.originalFormat} |{' '}
                       {new Date(upload.createdAt).toLocaleString()}
                     </p>
+                    {upload.organizationName ? (
+                      <p className="text-xs text-muted-foreground">Organization: {upload.organizationName}</p>
+                    ) : null}
                     {upload.trustInboxItem ? (
                       <p className="text-xs text-muted-foreground">
                         Linked trust intake: {upload.trustInboxItem.title}
                       </p>
                     ) : null}
+                    {upload.reviewDueAt ? (
+                      <p className="text-xs text-muted-foreground">
+                        Review due: {new Date(upload.reviewDueAt).toLocaleString()}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2">
+                    <StatusPill status={upload.status} />
+                    {upload.evidenceMap ? <StatusPill status={upload.evidenceMap.status} /> : null}
                     {upload.trustInboxItem ? <StatusPill status={upload.trustInboxItem.status} /> : null}
                     <Button asChild size="sm" variant="outline">
                       <Link href={`/app/questionnaires/${upload.id}`}>Open</Link>

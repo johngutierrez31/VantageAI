@@ -13,6 +13,10 @@ function addDays(base: Date, days: number) {
   return next;
 }
 
+function addHours(base: Date, hours: number) {
+  return new Date(base.getTime() + hours * 60 * 60 * 1000);
+}
+
 export async function GET() {
   try {
     await getSessionContext();
@@ -53,7 +57,10 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const dueDate = addDays(baseDate, taskTemplate.dueOffsetDays);
+      const dueDate =
+        typeof taskTemplate.dueOffsetHours === 'number'
+          ? addHours(baseDate, taskTemplate.dueOffsetHours)
+          : addDays(baseDate, taskTemplate.dueOffsetDays);
       const task = await prisma.task.create({
         data: {
           tenantId: session.tenantId,
@@ -62,6 +69,7 @@ export async function POST(request: Request) {
           assignee: payload.assignee,
           dueDate,
           priority: taskTemplate.priority,
+          responseOpsPhase: taskTemplate.phase ?? null,
           createdBy: session.userId
         }
       });
@@ -90,4 +98,3 @@ export async function POST(request: Request) {
     return handleRouteError(error);
   }
 }
-
