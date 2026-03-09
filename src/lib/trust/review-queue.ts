@@ -14,9 +14,7 @@ export type TrustReviewItem = {
 export type TrustReviewTiming = 'OVERDUE' | 'DUE_SOON' | 'ON_TRACK' | 'UNSCHEDULED' | 'DONE';
 
 function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
 function isDone(item: TrustReviewItem) {

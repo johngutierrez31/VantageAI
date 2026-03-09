@@ -36,7 +36,7 @@ describe('trustops review queue timing', () => {
         status: 'READY_TO_SHARE',
         assignedReviewerUserId: 'user-2',
         assignedReviewerLabel: 'Jordan',
-        reviewDueAt: '2026-03-10T12:00:00.000Z',
+        reviewDueAt: '2026-03-11T12:00:00.000Z',
         href: '/app/trust'
       }
     ];
