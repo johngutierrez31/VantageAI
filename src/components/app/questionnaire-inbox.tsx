@@ -149,6 +149,7 @@ export function QuestionnaireInbox({ assessments }: { assessments: AssessmentOpt
     <div className="space-y-6">
       <PageHeader
         title="Questionnaire Inbox"
+        helpKey="questionnaires"
         description="Ingest customer questionnaires, review mappings, and build a reusable response pack."
       />
 
@@ -236,3 +237,4 @@ export function QuestionnaireInbox({ assessments }: { assessments: AssessmentOpt
     </div>
   );
 }
+

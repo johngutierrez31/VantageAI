@@ -110,6 +110,7 @@ export default async function OverviewPage() {
     <div className="space-y-6">
       <PageHeader
         title="Overview"
+        helpKey="overview"
         description="Monitor readiness outcomes, prioritized risk, and execution health across your security program."
         primaryAction={{ label: 'Create Assessment', href: '/app/assessments/new' }}
         secondaryActions={[
@@ -250,3 +251,4 @@ export default async function OverviewPage() {
     </div>
   );
 }
+

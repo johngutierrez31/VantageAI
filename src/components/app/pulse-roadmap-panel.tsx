@@ -108,6 +108,7 @@ export function PulseRoadmapPanel({ roadmaps, reviewers }: { roadmaps: Roadmap[]
     <div className="space-y-6">
       <PageHeader
         title="Pulse Roadmap"
+        helpKey="roadmap"
         description="Manage the 30/60/90 executive remediation roadmap generated from current risks and weak posture categories."
         primaryAction={{ label: 'Open Pulse', href: '/app/pulse' }}
         secondaryActions={[{ label: 'Open Risks', href: '/app/pulse/risks', variant: 'outline' }]}
@@ -282,3 +283,4 @@ export function PulseRoadmapPanel({ roadmaps, reviewers }: { roadmaps: Roadmap[]
     </div>
   );
 }
+

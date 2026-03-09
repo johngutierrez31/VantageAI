@@ -102,6 +102,7 @@ export function EvidenceMapDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={evidenceMap.name}
+        helpKey="evidenceMapDetail"
         description={`Source questionnaire: ${evidenceMap.questionnaireLabel}`}
         secondaryActions={[
           { label: 'Review Queue', href: '/app/trust/reviews', variant: 'outline' },
@@ -195,3 +196,4 @@ export function EvidenceMapDetailPanel({
     </div>
   );
 }
+

@@ -16,6 +16,7 @@ export default async function EvidencePage() {
     <div className="space-y-6">
       <PageHeader
         title="Evidence Vault"
+        helpKey="evidence"
         description="Ingest supporting artifacts, track freshness, and manage evidence collection requests."
       />
       <EvidenceVaultPanel />
@@ -33,3 +34,4 @@ export default async function EvidencePage() {
     </div>
   );
 }
+

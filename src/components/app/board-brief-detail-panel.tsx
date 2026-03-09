@@ -60,6 +60,7 @@ export function BoardBriefDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={brief.title}
+        helpKey="boardBriefDetail"
         description="Durable board brief workflow for executive reporting and review-gated export."
         primaryAction={{ label: 'Open Pulse', href: '/app/pulse' }}
         secondaryActions={[{ label: 'Open Roadmap', href: '/app/pulse/roadmap', variant: 'outline' }]}
@@ -179,3 +180,4 @@ export function BoardBriefDetailPanel({
     </div>
   );
 }
+

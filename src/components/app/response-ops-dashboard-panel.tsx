@@ -173,6 +173,7 @@ export function ResponseOpsDashboardPanel({
     <div className="space-y-6">
       <PageHeader
         title="Response Ops"
+        helpKey="responseOps"
         description="Run first-hour incident triage, launch incident-linked runbook packs, capture decision trails, draft after-action reports, and turn exercises into owned follow-up."
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
@@ -599,3 +600,4 @@ export function ResponseOpsDashboardPanel({
     </div>
   );
 }
+

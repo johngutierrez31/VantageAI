@@ -11,9 +11,11 @@ export default async function NewAssessmentPage() {
     <div className="space-y-6">
       <PageHeader
         title="Create Assessment"
+        helpKey="assessmentNew"
         description="Start a new assessment and baseline this customer against your selected framework template."
       />
       <AssessmentCreateForm templates={templates} />
     </div>
   );
 }
+

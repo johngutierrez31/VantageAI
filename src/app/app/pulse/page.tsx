@@ -78,6 +78,7 @@ export default async function PulsePage() {
     <div className="space-y-6">
       <PageHeader
         title="Pulse"
+        helpKey="pulse"
         description="Executive visibility, risk register, roadmap, board briefing, and quarterly review workflow built on live app signals."
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
@@ -134,3 +135,4 @@ export default async function PulsePage() {
     </div>
   );
 }
+

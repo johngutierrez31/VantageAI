@@ -240,6 +240,7 @@ export function QuestionnaireDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={filename}
+        helpKey="questionnaireDetail"
         description={organizationName ? `Buyer organization: ${organizationName}` : 'Review mappings, generate cited draft answers, and approve only buyer-safe responses for export.'}
         secondaryActions={[
           { label: 'Back', href: '/app/questionnaires', variant: 'outline' },
@@ -458,3 +459,4 @@ export function QuestionnaireDetailPanel({
     </div>
   );
 }
+

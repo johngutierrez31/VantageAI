@@ -84,6 +84,7 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
     <div className="space-y-6">
       <PageHeader
         title="Questionnaires"
+        helpKey="questionnaires"
         description="Upload customer questionnaires, map to controls, generate AI drafts with citations, and export completed responses."
       />
 
@@ -177,3 +178,4 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
     </div>
   );
 }
+

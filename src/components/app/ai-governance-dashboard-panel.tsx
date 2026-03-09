@@ -52,6 +52,7 @@ export function AIGovernanceDashboardPanel({
     <div className="space-y-6">
       <PageHeader
         title="AI Governance"
+        helpKey="aiGovernance"
         description="Register AI use cases, review AI vendors, map policies and data classes, and push high-risk AI decisions into findings and Pulse."
         primaryAction={{ label: 'Register AI Use Case', href: '/app/ai-governance/use-cases' }}
         secondaryActions={[
@@ -239,3 +240,4 @@ export function AIGovernanceDashboardPanel({
     </div>
   );
 }
+

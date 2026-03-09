@@ -122,6 +122,7 @@ export default async function ToolsHubPage() {
     <div className="space-y-6">
       <PageHeader
         title="Tools Hub"
+        helpKey="toolsHub"
         description="Launch the VantageAI suite by module: TrustOps for buyer diligence, Pulse for executive cadence, AI Governance for governed adoption, and Response Ops for premium incident execution."
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
@@ -237,3 +238,4 @@ export default async function ToolsHubPage() {
     </div>
   );
 }
+

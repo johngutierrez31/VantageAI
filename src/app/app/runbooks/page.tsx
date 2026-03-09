@@ -11,6 +11,7 @@ export default async function RunbooksPage() {
     <div className="space-y-6">
       <PageHeader
         title="Runbooks"
+        helpKey="runbooks"
         description="Pre-built response and resilience workflows that can be instantiated into task packs for immediate execution."
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
@@ -22,3 +23,4 @@ export default async function RunbooksPage() {
     </div>
   );
 }
+

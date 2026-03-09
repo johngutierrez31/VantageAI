@@ -92,6 +92,7 @@ export function TabletopDetailPanel({ tabletop, risks }: TabletopDetailProps) {
     <div className="space-y-6">
       <PageHeader
         title={tabletop.title}
+        helpKey="tabletopDetail"
         description="Lightweight exercise workflow for readiness checks, gap capture, and follow-up creation."
         primaryAction={{ label: 'Open Response Ops', href: '/app/response-ops' }}
         secondaryActions={[
@@ -149,3 +150,4 @@ export function TabletopDetailPanel({ tabletop, risks }: TabletopDetailProps) {
     </div>
   );
 }
+

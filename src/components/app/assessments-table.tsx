@@ -41,6 +41,7 @@ export function AssessmentsTable({ rows }: { rows: AssessmentRow[] }) {
     <div className="space-y-6">
       <PageHeader
         title="Assessments"
+        helpKey="assessments"
         description="Track execution, confidence, and progress across customer assessments."
         primaryAction={{ label: 'New Assessment', href: '/app/assessments/new' }}
       />
@@ -112,3 +113,4 @@ export function AssessmentsTable({ rows }: { rows: AssessmentRow[] }) {
     </div>
   );
 }
+

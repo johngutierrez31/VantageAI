@@ -90,6 +90,7 @@ export function AnswerLibraryPanel({
     <div className="space-y-6">
       <PageHeader
         title="Answer Library"
+        helpKey="answerLibrary"
         description="Govern reusable buyer responses, track reuse, and curate which approved answers become durable TrustOps assets."
         secondaryActions={[
           { label: 'TrustOps', href: '/app/trust', variant: 'outline' },
@@ -276,3 +277,4 @@ export function AnswerLibraryPanel({
     </div>
   );
 }
+

@@ -105,6 +105,7 @@ export function AIReviewQueuePanel({
     <div className="space-y-6">
       <PageHeader
         title="AI Governance Review Queue"
+        helpKey="aiReviewQueue"
         description="Assign reviewers, set due dates, and keep AI use case and vendor intake decisions inside SLA."
         secondaryActions={[
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
@@ -304,3 +305,4 @@ export function AIReviewQueuePanel({
     </div>
   );
 }
+

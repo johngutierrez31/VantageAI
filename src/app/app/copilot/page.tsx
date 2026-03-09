@@ -9,6 +9,7 @@ export default async function CopilotPage() {
     <div className="space-y-6">
       <PageHeader
         title="Copilot"
+        helpKey="copilot"
         description="Generate practical plans, policy guidance, and control remediation steps with tenant-aware context."
         secondaryActions={[
           { label: 'Tools Hub', href: '/app/tools', variant: 'outline' },
@@ -19,3 +20,4 @@ export default async function CopilotPage() {
     </div>
   );
 }
+

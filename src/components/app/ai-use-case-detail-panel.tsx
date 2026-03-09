@@ -202,6 +202,7 @@ export function AIUseCaseDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={useCase.name}
+        helpKey="aiUseCaseDetail"
         description="Review AI workflow details, update policy mapping inputs, and control assignment, due dates, and approval state."
         secondaryActions={[
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
@@ -475,3 +476,4 @@ export function AIUseCaseDetailPanel({
     </div>
   );
 }
+

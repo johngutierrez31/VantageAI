@@ -162,6 +162,7 @@ export function CyberRangePanel() {
     <div className="space-y-6">
       <PageHeader
         title="Cyber Range Designer"
+        helpKey="cyberRange"
         description="Design and operationalize a high-fidelity training range with phased delivery, zone architecture, and reset strategy."
         primaryAction={{ label: busy ? 'Generating...' : 'Generate Plan', onClick: generatePlan }}
       />
@@ -366,3 +367,4 @@ export function CyberRangePanel() {
     </div>
   );
 }
+

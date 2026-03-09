@@ -94,6 +94,7 @@ export function TrustReviewQueuePanel({
     <div className="space-y-6">
       <PageHeader
         title="TrustOps Review Queue"
+        helpKey="trustReviewQueue"
         description="Assign reviewers, set due dates, and keep questionnaire, evidence-map, and trust-packet review work inside SLA."
         secondaryActions={[
           { label: 'TrustOps', href: '/app/trust', variant: 'outline' },
@@ -240,3 +241,4 @@ export function TrustReviewQueuePanel({
     </div>
   );
 }
+

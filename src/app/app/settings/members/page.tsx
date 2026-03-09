@@ -22,6 +22,7 @@ export default async function SettingsMembersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Members"
+        helpKey="members"
         description="Manage workspace access and role assignments."
         secondaryActions={[{ label: 'Billing', href: '/app/settings/billing', variant: 'outline' }]}
       />
@@ -44,3 +45,4 @@ export default async function SettingsMembersPage() {
     </div>
   );
 }
+

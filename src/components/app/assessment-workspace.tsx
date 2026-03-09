@@ -145,6 +145,7 @@ export function AssessmentWorkspace({
     <div className="space-y-6">
       <PageHeader
         title={assessment.name}
+        helpKey="assessmentDetail"
         description={`Customer: ${assessment.customerName} - Template: ${assessment.templateName}`}
       >
         <div className="flex items-center gap-2">
@@ -303,3 +304,4 @@ export function AssessmentWorkspace({
     </div>
   );
 }
+

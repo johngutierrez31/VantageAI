@@ -167,6 +167,7 @@ export function RiskRegisterPanel({
     <div className="space-y-6">
       <PageHeader
         title="Risk Register"
+        helpKey="riskRegister"
         description="Maintain a living Pulse risk register sourced from findings, assessment gaps, overdue work, and manual leadership concerns."
         primaryAction={{ label: 'Open Pulse', href: '/app/pulse' }}
         secondaryActions={[{ label: 'Open Roadmap', href: '/app/pulse/roadmap', variant: 'outline' }]}
@@ -374,3 +375,4 @@ export function RiskRegisterPanel({
     </div>
   );
 }
+

@@ -68,6 +68,7 @@ export function TemplatesGrid({ templates }: { templates: TemplateCard[] }) {
     <div className="space-y-6">
       <PageHeader
         title="Templates"
+        helpKey="templates"
         description="Build and govern reusable assessment frameworks across security and AI readiness programs."
         primaryAction={{ label: 'Create Template', href: '/app/templates/new' }}
       />
@@ -185,3 +186,4 @@ export function TemplatesGrid({ templates }: { templates: TemplateCard[] }) {
     </div>
   );
 }
+

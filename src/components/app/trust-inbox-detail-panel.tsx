@@ -204,6 +204,7 @@ export function TrustInboxDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={item.title}
+        helpKey="trustInboxDetail"
         description={`Requester: ${item.requesterEmail ?? 'N/A'}`}
         secondaryActions={[
           { label: 'Back to Inbox', href: '/app/trust/inbox', variant: 'outline' },
@@ -413,3 +414,4 @@ export function TrustInboxDetailPanel({
     </div>
   );
 }
+

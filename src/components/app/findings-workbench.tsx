@@ -153,6 +153,7 @@ export function FindingsWorkbench({
     <div className="space-y-6">
       <PageHeader
         title="Findings / Gaps"
+        helpKey="findings"
         description="Central view for risk priorities, remediation tasks, and accepted exceptions."
         primaryAction={{ label: 'Create Assessment', href: '/app/assessments/new' }}
       />
@@ -411,3 +412,4 @@ export function FindingsWorkbench({
     </div>
   );
 }
+

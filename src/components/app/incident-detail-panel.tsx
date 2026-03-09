@@ -120,6 +120,7 @@ export function IncidentDetailPanel({ incident, risks, reviewers, runbooks }: In
     <div className="space-y-6">
       <PageHeader
         title={incident.title}
+        helpKey="incidentDetail"
         description="First-hour triage, incident-linked runbook packs, decision trail, and review-gated after-action reporting."
         primaryAction={{ label: 'Open Response Ops', href: '/app/response-ops' }}
         secondaryActions={[
@@ -224,3 +225,4 @@ export function IncidentDetailPanel({ incident, risks, reviewers, runbooks }: In
     </div>
   );
 }
+

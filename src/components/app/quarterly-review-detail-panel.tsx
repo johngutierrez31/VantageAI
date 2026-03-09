@@ -75,6 +75,7 @@ export function QuarterlyReviewDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={`Quarterly Review ${review.reviewPeriod}`}
+        helpKey="quarterlyReviewDetail"
         description="Recurring leadership review workflow tied to the current scorecard, roadmap, and board brief."
         primaryAction={{ label: 'Open Pulse', href: '/app/pulse' }}
         secondaryActions={[
@@ -144,3 +145,4 @@ export function QuarterlyReviewDetailPanel({
     </div>
   );
 }
+

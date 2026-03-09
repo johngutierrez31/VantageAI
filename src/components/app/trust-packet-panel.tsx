@@ -180,6 +180,7 @@ export function TrustPacketPanel({
     <div className="space-y-6">
       <PageHeader
         title="TrustOps"
+        helpKey="trustOps"
         description="Run buyer-readiness workflows across questionnaires, evidence maps, answer reuse, trust packets, and review-safe external sharing."
         primaryAction={{ label: 'Open Trust Inbox', href: '/app/trust/inbox' }}
         secondaryActions={[
@@ -414,3 +415,4 @@ export function TrustPacketPanel({
     </div>
   );
 }
+

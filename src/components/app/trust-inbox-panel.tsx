@@ -65,6 +65,7 @@ export function TrustInboxPanel({ items, uploads }: { items: InboxRow[]; uploads
     <div className="space-y-6">
       <PageHeader
         title="Trust Inbox"
+        helpKey="trustInbox"
         description="Queue incoming security questionnaires and move from new intake to delivered package."
       />
 
@@ -135,3 +136,4 @@ export function TrustInboxPanel({ items, uploads }: { items: InboxRow[]; uploads
     </div>
   );
 }
+

@@ -67,6 +67,7 @@ export function PulseSnapshotDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={`Pulse Snapshot ${snapshot.reportingPeriod}`}
+        helpKey="snapshotDetail"
         description="Executive scorecard with explainable posture categories and measured input drilldowns."
         primaryAction={{ label: 'Open Pulse', href: '/app/pulse' }}
         secondaryActions={[
@@ -172,3 +173,4 @@ export function PulseSnapshotDetailPanel({
     </div>
   );
 }
+

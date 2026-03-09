@@ -178,6 +178,7 @@ export function AIVendorReviewPanel({
     <div className="space-y-6">
       <PageHeader
         title="AI Vendor Intake"
+        helpKey="aiVendors"
         description="Review AI vendors and products for retention, training behavior, logging, DPA status, and approval conditions."
         secondaryActions={[
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
@@ -405,3 +406,4 @@ export function AIVendorReviewPanel({
     </div>
   );
 }
+

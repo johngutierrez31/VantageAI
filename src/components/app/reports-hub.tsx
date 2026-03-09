@@ -47,6 +47,7 @@ export function ReportsHub({ reports }: { reports: ReportRow[] }) {
     <div className="space-y-6">
       <PageHeader
         title="Reports"
+        helpKey="reports"
         description="Generate executive and detailed outputs for stakeholders, customers, and audit trails."
         primaryAction={{ label: 'Go to Assessments', href: '/app/assessments' }}
       />
@@ -113,3 +114,4 @@ export function ReportsHub({ reports }: { reports: ReportRow[] }) {
     </div>
   );
 }
+

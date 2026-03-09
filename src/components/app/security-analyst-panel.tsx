@@ -333,6 +333,7 @@ export function SecurityAnalystPanel({ tenantName }: { tenantName: string }) {
     <div className="space-y-6">
       <PageHeader
         title="Security Analyst"
+        helpKey="securityAnalyst"
         description="Run structured security analysis using threat-model and incident-response workflows with evidence citations."
         primaryAction={{ label: busy ? 'Analyzing...' : 'Run Analysis', onClick: runAnalysis }}
         secondaryActions={[{ label: 'Open Copilot', href: '/app/copilot', variant: 'outline' }]}
@@ -472,3 +473,4 @@ export function SecurityAnalystPanel({ tenantName }: { tenantName: string }) {
     </div>
   );
 }
+

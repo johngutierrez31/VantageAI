@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
+import { ContextualHelpPanel } from '@/components/app/contextual-help-panel';
 import { Button } from '@/components/ui/button';
+import { getContextualHelp, type ContextualHelpKey } from '@/lib/product/contextual-help';
 
 type Action = {
   label: string;
@@ -15,6 +17,7 @@ type Props = {
   primaryAction?: Action;
   secondaryActions?: Action[];
   volumeLabel?: string;
+  helpKey?: ContextualHelpKey;
   children?: ReactNode;
 };
 
@@ -45,9 +48,11 @@ export function PageHeader({
   primaryAction,
   secondaryActions = [],
   volumeLabel,
+  helpKey,
   children
 }: Props) {
   const showDropCap = (description?.length ?? 0) > 90;
+  const contextualHelp = helpKey ? getContextualHelp(helpKey) : null;
 
   return (
     <div className="ornate-frame mb-8 rounded-md border border-border bg-card/95 p-6 shadow-panel md:p-8">
@@ -63,6 +68,7 @@ export function PageHeader({
             </p>
           ) : null}
           {children}
+          {contextualHelp ? <ContextualHelpPanel help={contextualHelp} /> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {secondaryActions.map((action, index) => renderAction(action, index))}

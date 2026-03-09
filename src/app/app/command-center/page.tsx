@@ -35,6 +35,7 @@ export default async function CommandCenterPage() {
     <div className="space-y-6">
       <PageHeader
         title="Command Center"
+        helpKey="commandCenter"
         description="Run the VantageAI security operating system from one cross-module surface: open work, executive carry-over, trust pressure, incident activity, and guided next actions."
         primaryAction={{ label: 'Open Copilot', href: '/app/copilot' }}
         secondaryActions={[
@@ -405,3 +406,4 @@ export default async function CommandCenterPage() {
     </div>
   );
 }
+

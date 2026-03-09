@@ -7,6 +7,7 @@ export default function SettingsBillingPage() {
     <div className="space-y-6">
       <PageHeader
         title="Billing"
+        helpKey="billing"
         description="Manage plan, subscriptions, feature entitlements, and module packaging for TrustOps, Pulse, AI Governance, and Response Ops."
         secondaryActions={[{ label: 'Members', href: '/app/settings/members', variant: 'outline' }]}
       />
@@ -22,3 +23,4 @@ export default function SettingsBillingPage() {
     </div>
   );
 }
+

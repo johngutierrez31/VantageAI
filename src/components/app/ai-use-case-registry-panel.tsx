@@ -217,6 +217,7 @@ export function AIUseCaseRegistryPanel({
     <div className="space-y-6">
       <PageHeader
         title="AI Use Case Registry"
+        helpKey="aiUseCases"
         description="Track AI workflows as governed records with data classes, policy mappings, approval state, and downstream Pulse hooks."
         secondaryActions={[
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
@@ -439,3 +440,4 @@ export function AIUseCaseRegistryPanel({
     </div>
   );
 }
+

@@ -174,6 +174,7 @@ export function AIVendorReviewDetailPanel({
     <div className="space-y-6">
       <PageHeader
         title={`${vendorReview.vendorName} - ${vendorReview.productName}`}
+        helpKey="aiVendorDetail"
         description="Review AI vendor controls, update intake status, and manage due dates, decision state, and Pulse-linked follow-up."
         secondaryActions={[
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
@@ -456,3 +457,4 @@ export function AIVendorReviewDetailPanel({
     </div>
   );
 }
+

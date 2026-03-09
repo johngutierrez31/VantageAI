@@ -259,6 +259,7 @@ export function PolicyGeneratorPanel({
     <div className="space-y-6">
       <PageHeader
         title="Policies"
+        helpKey="policies"
         description="Generate customized policy packages using the vendored template library in this repository."
       />
 
@@ -481,3 +482,4 @@ export function PolicyGeneratorPanel({
     </div>
   );
 }
+
