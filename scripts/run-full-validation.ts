@@ -76,6 +76,26 @@ async function waitForUrl(url: string, timeoutMs: number) {
   throw new Error(`Timed out waiting for ${url}: ${lastError}`);
 }
 
+async function waitForProcessExit(child: ChildProcess, timeoutMs: number) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return true;
+  }
+
+  return new Promise<boolean>((resolve) => {
+    const timer = setTimeout(() => {
+      child.off('exit', handleExit);
+      resolve(false);
+    }, timeoutMs);
+
+    function handleExit() {
+      clearTimeout(timer);
+      resolve(true);
+    }
+
+    child.once('exit', handleExit);
+  });
+}
+
 async function terminateProcessTree(child: ChildProcess) {
   if (!child.pid) return;
 
@@ -99,9 +119,10 @@ async function terminateProcessTree(child: ChildProcess) {
   }
 
   child.kill('SIGTERM');
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  if (!child.killed) {
+  const exitedAfterSigterm = await waitForProcessExit(child, 5_000);
+  if (!exitedAfterSigterm) {
     child.kill('SIGKILL');
+    await waitForProcessExit(child, 5_000);
   }
 }
 
