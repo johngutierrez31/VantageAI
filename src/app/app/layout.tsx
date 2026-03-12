@@ -1,12 +1,15 @@
+import { cookies } from 'next/headers';
 import { AppShell } from '@/components/app/app-shell';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { isDemoModeEnabled } from '@/lib/auth/demo';
 import { getTenantEntitlements } from '@/lib/billing/entitlements';
 import { getTenantSecurityPulse } from '@/lib/intel/pulse';
+import { FUN_MODE_COOKIE } from '@/lib/ui/fun-mode';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getPageSessionContext();
+  const initialFunMode = cookies().get(FUN_MODE_COOKIE)?.value === 'true';
 
   const [activeUser, pulse, entitlements] = await Promise.all([
     prisma.user.findUnique({
@@ -320,6 +323,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       searchItems={searchItems}
       notifications={notifications}
       currentPlan={entitlements.plan}
+      initialFunMode={initialFunMode}
     >
       {children}
     </AppShell>
