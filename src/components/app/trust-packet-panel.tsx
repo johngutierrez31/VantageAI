@@ -181,13 +181,19 @@ export function TrustPacketPanel({
       <PageHeader
         title="TrustOps"
         helpKey="trustOps"
-        description="Run buyer-readiness workflows across questionnaires, evidence maps, answer reuse, trust packets, and review-safe external sharing."
+        description="TrustOps is the buyer diligence layer: run questionnaires, evidence maps, approved answers, trust packets, and review-safe sharing without losing internal control."
         primaryAction={{ label: 'Open Trust Inbox', href: '/app/trust/inbox' }}
         secondaryActions={[
+          { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
+          { label: 'Trust Rooms', href: '/app/trust/rooms', variant: 'outline' },
           { label: 'Review Queue', href: '/app/trust/reviews', variant: 'outline' },
           { label: 'Answer Library', href: '/app/trust/answer-library', variant: 'outline' }
         ]}
-      />
+      >
+        <p className="text-xs text-muted-foreground">
+          Start here: import or open the questionnaire, validate support in the evidence map, promote reusable approved answers, then assemble the buyer-safe packet or trust room.
+        </p>
+      </PageHeader>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
@@ -213,6 +219,15 @@ export function TrustPacketPanel({
                 <Link href={evidenceMaps[0] ? `/app/trust/evidence-maps/${evidenceMaps[0].id}` : '/app/questionnaires'}>
                   Open Evidence Maps
                 </Link>
+              </Button>
+            </div>
+            <div className="rounded-md border border-border p-3">
+              <p className="text-sm font-semibold">Publish Trust Room</p>
+              <p className="text-sm text-muted-foreground">
+                Turn an approved external-share packet into a buyer-facing trust room with link protection or request gating.
+              </p>
+              <Button asChild size="sm" variant="outline" className="mt-3">
+                <Link href="/app/trust/rooms">Open Trust Rooms</Link>
               </Button>
             </div>
             <div className="rounded-md border border-border p-3">
@@ -361,6 +376,9 @@ export function TrustPacketPanel({
                   <p className="mt-2 text-xs text-muted-foreground">{packet.staleArtifactCount} artifact(s) flagged stale.</p>
                 ) : null}
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <Button asChild size="sm" variant="secondary">
+                    <Link href="/app/trust/rooms">Publish Trust Room</Link>
+                  </Button>
                   {packet.shareMode === 'EXTERNAL_SHARE' && !['READY_TO_SHARE', 'SHARED'].includes(packet.status) ? (
                     <Button onClick={() => markPacketReady(packet.id)} size="sm" disabled={busy !== null}>
                       {busy === 'review' ? 'Saving...' : 'Mark Ready to Share'}

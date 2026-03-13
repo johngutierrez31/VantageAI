@@ -142,6 +142,78 @@ enum TrustPacketShareMode {
   EXTERNAL_SHARE
 }
 
+enum TrustRoomStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TrustRoomAccessMode {
+  INTERNAL_REVIEW
+  PROTECTED_LINK
+  REQUEST_ACCESS
+}
+
+enum TrustRoomAccessRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+  FULFILLED
+}
+
+enum TrustRoomEngagementEventType {
+  ROOM_VIEWED
+  SECTION_VIEWED
+  PACKET_DOWNLOADED
+  REQUEST_SUBMITTED
+  ACCESS_GRANTED
+}
+
+enum ConnectorProvider {
+  SLACK
+  JIRA
+  CONFLUENCE
+  GOOGLE_DRIVE
+  OUTBOUND_WEBHOOK
+}
+
+enum ConnectorMode {
+  SIMULATED
+  LIVE
+}
+
+enum ConnectorStatus {
+  ACTIVE
+  NEEDS_ATTENTION
+  DISABLED
+}
+
+enum ConnectorActivityStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  SKIPPED
+}
+
+enum AdoptionImportTarget {
+  FINDINGS
+  RISKS
+  APPROVED_ANSWERS
+  INCIDENTS
+}
+
+enum AdoptionImportSource {
+  MANUAL
+  CSV
+  CONNECTOR_EXPORT
+}
+
+enum AdoptionImportStatus {
+  SUCCEEDED
+  PARTIAL
+  FAILED
+}
+
 enum EvidenceMapStatus {
   DRAFT
   NEEDS_REVIEW
@@ -199,6 +271,7 @@ enum FindingSourceType {
   RESPONSE_OPS_INCIDENT
   RESPONSE_OPS_AFTER_ACTION
   RESPONSE_OPS_TABLETOP
+  ADOPTION_IMPORT
 }
 
 enum PulseSnapshotPeriodType {
@@ -489,6 +562,13 @@ model Tenant {
   trustDocs             TrustDoc[]
   trustInboxAttachments TrustInboxAttachment[]
   trustPackets          TrustPacket[]
+  trustRooms            TrustRoom[]
+  trustRoomAccessRequests TrustRoomAccessRequest[]
+  trustRoomEngagementEvents TrustRoomEngagementEvent[]
+  connectorConfigs      ConnectorConfig[]
+  connectorActivities   ConnectorActivity[]
+  connectorObjectLinks  ConnectorObjectLink[]
+  adoptionImports       AdoptionImport[]
   findings              Finding[]
   pulseSnapshots        PulseSnapshot[]
   pulseCategoryScores   PulseCategoryScore[]
@@ -890,6 +970,8 @@ model QuestionnaireUpload {
   sourceApprovedAnswers  ApprovedAnswer[]
   findings               Finding[]
   trustInboxItem         TrustInboxItem?             @relation("TrustInboxUpload")
+  trustRooms             TrustRoom[]
+  trustRoomAccessRequests TrustRoomAccessRequest[]
   incidents              Incident[]
 
   @@index([tenantId, status, updatedAt])
@@ -1016,6 +1098,8 @@ model TrustInboxItem {
   tasks                 Task[]
   evidenceMaps          EvidenceMap[]
   trustPackets          TrustPacket[]
+  trustRooms            TrustRoom[]
+  trustRoomAccessRequests TrustRoomAccessRequest[]
   incidents             Incident[]
 
   @@unique([questionnaireUploadId])
@@ -1053,11 +1137,204 @@ model TrustPacket {
   trustInboxItem         TrustInboxItem?      @relation(fields: [trustInboxItemId], references: [id], onDelete: SetNull)
   questionnaireUpload    QuestionnaireUpload? @relation(fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
   evidenceMap            EvidenceMap?         @relation(fields: [evidenceMapId], references: [id], onDelete: SetNull)
+  trustRoom              TrustRoom?
+  trustRoomAccessRequests TrustRoomAccessRequest[]
+  trustRoomEngagementEvents TrustRoomEngagementEvent[]
 
   @@index([tenantId, status, updatedAt])
   @@index([tenantId, assignedReviewerUserId, reviewDueAt])
   @@index([tenantId, trustInboxItemId])
   @@index([tenantId, questionnaireUploadId])
+}
+
+model TrustRoom {
+  id                    String              @id @default(cuid())
+  tenantId              String
+  trustPacketId         String              @unique
+  trustInboxItemId      String?
+  questionnaireUploadId String?
+  name                  String
+  slug                  String              @unique
+  status                TrustRoomStatus     @default(DRAFT)
+  accessMode            TrustRoomAccessMode @default(INTERNAL_REVIEW)
+  roomSections          String[]            @default([])
+  summaryText           String?
+  termsRequired         Boolean             @default(true)
+  ndaRequired           Boolean             @default(false)
+  shareKeyHash          String?
+  shareExpiresAt        DateTime?
+  publishedAt           DateTime?
+  publishedBy           String?
+  createdBy             String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  tenant                Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  trustPacket           TrustPacket         @relation(fields: [trustPacketId], references: [id], onDelete: Cascade)
+  trustInboxItem        TrustInboxItem?     @relation(fields: [trustInboxItemId], references: [id], onDelete: SetNull)
+  questionnaireUpload   QuestionnaireUpload? @relation(fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
+  accessRequests        TrustRoomAccessRequest[]
+  engagementEvents      TrustRoomEngagementEvent[]
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, accessMode, status])
+  @@index([tenantId, trustInboxItemId])
+  @@index([tenantId, questionnaireUploadId])
+}
+
+model TrustRoomAccessRequest {
+  id                    String                        @id @default(cuid())
+  tenantId              String
+  trustRoomId           String
+  trustPacketId         String?
+  trustInboxItemId      String?
+  questionnaireUploadId String?
+  requesterName         String
+  requesterEmail        String
+  companyName           String?
+  requestReason         String?
+  status                TrustRoomAccessRequestStatus @default(PENDING)
+  assignedOwnerUserId   String?
+  internalNotes         String?
+  approvedAccessTokenHash String?
+  approvedAt            DateTime?
+  respondedAt           DateTime?
+  expiresAt             DateTime?
+  lastViewedAt          DateTime?
+  viewCount             Int                           @default(0)
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  tenant                Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  trustRoom             TrustRoom                     @relation(fields: [trustRoomId], references: [id], onDelete: Cascade)
+  trustPacket           TrustPacket?                  @relation(fields: [trustPacketId], references: [id], onDelete: SetNull)
+  trustInboxItem        TrustInboxItem?               @relation(fields: [trustInboxItemId], references: [id], onDelete: SetNull)
+  questionnaireUpload   QuestionnaireUpload?          @relation(fields: [questionnaireUploadId], references: [id], onDelete: SetNull)
+  engagementEvents      TrustRoomEngagementEvent[]
+
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, assignedOwnerUserId, status])
+  @@index([tenantId, requesterEmail, createdAt])
+  @@index([tenantId, trustRoomId, createdAt])
+}
+
+model TrustRoomEngagementEvent {
+  id              String                       @id @default(cuid())
+  tenantId        String
+  trustRoomId     String
+  trustPacketId   String?
+  accessRequestId String?
+  eventType       TrustRoomEngagementEventType
+  sectionKey      String?
+  actorEmail      String?
+  actorLabel      String?
+  metadata        Json?
+  createdAt       DateTime                     @default(now())
+  tenant          Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  trustRoom       TrustRoom                    @relation(fields: [trustRoomId], references: [id], onDelete: Cascade)
+  trustPacket     TrustPacket?                 @relation(fields: [trustPacketId], references: [id], onDelete: SetNull)
+  accessRequest   TrustRoomAccessRequest?      @relation(fields: [accessRequestId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, trustRoomId, createdAt])
+  @@index([tenantId, eventType, createdAt])
+  @@index([tenantId, accessRequestId, createdAt])
+}
+
+model ConnectorConfig {
+  id                  String            @id @default(cuid())
+  tenantId            String
+  provider            ConnectorProvider
+  name                String
+  description         String?
+  mode                ConnectorMode     @default(SIMULATED)
+  status              ConnectorStatus   @default(ACTIVE)
+  configJson          Json
+  secretCiphertext    String?           @db.Text
+  lastHealthStatus    ConnectorActivityStatus?
+  lastHealthCheckedAt DateTime?
+  lastSuccessAt       DateTime?
+  lastErrorAt         DateTime?
+  lastErrorMessage    String?           @db.Text
+  createdBy           String
+  updatedBy           String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  activities          ConnectorActivity[]
+  objectLinks         ConnectorObjectLink[]
+  adoptionImports     AdoptionImport[]
+
+  @@unique([tenantId, provider])
+  @@index([tenantId, status, updatedAt])
+}
+
+model ConnectorActivity {
+  id               String                  @id @default(cuid())
+  tenantId         String
+  connectorId      String?
+  provider         ConnectorProvider
+  action           String
+  entityType       String?
+  entityId         String?
+  targetLabel      String?
+  externalObjectId String?
+  externalObjectKey String?
+  externalObjectUrl String?
+  status           ConnectorActivityStatus @default(PENDING)
+  summary          String
+  payloadJson      Json?
+  errorMessage     String?                 @db.Text
+  createdBy        String?
+  createdAt        DateTime                @default(now())
+  tenant           Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  connector        ConnectorConfig?        @relation(fields: [connectorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, provider, createdAt])
+  @@index([tenantId, connectorId, createdAt])
+  @@index([tenantId, entityType, entityId])
+}
+
+model ConnectorObjectLink {
+  id                String                  @id @default(cuid())
+  tenantId          String
+  connectorId       String
+  provider          ConnectorProvider
+  entityType        String
+  entityId          String
+  externalObjectId  String
+  externalObjectKey String?
+  externalObjectUrl String?
+  lastSyncStatus    ConnectorActivityStatus @default(PENDING)
+  lastSyncedAt      DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  tenant            Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  connector         ConnectorConfig         @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@unique([connectorId, entityType, entityId])
+  @@index([tenantId, provider, entityType, entityId])
+}
+
+model AdoptionImport {
+  id           String               @id @default(cuid())
+  tenantId     String
+  connectorId  String?
+  target       AdoptionImportTarget
+  source       AdoptionImportSource
+  status       AdoptionImportStatus @default(SUCCEEDED)
+  sourceLabel  String?
+  summary      String
+  rawInput     Json
+  resultJson   Json?
+  createdCount Int                  @default(0)
+  failedCount  Int                  @default(0)
+  createdBy    String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  connector    ConnectorConfig?     @relation(fields: [connectorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, target, createdAt])
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, connectorId, createdAt])
 }
 
 model EvidenceMap {

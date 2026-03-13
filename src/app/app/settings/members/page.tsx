@@ -24,7 +24,10 @@ export default async function SettingsMembersPage() {
         title="Members"
         helpKey="members"
         description="Manage workspace access and role assignments."
-        secondaryActions={[{ label: 'Billing', href: '/app/settings/billing', variant: 'outline' }]}
+        secondaryActions={[
+          { label: 'Connectors', href: '/app/settings/connectors', variant: 'outline' },
+          { label: 'Billing', href: '/app/settings/billing', variant: 'outline' }
+        ]}
       />
 
       <Card>

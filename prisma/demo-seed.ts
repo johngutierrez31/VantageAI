@@ -44,17 +44,17 @@ export async function seedDemoWorkspace(prisma: PrismaClient) {
   await prisma.tenantBranding.upsert({
     where: { tenantId: tenant.id },
     update: {
-      companyName: 'VantageAI Demo',
+      companyName: 'Astera Cloud Security',
       primaryColor: '#0f172a',
       accentColor: '#2563eb',
-      footerNote: 'Not legal advice. For planning use only.'
+      footerNote: 'Confidential internal demo workspace. Buyer-safe sharing remains review-gated.'
     },
     create: {
       tenantId: tenant.id,
-      companyName: 'VantageAI Demo',
+      companyName: 'Astera Cloud Security',
       primaryColor: '#0f172a',
       accentColor: '#2563eb',
-      footerNote: 'Not legal advice. For planning use only.'
+      footerNote: 'Confidential internal demo workspace. Buyer-safe sharing remains review-gated.'
     }
   });
 

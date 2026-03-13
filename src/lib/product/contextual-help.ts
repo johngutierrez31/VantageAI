@@ -36,6 +36,8 @@ export const CONTEXTUAL_HELP = {
       'You want the fastest drill-through path into the right workflow.'
     ],
     [
+      'Use the Demo Path card first when you need the fastest walkthrough for the seeded workspace.',
+      'Use Adoption Mode when the next conversation is about stack fit, migration friction, or imported work.',
       'Review the KPI cards first to identify overdue or high-pressure work.',
       'Use the operational layers to decide whether the work belongs in TrustOps, Pulse, AI Governance, or Response Ops.',
       'Open the 7-day mission queue or a linked workflow to move from insight into action.'
@@ -55,15 +57,37 @@ export const CONTEXTUAL_HELP = {
       'You want to understand which modules are included in the current plan.'
     ],
     [
+      'Use the Demo Path card first when you need the shortest demo click path.',
+      'Use Adoption Mode when you need to explain how Vantage works alongside the current stack.',
       'Scan the module cards first to understand what each paid module covers.',
       'Use the integrated workflow section to explain how work moves across the suite.',
       'Launch a guided workflow card when you are ready to produce a durable record.'
     ],
     [
       'Users can tell the difference between TrustOps, Pulse, AI Governance, and Response Ops immediately.',
+      'Users can see how Vantage fits with their existing tools before a full rollout decision.',
       'Each launcher maps to a real durable workflow, not vague chat behavior.',
       'You can use this page as both an onboarding surface and a live demo menu.'
     ]
+  ),
+  adoptionMode: buildHelp(
+    'Use Adoption Mode when a new operator or buyer needs to understand how Vantage sits above the current stack before committing to a broader rollout.',
+    [
+      'You need to reduce rip-and-replace anxiety and show a practical path into the suite.',
+      'Findings, risks, approved answers, or incidents already exist elsewhere and need a durable home in Vantage.',
+      'You want the cross-module value graph to be visible before adding more process change.'
+    ],
+    [
+      'Start with the job to be done first, such as a questionnaire, board brief, AI review, or incident.',
+      'Import only the highest-signal records that will improve the next operator workflow.',
+      'Use connectors to keep Slack, Jira, and publishing in the loop while Vantage becomes the operating layer.'
+    ],
+    [
+      'Operators can explain where Vantage fits in one screen.',
+      'Imported records are tenant-scoped, durable, and auditable.',
+      'The path from trust work to risk, roadmap, board reporting, and incident carry-over is obvious.'
+    ],
+    'Use this page for onboarding and stack-fit conversations. Move into the owning module when execution begins.'
   ),
   copilot: buildHelp(
     'Use Copilot as a workflow launcher and guided reasoning layer, not as a generic chat surface.',
@@ -74,6 +98,7 @@ export const CONTEXTUAL_HELP = {
     ],
     [
       'Ask for a specific outcome such as drafting answers, preparing a board brief, or starting incident triage.',
+      'Ask where Vantage fits alongside the current stack when the right start path is still unclear.',
       'Use the suggested workflow launchers to jump into the underlying module.',
       'Review and approve outputs in the module that owns the record.'
     ],

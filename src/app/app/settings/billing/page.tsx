@@ -9,7 +9,10 @@ export default function SettingsBillingPage() {
         title="Billing"
         helpKey="billing"
         description="Manage plan, subscriptions, feature entitlements, and module packaging for TrustOps, Pulse, AI Governance, and Response Ops."
-        secondaryActions={[{ label: 'Members', href: '/app/settings/members', variant: 'outline' }]}
+        secondaryActions={[
+          { label: 'Members', href: '/app/settings/members', variant: 'outline' },
+          { label: 'Connectors', href: '/app/settings/connectors', variant: 'outline' }
+        ]}
       />
 
       <Card>

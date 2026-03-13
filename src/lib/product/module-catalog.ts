@@ -18,48 +18,48 @@ export const MODULE_CATALOG: ModuleDefinition[] = [
     id: 'trustops',
     label: 'TrustOps',
     href: '/app/trust',
-    categoryLabel: 'Flagship',
-    summary: 'Buyer diligence workflows for questionnaires, evidence maps, answer reuse, and trust-packet packaging.',
-    startLabel: 'Open TrustOps',
+    categoryLabel: 'Buyer Diligence Layer',
+    summary: 'Run questionnaires, evidence maps, approved answers, trust packets, and buyer-safe sharing without losing internal review control.',
+    startLabel: 'Start With TrustOps',
     startHref: '/app/trust',
     includedFrom: 'STARTER',
-    premiumLabel: 'Core module',
+    premiumLabel: 'Operating layer for buyer readiness',
     outcomes: ['Shorten questionnaire turnaround', 'Prove buyer readiness', 'Reuse approved answers and evidence']
   },
   {
     id: 'pulse',
     label: 'Pulse',
     href: '/app/pulse',
-    categoryLabel: 'Executive Add-On',
-    summary: 'Executive scorecards, living cyber risk register, 30/60/90 roadmap, board briefs, and quarterly review cadence.',
-    startLabel: 'Open Pulse',
+    categoryLabel: 'Executive Risk Layer',
+    summary: 'Translate live trust, finding, incident, and AI signals into a scorecard, risk register, roadmap, board brief, and quarterly review.',
+    startLabel: 'Start With Pulse',
     startHref: '/app/pulse',
     includedFrom: 'PRO',
-    premiumLabel: 'Recurring executive workflow',
+    premiumLabel: 'Recurring executive operating cadence',
     outcomes: ['Give leadership one posture view', 'Track a living risk register', 'Run a board-ready quarterly cadence']
   },
   {
     id: 'ai-governance',
     label: 'AI Governance',
     href: '/app/ai-governance',
-    categoryLabel: 'Expansion Module',
-    summary: 'AI use-case registry, vendor intake, policy mapping, approvals, and Pulse-linked AI risk oversight.',
-    startLabel: 'Open AI Governance',
+    categoryLabel: 'Governed AI Layer',
+    summary: 'Register AI use cases, review vendors, map policies, and push AI decisions into findings and Pulse without losing auditability.',
+    startLabel: 'Start With AI Governance',
     startHref: '/app/ai-governance',
     includedFrom: 'BUSINESS',
-    premiumLabel: 'Strategic expansion module',
+    premiumLabel: 'Governed AI adoption workflow',
     outcomes: ['Govern AI adoption with durable approvals', 'Map policies and data classes', 'Push AI decisions into findings and risks']
   },
   {
     id: 'response-ops',
     label: 'Response Ops',
     href: '/app/response-ops',
-    categoryLabel: 'Premium Ops',
-    summary: 'Incident triage, runbook task packs, after-action reviews, tabletop workflows, and operational carry-over into Pulse.',
-    startLabel: 'Open Response Ops',
+    categoryLabel: 'Incident Execution Layer',
+    summary: 'Run first-hour triage, task packs, after-action reviews, and tabletop follow-up while keeping incident carry-over visible in Pulse.',
+    startLabel: 'Start With Response Ops',
     startHref: '/app/response-ops',
     includedFrom: 'ENTERPRISE',
-    premiumLabel: 'Premium response workflow',
+    premiumLabel: 'Operational incident workflow',
     outcomes: ['Run first-hour triage', 'Capture a durable decision trail', 'Turn incidents into follow-up remediation']
   }
 ];
@@ -86,8 +86,8 @@ export function getModuleCommercialState(plan: CommercialPlanTier, module: Modul
     included,
     badge: included ? `Included in ${formatPlanLabel(plan)}` : `Packaging target: ${formatPlanLabel(module.includedFrom)}`,
     helperText: included
-      ? `${module.premiumLabel}. Keep this workflow active to increase module value and recurring usage.`
-      : `${module.premiumLabel}. Open the workflow now, and use billing settings to align packaging before launch.`,
+      ? `${module.premiumLabel}. Use this module alongside your existing systems and let Vantage carry the outputs across the suite.`
+      : `${module.premiumLabel}. You can still explain the workflow now and align packaging before rollout.`,
     upgradeCtaLabel: included ? 'View module workflow' : `Review ${formatPlanLabel(module.includedFrom)} packaging`
   };
 }

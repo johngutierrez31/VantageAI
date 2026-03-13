@@ -25,16 +25,21 @@ type CopilotCitation = {
 type RecommendedTool = {
   id:
     | 'command-center'
+    | 'adoption'
     | 'security-analyst'
     | 'policies'
     | 'cyber-range'
     | 'assessments'
     | 'evidence'
     | 'trustops'
+    | 'trust-rooms'
+    | 'buyer-requests'
+    | 'buyer-engagement'
     | 'questionnaires'
     | 'review-queue'
     | 'answer-library'
     | 'evidence-maps'
+    | 'connectors'
     | 'pulse'
     | 'ai-governance'
     | 'ai-use-cases'
@@ -201,6 +206,15 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     reason: 'Review daily mission queue and trend-informed priorities.'
   });
 
+  if (/adoption|onboard|migration|existing stack|overlay|operating layer|import|rip and replace|fit with/.test(normalized)) {
+    add({
+      id: 'adoption',
+      label: 'Adoption Mode',
+      href: '/app/adoption',
+      reason: 'Show how Vantage fits alongside your existing stack through imports, connectors, and guided start paths.'
+    });
+  }
+
   if (mode === 'general' || /board|executive|leadership|roadmap|risk register|quarterly|scorecard|posture/.test(normalized)) {
     add({
       id: 'pulse',
@@ -256,12 +270,39 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     reason: 'Run a structured analysis workflow and export a report.'
   });
 
+  if (/connector|integration|slack|jira|confluence|drive|publish to docs|webhook/.test(normalized)) {
+    add({
+      id: 'connectors',
+      label: 'Connector Health',
+      href: '/app/settings/connectors',
+      reason: 'Configure connectors, test health, and push records into Slack, Jira, Confluence, or outbound hooks.'
+    });
+  }
+
   if (mode === 'compliance' || /questionnaire|diligence|trust packet|security review|evidence map|procurement|buyer/.test(normalized)) {
     add({
       id: 'trustops',
       label: 'TrustOps',
       href: '/app/trust',
       reason: 'Manage trust packets, evidence linking, and buyer-facing response workflows.'
+    });
+    add({
+      id: 'trust-rooms',
+      label: 'Trust Rooms',
+      href: '/app/trust/rooms',
+      reason: 'Publish a buyer-facing trust room, control access mode, and keep packet sharing review-safe.'
+    });
+    add({
+      id: 'buyer-requests',
+      label: 'Access Requests',
+      href: '/app/trust/rooms',
+      reason: 'Review buyer requests, assign an owner, and issue access when the room is ready to share.'
+    });
+    add({
+      id: 'buyer-engagement',
+      label: 'Buyer Engagement',
+      href: '/app/trust/rooms',
+      reason: 'See which trust-room sections buyers viewed and whether they downloaded the packet.'
     });
     add({
       id: 'questionnaires',
@@ -396,18 +437,23 @@ export async function POST(request: Request) {
     let model = 'heuristic-fallback';
 
     if (process.env.OPENAI_API_KEY) {
-      const generated = await generateAnswer({
-        tenantName: session.tenantName,
-        snapshot,
-        history,
-        message: payload.message,
-        citations,
-        mode
-      });
+      try {
+        const generated = await generateAnswer({
+          tenantName: session.tenantName,
+          snapshot,
+          history,
+          message: payload.message,
+          citations,
+          mode
+        });
 
-      if (generated) {
-        answer = generated.answer;
-        model = generated.model;
+        if (generated) {
+          answer = generated.answer;
+          model = generated.model;
+        }
+      } catch {
+        answer = buildFallbackAnswer(payload.message, citations);
+        model = 'heuristic-fallback';
       }
     }
 
@@ -450,15 +496,6 @@ export async function POST(request: Request) {
       recommendedTools
     });
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith('OPENAI_REQUEST_FAILED')) {
-      return NextResponse.json(
-        { error: 'OpenAI request failed. Check OPENAI_API_KEY, OPENAI_MODEL, and account limits.' },
-        { status: 502 }
-      );
-    }
-    if (error instanceof Error && error.message === 'OPENAI_EMPTY_RESPONSE') {
-      return NextResponse.json({ error: 'OpenAI returned an empty response.' }, { status: 502 });
-    }
     return handleRouteError(error);
   }
 }

@@ -24,21 +24,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     {
       id: 'command-center',
       label: 'Command Center',
-      description: 'Suite-wide mission queue, module carry-over, and leadership-ready security priorities.',
+      description: 'Suite-wide mission queue, cross-module carry-over, and leadership-ready security priorities.',
       href: '/app/command-center',
       kind: 'command' as const
     },
     {
+      id: 'adoption-mode',
+      label: 'Adoption Mode',
+      description: 'Use Vantage with your existing stack through imports, connectors, and an operating-layer start path.',
+      href: '/app/adoption',
+      kind: 'adoption' as const
+    },
+    {
       id: 'tools-hub',
       label: 'Tools Hub',
-      description: 'Module launcher and guided workflow map across TrustOps, Pulse, AI Governance, and Response Ops.',
+      description: 'Module launcher and guided workflow map across TrustOps, Pulse, AI Governance, Response Ops, and adoption mode.',
       href: '/app/tools',
       kind: 'tools' as const
     },
     {
       id: 'pulse',
       label: 'Pulse',
-      description: 'Executive scorecards, risk register, roadmap, board briefs, and quarterly reviews.',
+      description: 'Executive scorecards, risk register, roadmap, board briefs, and quarterly reviews built from live suite signals.',
       href: '/app/pulse',
       kind: 'pulse' as const
     },
@@ -59,7 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     {
       id: 'ai-governance',
       label: 'AI Governance',
-      description: 'AI use case registry, vendor intake, policy mapping, and review queue.',
+      description: 'Governed AI use case registry, vendor intake, policy mapping, and review queue.',
       href: '/app/ai-governance',
       kind: 'ai' as const
     },
@@ -108,7 +115,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     {
       id: 'trustops',
       label: 'TrustOps',
-      description: 'Buyer diligence operations, evidence linking, trust packets, and procurement response workflows.',
+      description: 'Buyer diligence operations, evidence linking, approved answers, trust packets, and procurement response workflows.',
       href: '/app/trust',
       kind: 'trustops' as const
     },
@@ -136,7 +143,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     {
       id: 'copilot',
       label: 'Copilot',
-      description: 'Ask governance and security questions with citations.',
+      description: 'Ask for guided workflows, operating-layer recommendations, and evidence-aware next steps.',
       href: '/app/copilot',
       kind: 'copilot' as const
     },
@@ -180,6 +187,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       label: 'Settings: Billing',
       description: 'Manage plan and billing details.',
       href: '/app/settings/billing',
+      kind: 'settings' as const
+    },
+    {
+      id: 'settings-connectors',
+      label: 'Settings: Connectors',
+      description: 'Configure Slack, Jira, document publishing, outbound hooks, and the connector footprint Vantage works alongside.',
+      href: '/app/settings/connectors',
       kind: 'settings' as const
     }
   ];

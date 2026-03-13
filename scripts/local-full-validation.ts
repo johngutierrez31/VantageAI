@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { chromium, type Page } from 'playwright';
+import { DEMO_TENANT_ID } from '../prisma/demo-support';
 import { getPolicyCatalog } from '../src/lib/policy-generator/library';
 import { prisma } from '../src/lib/db/prisma';
 
@@ -9,6 +10,21 @@ const VALIDATION_TEMPLATE_NAME = 'Automation Validation Template';
 const VALIDATION_ASSESSMENT_NAME = 'Automation Validation Assessment';
 const VALIDATION_EVIDENCE_NAME = 'validation-evidence.txt';
 const VALIDATION_TRUST_TITLE = 'Validation Trust Packet';
+const VALIDATION_TRUST_ROOM_NAME = 'Validation Buyer Trust Room';
+const VALIDATION_TRUST_ROOM_SLUG = 'validation-buyer-trust-room';
+const VALIDATION_TRUST_ROOM_SECTION_IDS = [
+  'cover-summary',
+  'approved-security-faq',
+  'evidence-map-summary',
+  'policy-summaries',
+  'executive-posture-summary',
+  'approved-contact-details'
+];
+const VALIDATION_TRUST_ROOM_REQUESTER_NAME = 'Validation Buyer';
+const VALIDATION_TRUST_ROOM_REQUESTER_EMAIL = 'buyer@validation.example';
+const VALIDATION_TRUST_ROOM_REQUESTER_COMPANY = 'Validation Buyer Co';
+const DEMO_TRUST_ROOM_SLUG = 'northbridge-payments-room';
+const DEMO_TRUST_ROOM_GRANT_TOKEN = 'northbridge-buyer-grant-demo';
 const OUTPUT_ROOT = path.join(process.cwd(), 'output', 'test');
 const UI_ROOT = path.join(OUTPUT_ROOT, 'ui');
 const API_ROOT = path.join(OUTPUT_ROOT, 'api');
@@ -135,13 +151,16 @@ async function writeJson(filePath: string, data: unknown) {
 
 async function waitForServer() {
   let lastError = 'Server did not respond';
+  const readinessPaths = ['/app/tools', '/login'];
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    try {
-      const response = await fetch(`${BASE_URL}/login`);
-      if (response.ok) return;
-      lastError = `Unexpected status ${response.status}`;
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+    for (const readinessPath of readinessPaths) {
+      try {
+        const response = await fetch(`${BASE_URL}${readinessPath}`);
+        if (response.ok) return;
+        lastError = `${readinessPath} returned ${response.status}`;
+      } catch (error) {
+        lastError = `${readinessPath}: ${error instanceof Error ? error.message : String(error)}`;
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
@@ -153,6 +172,12 @@ function parseJson(text: string) {
     return JSON.parse(text);
   } catch {
     return null;
+  }
+}
+
+function assertIncludes(text: string, expected: string, context: string) {
+  if (!text.includes(expected)) {
+    throw new Error(`${context} did not include "${expected}".`);
   }
 }
 
@@ -301,6 +326,167 @@ async function waitForAppPage(page: Page) {
   await page.waitForLoadState('domcontentloaded');
   await page.waitForSelector('main');
   await page.waitForTimeout(1000);
+}
+
+async function assertTrustRoomPersistence(roomId: string, accessRequestId: string) {
+  const room = await prisma.trustRoom.findUnique({
+    where: { id: roomId },
+    include: {
+      accessRequests: {
+        where: { id: accessRequestId },
+        select: {
+          status: true,
+          assignedOwnerUserId: true,
+          internalNotes: true,
+          approvedAt: true,
+          viewCount: true,
+          lastViewedAt: true
+        }
+      },
+      engagementEvents: {
+        select: {
+          eventType: true,
+          sectionKey: true
+        }
+      }
+    }
+  });
+
+  if (!room) {
+    throw new Error(`Trust room ${roomId} was not found during persistence validation.`);
+  }
+
+  const accessRequest = room.accessRequests[0];
+  if (!accessRequest) {
+    throw new Error(`Trust room request ${accessRequestId} was not found during persistence validation.`);
+  }
+
+  if (accessRequest.status !== 'FULFILLED') {
+    throw new Error(`Expected trust room request ${accessRequestId} to reach FULFILLED, received ${accessRequest.status}.`);
+  }
+
+  if (!accessRequest.assignedOwnerUserId) {
+    throw new Error(`Trust room request ${accessRequestId} did not retain an assigned owner.`);
+  }
+
+  if (!accessRequest.internalNotes?.includes('Automated validation')) {
+    throw new Error(`Trust room request ${accessRequestId} did not retain the internal triage notes.`);
+  }
+
+  if (!accessRequest.approvedAt) {
+    throw new Error(`Trust room request ${accessRequestId} did not retain an approval timestamp.`);
+  }
+
+  if (!accessRequest.lastViewedAt || accessRequest.viewCount < 3) {
+    throw new Error(
+      `Trust room request ${accessRequestId} did not capture enough buyer activity (viewCount=${accessRequest.viewCount}).`
+    );
+  }
+
+  const roomEventTypes = new Set(room.engagementEvents.map((event) => event.eventType));
+  for (const requiredEvent of [
+    'REQUEST_SUBMITTED',
+    'ACCESS_GRANTED',
+    'ROOM_VIEWED',
+    'SECTION_VIEWED',
+    'PACKET_DOWNLOADED'
+  ] as const) {
+    if (!roomEventTypes.has(requiredEvent)) {
+      throw new Error(`Trust room ${roomId} did not persist the ${requiredEvent} engagement event.`);
+    }
+  }
+
+  if (
+    !room.engagementEvents.some(
+      (event) => event.eventType === 'SECTION_VIEWED' && event.sectionKey === 'approved-security-faq'
+    )
+  ) {
+    throw new Error(`Trust room ${roomId} did not persist the approved-security-faq section view event.`);
+  }
+}
+
+async function assertAdoptionImportPersistence(importId: string) {
+  const record = await prisma.adoptionImport.findUnique({
+    where: { id: importId }
+  });
+
+  if (!record) {
+    throw new Error(`Adoption import ${importId} was not found during persistence validation.`);
+  }
+
+  if (record.status === 'FAILED' || record.createdCount < 1) {
+    throw new Error(
+      `Adoption import ${importId} did not persist a successful import outcome (status=${record.status}, createdCount=${record.createdCount}).`
+    );
+  }
+}
+
+async function assertConnectorPersistence(args: {
+  slackConnectorId: string;
+  jiraConnectorId: string;
+  confluenceConnectorId: string;
+  webhookConnectorId: string;
+  riskId: string;
+  boardBriefId: string;
+  trustRoomRequestId: string;
+  incidentId: string;
+  quarterlyReviewId: string;
+}) {
+  const [activities, riskLink, docLink] = await Promise.all([
+    prisma.connectorActivity.findMany({
+      where: {
+        tenantId: DEMO_TENANT_ID,
+        OR: [
+          { connectorId: args.slackConnectorId, action: { in: ['health_check', 'manual_notify', 'notify'] } },
+          { connectorId: args.jiraConnectorId, action: { in: ['health_check', 'sync'] } },
+          { connectorId: args.confluenceConnectorId, action: { in: ['health_check', 'publish'] } },
+          { connectorId: args.webhookConnectorId, action: { in: ['health_check', 'notify'] } }
+        ]
+      }
+    }),
+    prisma.connectorObjectLink.findUnique({
+      where: {
+        connectorId_entityType_entityId: {
+          connectorId: args.jiraConnectorId,
+          entityType: 'risk',
+          entityId: args.riskId
+        }
+      }
+    }),
+    prisma.connectorObjectLink.findUnique({
+      where: {
+        connectorId_entityType_entityId: {
+          connectorId: args.confluenceConnectorId,
+          entityType: 'board_brief',
+          entityId: args.boardBriefId
+        }
+      }
+    })
+  ]);
+
+  const activityChecks: Array<[string, boolean]> = [
+    ['Slack health check', activities.some((activity) => activity.connectorId === args.slackConnectorId && activity.action === 'health_check' && activity.status === 'SUCCEEDED')],
+    ['Manual Slack notification', activities.some((activity) => activity.connectorId === args.slackConnectorId && activity.action === 'manual_notify' && activity.status === 'SUCCEEDED')],
+    ['Buyer request Slack notification', activities.some((activity) => activity.connectorId === args.slackConnectorId && activity.entityType === 'trust_room_request' && activity.entityId === args.trustRoomRequestId)],
+    ['Incident webhook notification', activities.some((activity) => activity.connectorId === args.webhookConnectorId && activity.entityType === 'incident' && activity.entityId === args.incidentId)],
+    ['Quarterly review Slack notification', activities.some((activity) => activity.connectorId === args.slackConnectorId && activity.entityType === 'quarterly_review' && activity.entityId === args.quarterlyReviewId)],
+    ['Jira risk sync', activities.some((activity) => activity.connectorId === args.jiraConnectorId && activity.action === 'sync' && activity.entityType === 'risk' && activity.entityId === args.riskId && activity.status === 'SUCCEEDED')],
+    ['Confluence board brief publish', activities.some((activity) => activity.connectorId === args.confluenceConnectorId && activity.action === 'publish' && activity.entityType === 'board_brief' && activity.entityId === args.boardBriefId && activity.status === 'SUCCEEDED')]
+  ];
+
+  for (const [label, passed] of activityChecks) {
+    if (!passed) {
+      throw new Error(`Connector persistence check failed: ${label} was not recorded.`);
+    }
+  }
+
+  if (!riskLink?.lastSyncedAt || riskLink.lastSyncStatus !== 'SUCCEEDED') {
+    throw new Error('Connector persistence check failed: Jira risk link was not stored correctly.');
+  }
+
+  if (!docLink?.lastSyncedAt || docLink.lastSyncStatus !== 'SUCCEEDED') {
+    throw new Error('Connector persistence check failed: Confluence board brief link was not stored correctly.');
+  }
 }
 
 async function captureRoute(page: Page, route: string) {
@@ -875,6 +1061,253 @@ async function runApiValidation() {
     'trust-packet-external.html'
   );
 
+  const { payload: createdTrustRoom } = await requestJson<{
+    room: { id: string; slug: string; accessMode: string; status: string };
+    shareUrl: string | null;
+    shareToken: string | null;
+  }>(
+    'Publish request-gated trust room',
+    '/api/trust/rooms',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        trustPacketId: externalTrustPacket.id,
+        name: VALIDATION_TRUST_ROOM_NAME,
+        slug: VALIDATION_TRUST_ROOM_SLUG,
+        accessMode: 'REQUEST_ACCESS',
+        roomSections: VALIDATION_TRUST_ROOM_SECTION_IDS,
+        summaryText:
+          'Validation buyer trust room for approved FAQs, evidence posture, trust packet sections, and contact details.',
+        termsRequired: true,
+        ndaRequired: true
+      })
+    },
+    'trust-room-created'
+  );
+  summary.createdEntities.trustRoomId = createdTrustRoom.room.id;
+  summary.createdEntities.trustRoomSlug = createdTrustRoom.room.slug;
+
+  if (createdTrustRoom.room.accessMode !== 'REQUEST_ACCESS' || createdTrustRoom.room.status !== 'PUBLISHED') {
+    throw new Error('Trust room creation did not return a published request-gated room.');
+  }
+
+  await requestJson('List trust rooms after publish', '/api/trust/rooms', {}, 'trust-rooms-list');
+
+  const requestGateLanding = await requestText(
+    'Open request-gated trust room',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}`,
+    {},
+    'trust-room-request-gate'
+  );
+  assertIncludes(requestGateLanding.text, 'Request Access', 'Request-gated trust room page');
+  assertIncludes(requestGateLanding.text, 'Validation buyer trust room', 'Request-gated trust room summary');
+
+  await requestJsonWithExpectedStatus(
+    'Reject unauthorized room event',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}/event`,
+    403,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: 'SECTION_VIEWED',
+        sectionKey: 'approved-security-faq'
+      })
+    },
+    'trust-room-event-forbidden'
+  );
+
+  const { payload: createdRequest } = await requestJson<{ requestId: string; status: string }>(
+    'Submit trust room access request',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}/request`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requesterName: VALIDATION_TRUST_ROOM_REQUESTER_NAME,
+        requesterEmail: VALIDATION_TRUST_ROOM_REQUESTER_EMAIL,
+        companyName: VALIDATION_TRUST_ROOM_REQUESTER_COMPANY,
+        requestReason: 'Need to review your approved security materials for buyer diligence.',
+        acknowledgedTerms: true
+      })
+    },
+    'trust-room-request-created'
+  );
+  summary.createdEntities.trustRoomAccessRequestId = createdRequest.requestId;
+
+  if (createdRequest.status !== 'PENDING') {
+    throw new Error(`Expected trust room request to start in PENDING, received ${createdRequest.status}.`);
+  }
+
+  const { payload: approvedRequest } = await requestJson<{
+    accessRequest: { id: string; status: string; assignedOwnerUserId: string | null };
+    grantUrl: string | null;
+    grantToken: string | null;
+  }>(
+    'Approve trust room access request',
+    `/api/trust/rooms/requests/${createdRequest.requestId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'APPROVED',
+        assignedOwnerUserId: reviewerUserId,
+        internalNotes: 'Automated validation approved this buyer after reviewing the trust packet.',
+        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+      })
+    },
+    'trust-room-request-approved'
+  );
+
+  if (!approvedRequest.grantToken) {
+    throw new Error('Trust room approval did not issue a grant token.');
+  }
+
+  summary.createdEntities.trustRoomGrantToken = approvedRequest.grantToken;
+
+  const grantLanding = await requestText(
+    'Open granted trust room acknowledgement',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}?grant=${approvedRequest.grantToken}`,
+    {},
+    'trust-room-grant-acknowledgement'
+  );
+  assertIncludes(grantLanding.text, 'I Acknowledge And Continue', 'Trust room acknowledgement page');
+
+  const grantedRoom = await requestText(
+    'Open granted trust room',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}?grant=${approvedRequest.grantToken}&ack=1`,
+    {},
+    'trust-room-granted'
+  );
+  assertIncludes(grantedRoom.text, 'Download HTML', 'Granted trust room');
+  assertIncludes(grantedRoom.text, 'Approved Security FAQ', 'Granted trust room section list');
+
+  await requestJson(
+    'Track trust room section view',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}/event?grant=${approvedRequest.grantToken}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: 'SECTION_VIEWED',
+        sectionKey: 'approved-security-faq',
+        actorLabel: VALIDATION_TRUST_ROOM_REQUESTER_NAME
+      })
+    },
+    'trust-room-event-section-viewed'
+  );
+
+  await requestBinary(
+    'Download trust room HTML',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}/download?grant=${approvedRequest.grantToken}&format=html`,
+    DOWNLOAD_ROOT,
+    'trust-room.html'
+  );
+  await requestBinary(
+    'Download trust room JSON',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}/download?grant=${approvedRequest.grantToken}&format=json`,
+    DOWNLOAD_ROOT,
+    'trust-room.json'
+  );
+
+  const { payload: protectedRoom } = await requestJson<{
+    room: { id: string; slug: string; accessMode: string; status: string };
+    shareUrl: string | null;
+    shareToken: string | null;
+  }>(
+    'Switch trust room to protected link',
+    `/api/trust/rooms/${createdTrustRoom.room.id}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accessMode: 'PROTECTED_LINK',
+        rotateShareKey: true
+      })
+    },
+    'trust-room-protected-link'
+  );
+
+  if (protectedRoom.room.accessMode !== 'PROTECTED_LINK' || !protectedRoom.shareToken) {
+    throw new Error('Trust room did not rotate into protected-link mode correctly.');
+  }
+
+  summary.createdEntities.trustRoomProtectedAccessToken = protectedRoom.shareToken;
+
+  const protectedLanding = await requestText(
+    'Open protected-link trust room',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}`,
+    {},
+    'trust-room-protected-link-page'
+  );
+  assertIncludes(protectedLanding.text, 'Enter Your Protected Link', 'Protected-link trust room page');
+
+  const protectedAck = await requestText(
+    'Open protected-link trust room acknowledgement',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}?access=${protectedRoom.shareToken}`,
+    {},
+    'trust-room-protected-link-acknowledgement'
+  );
+  assertIncludes(protectedAck.text, 'I Acknowledge And Continue', 'Protected-link acknowledgement page');
+
+  const protectedViewer = await requestText(
+    'Open protected-link trust room viewer',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}?access=${protectedRoom.shareToken}&ack=1`,
+    {},
+    'trust-room-protected-link-viewer'
+  );
+  assertIncludes(protectedViewer.text, 'Download Markdown', 'Protected-link trust room viewer');
+
+  await requestBinary(
+    'Download trust room Markdown via protected link',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}/download?access=${protectedRoom.shareToken}&format=markdown`,
+    DOWNLOAD_ROOT,
+    'trust-room.md'
+  );
+
+  const { payload: internalReviewRoom } = await requestJson<{
+    room: { id: string; slug: string; accessMode: string; status: string };
+    shareUrl: string | null;
+    shareToken: string | null;
+  }>(
+    'Switch trust room to internal review',
+    `/api/trust/rooms/${createdTrustRoom.room.id}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accessMode: 'INTERNAL_REVIEW'
+      })
+    },
+    'trust-room-internal-review'
+  );
+
+  if (internalReviewRoom.room.accessMode !== 'INTERNAL_REVIEW') {
+    throw new Error('Trust room did not return to internal-review mode.');
+  }
+
+  const internalReviewLanding = await requestText(
+    'Open internal-review trust room',
+    `/trust-room/${VALIDATION_TRUST_ROOM_SLUG}`,
+    {},
+    'trust-room-internal-review-page'
+  );
+  assertIncludes(internalReviewLanding.text, 'Internal Review Only', 'Internal-review trust room page');
+
+  await requestJson('List trust rooms after mode transitions', '/api/trust/rooms', {}, 'trust-rooms-list-final');
+
+  const demoTrustRoom = await requestText(
+    'Open seeded demo trust room',
+    `/trust-room/${DEMO_TRUST_ROOM_SLUG}?grant=${DEMO_TRUST_ROOM_GRANT_TOKEN}&ack=1`,
+    {},
+    'trust-room-demo-seeded'
+  );
+  assertIncludes(demoTrustRoom.text, 'Download HTML', 'Seeded demo trust room');
+  summary.createdEntities.demoTrustRoomSlug = DEMO_TRUST_ROOM_SLUG;
+
+  await assertTrustRoomPersistence(createdTrustRoom.room.id, createdRequest.requestId);
+
   const { payload: incidentDetail } = await requestJson<{
     incident: {
       id: string;
@@ -1435,6 +1868,92 @@ async function runApiValidation() {
     'pulse-quarterly-review-finalized'
   );
 
+  const seededConnectors = await prisma.connectorConfig.findMany({
+    where: {
+      tenantId: DEMO_TENANT_ID,
+      provider: { in: ['SLACK', 'JIRA', 'CONFLUENCE', 'OUTBOUND_WEBHOOK'] }
+    },
+    orderBy: { provider: 'asc' }
+  });
+  summary.createdEntities.connectorCount = seededConnectors.length;
+
+  const slackConnector = seededConnectors.find((connector) => connector.provider === 'SLACK');
+  const jiraConnector = seededConnectors.find((connector) => connector.provider === 'JIRA');
+  const confluenceConnector = seededConnectors.find((connector) => connector.provider === 'CONFLUENCE');
+  const webhookConnector = seededConnectors.find((connector) => connector.provider === 'OUTBOUND_WEBHOOK');
+
+  if (!slackConnector || !jiraConnector || !confluenceConnector || !webhookConnector) {
+    throw new Error('Seeded connector set is incomplete after demo reset.');
+  }
+
+  await requestJson<Array<{ id: string; provider: string }>>(
+    'List connectors',
+    '/api/integrations/connectors',
+    {},
+    'connectors-list'
+  );
+
+  await requestJson(
+    'Slack connector health check',
+    `/api/integrations/connectors/${slackConnector.id}/health`,
+    { method: 'POST' },
+    'connector-slack-health'
+  );
+
+  await requestJson(
+    'Webhook connector health check',
+    `/api/integrations/connectors/${webhookConnector.id}/health`,
+    { method: 'POST' },
+    'connector-webhook-health'
+  );
+
+  await requestJson(
+    'Send manual Slack notification',
+    '/api/integrations/slack/notify',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        connectorId: slackConnector.id,
+        eventKey: 'manual_notification',
+        title: 'Validation connector ping',
+        body: 'Connector validation confirmed the operator-driven Slack flow.',
+        href: '/app/settings/connectors'
+      })
+    },
+    'connector-slack-notify'
+  );
+
+  await requestJson(
+    'Sync risk to Jira',
+    '/api/integrations/jira/sync',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        connectorId: jiraConnector.id,
+        entityType: 'risk',
+        entityId: manualRisk.id
+      })
+    },
+    'connector-jira-sync'
+  );
+
+  await requestJson(
+    'Publish board brief to Confluence',
+    '/api/integrations/docs/publish',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        connectorId: confluenceConnector.id,
+        artifactType: 'board_brief',
+        artifactId: boardBrief.id
+      })
+    },
+    'connector-doc-publish'
+  );
+
   await requestJson(
     'Publish pulse snapshot',
     `/api/pulse/snapshots/${pulseSnapshot.id}`,
@@ -1447,6 +1966,18 @@ async function runApiValidation() {
     },
     'pulse-snapshot-published'
   );
+
+  await assertConnectorPersistence({
+    slackConnectorId: slackConnector.id,
+    jiraConnectorId: jiraConnector.id,
+    confluenceConnectorId: confluenceConnector.id,
+    webhookConnectorId: webhookConnector.id,
+    riskId: manualRisk.id,
+    boardBriefId: boardBrief.id,
+    trustRoomRequestId: createdRequest.requestId,
+    incidentId: incidentDetail.incident.id,
+    quarterlyReviewId: quarterlyReview.id
+  });
 
   const { payload: aiVendorReview } = await requestJson<{
     id: string;
@@ -1634,6 +2165,7 @@ async function runApiValidation() {
   await requestJson('List trust inbox items', '/api/trust/inbox', {}, 'trust-inbox-list');
   await requestJson('Trust inbox detail', `/api/trust/inbox/${trustItem.id}`, {}, 'trust-inbox-detail');
   await requestJson('List trust packets', '/api/trust/packets', {}, 'trust-packets');
+  await requestJson('List trust rooms final snapshot', '/api/trust/rooms', {}, 'trust-rooms-summary');
 
   const { payload: missionQueue } = await requestJson<{
     missionQueue: Array<{ id: string }>;
@@ -1774,12 +2306,38 @@ async function runApiValidation() {
     );
   } else {
     if (copilot.model === 'heuristic-fallback') {
-      throw new Error('Copilot remained in heuristic fallback mode despite OPENAI_API_KEY being configured.');
+      summary.notes.push(
+        'OPENAI_API_KEY is configured, but Copilot used heuristic fallback because the live provider response was unavailable during validation.'
+      );
+    } else {
+      summary.notes.push(`OPENAI_API_KEY is configured. Copilot responded with live model ${copilot.model}.`);
     }
-    summary.notes.push(`OPENAI_API_KEY is configured. Copilot responded with live model ${copilot.model}.`);
   }
 
   await requestJson('List assessments', '/api/assessments', {}, 'assessments');
+
+  const { payload: adoptionImport } = await requestJson<{
+    record: { id: string; status: string; createdCount: number };
+  }>(
+    'Create adoption import',
+    '/api/adoption/imports',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        target: 'FINDINGS',
+        source: 'MANUAL',
+        content: [
+          'title | description | priority | status | controlCode',
+          'Validation imported finding | Imported through adoption mode validation. | HIGH | OPEN | IAM-9'
+        ].join('\n')
+      })
+    },
+    'adoption-import'
+  );
+  summary.createdEntities.adoptionImportId = adoptionImport.record.id;
+  await assertAdoptionImportPersistence(adoptionImport.record.id);
+  await requestJson('List adoption imports', '/api/adoption/imports', {}, 'adoption-imports');
 
   summary.notes.push(
     `Template catalog contained ${templateCatalog.length} visible template records before this run.`
@@ -1798,6 +2356,7 @@ async function runUiValidation() {
   try {
     const routes = new Set<string>([
       '/app/command-center',
+      '/app/adoption',
       '/app/tools',
       '/app/copilot',
       '/app/ai-governance',
@@ -1816,6 +2375,7 @@ async function runUiValidation() {
       '/app/assessments',
       '/app/questionnaires',
       '/app/trust',
+      '/app/trust/rooms',
       '/app/trust/reviews',
       '/app/trust/answer-library',
       '/app/trust/inbox',
@@ -1825,7 +2385,8 @@ async function runUiValidation() {
       '/app/templates',
       '/app/settings',
       '/app/settings/billing',
-      '/app/settings/members'
+      '/app/settings/members',
+      '/app/settings/connectors'
     ]);
 
     if (summary.createdEntities.assessmentId) {
@@ -1881,6 +2442,9 @@ async function runUiValidation() {
 
     await page.goto(`${BASE_URL}/app/command-center`, { waitUntil: 'domcontentloaded' });
     await waitForAppPage(page);
+    await page.getByText('3-minute path').waitFor({ timeout: 15000 });
+    await page.getByText('10-minute full-suite tour').waitFor({ timeout: 15000 });
+    await page.getByText('Seeded artifacts to show').waitFor({ timeout: 15000 });
     await saveDownloadFromClick(page, 'Weekly brief markdown', async () => {
       await page.getByRole('button', { name: 'Download Markdown' }).click();
     });
@@ -1891,6 +2455,31 @@ async function runUiValidation() {
     await page.getByRole('button', { name: 'Create mission task pack' }).click();
     await page.getByText(/Created .* mission tasks/i).waitFor({ timeout: 20000 });
     await page.screenshot({ path: path.join(UI_ROOT, 'command-center-actions.png'), fullPage: true });
+
+    await page.goto(`${BASE_URL}/app/tools`, { waitUntil: 'domcontentloaded' });
+    await waitForAppPage(page);
+    await page.getByText('Publish Trust Room').first().waitFor({ timeout: 15000 });
+    await page.getByText('Review Access Requests').first().waitFor({ timeout: 15000 });
+    await page.getByText('Summarize Buyer Engagement').first().waitFor({ timeout: 15000 });
+    await page.getByText('Configure Connectors').first().waitFor({ timeout: 15000 });
+    await page.getByText('Sync to Jira').first().waitFor({ timeout: 15000 });
+    await page.screenshot({ path: path.join(UI_ROOT, 'tools-hub-guided-workflows.png'), fullPage: true });
+
+    await page.goto(`${BASE_URL}/app/adoption`, { waitUntil: 'domcontentloaded' });
+    await waitForAppPage(page);
+    await page.getByRole('heading', { name: 'Adoption Mode' }).waitFor({ timeout: 15000 });
+    await page.getByText('Import Existing Work').waitFor({ timeout: 15000 });
+    await page.getByRole('button', { name: 'Import findings' }).click();
+    await page.getByText(/manual import created 1 finding/i).waitFor({ timeout: 20000 });
+    await page.screenshot({ path: path.join(UI_ROOT, 'adoption-mode.png'), fullPage: true });
+
+    await page.goto(`${BASE_URL}/app/settings/connectors`, { waitUntil: 'domcontentloaded' });
+    await waitForAppPage(page);
+    await page.getByText('Slack').first().waitFor({ timeout: 15000 });
+    await page.getByText('Send To Slack').first().waitFor({ timeout: 15000 });
+    await page.getByText('Sync To Jira').first().waitFor({ timeout: 15000 });
+    await page.getByText('Publish To Docs').first().waitFor({ timeout: 15000 });
+    await page.screenshot({ path: path.join(UI_ROOT, 'connector-health-page.png'), fullPage: true });
 
     await page.goto(`${BASE_URL}/app/runbooks`, { waitUntil: 'domcontentloaded' });
     await waitForAppPage(page);
@@ -1982,12 +2571,20 @@ async function runUiValidation() {
 
     await page.goto(`${BASE_URL}/app/trust`, { waitUntil: 'domcontentloaded' });
     await waitForAppPage(page);
+    await page.getByText('Trust Rooms').first().waitFor({ timeout: 15000 });
     if (summary.createdEntities.trustPacketId) {
       await saveDownloadFromClick(page, 'Trust packet HTML (UI)', async () => {
         await page.getByRole('button', { name: 'Export HTML' }).first().click();
       });
     }
     await page.screenshot({ path: path.join(UI_ROOT, 'trustops-workflows.png'), fullPage: true });
+
+    await page.goto(`${BASE_URL}/app/trust/rooms`, { waitUntil: 'domcontentloaded' });
+    await waitForAppPage(page);
+    await page.getByRole('heading', { name: 'Publish Trust Room' }).waitFor({ timeout: 15000 });
+    await page.getByRole('heading', { name: 'Access Requests' }).waitFor({ timeout: 15000 });
+    await page.getByText('Summarize Buyer Engagement').first().waitFor({ timeout: 15000 });
+    await page.screenshot({ path: path.join(UI_ROOT, 'trust-rooms-operator-workflow.png'), fullPage: true });
 
     await page.goto(`${BASE_URL}/app/pulse`, { waitUntil: 'domcontentloaded' });
     await waitForAppPage(page);
@@ -2036,6 +2633,19 @@ async function runUiValidation() {
       });
       await waitForAppPage(page);
       await page.screenshot({ path: path.join(UI_ROOT, 'pulse-quarterly-review.png'), fullPage: true });
+    }
+
+    if (summary.createdEntities.demoTrustRoomSlug) {
+      await page.goto(
+        `${BASE_URL}/trust-room/${summary.createdEntities.demoTrustRoomSlug}?grant=${DEMO_TRUST_ROOM_GRANT_TOKEN}&ack=1`,
+        {
+          waitUntil: 'domcontentloaded'
+        }
+      );
+      await page.getByText('Download HTML').waitFor({ timeout: 15000 });
+      await page.getByRole('button', { name: 'Approved Security FAQ' }).click();
+      await page.getByText('Download JSON').waitFor({ timeout: 15000 });
+      await page.screenshot({ path: path.join(UI_ROOT, 'trust-room-demo-viewer.png'), fullPage: true });
     }
   } finally {
     await context.close().catch(() => undefined);

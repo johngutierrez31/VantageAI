@@ -55,7 +55,8 @@ type TrustFindingItem = {
     | 'AI_VENDOR_REVIEW'
     | 'RESPONSE_OPS_INCIDENT'
     | 'RESPONSE_OPS_AFTER_ACTION'
-    | 'RESPONSE_OPS_TABLETOP';
+    | 'RESPONSE_OPS_TABLETOP'
+    | 'ADOPTION_IMPORT';
   status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ARCHIVED';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   supportStrength: 'STRONG' | 'MODERATE' | 'WEAK' | 'MISSING' | null;

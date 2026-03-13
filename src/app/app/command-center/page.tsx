@@ -5,7 +5,10 @@ import { KpiCard } from '@/components/app/kpi-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CommandCenterOperations } from '@/components/app/command-center-operations';
+import { DemoPathCard } from '@/components/app/demo-path-card';
+import { getTenantAdoptionModeViewModel } from '@/lib/adoption/adoption-mode';
 import { getPageSessionContext } from '@/lib/auth/page-session';
+import { getTenantDemoPathViewModel } from '@/lib/demo/demo-path';
 import { buildSevenDayMissionQueue, getTenantSecurityPulse } from '@/lib/intel/pulse';
 import { getSoloCisoCapabilities, getTrendSignals, type TrendSeverity } from '@/lib/intel/trends';
 
@@ -23,9 +26,11 @@ function severityClasses(severity: TrendSeverity) {
 
 export default async function CommandCenterPage() {
   const session = await getPageSessionContext();
-  const [pulse, trends] = await Promise.all([
+  const [pulse, trends, demoPath, adoptionMode] = await Promise.all([
     getTenantSecurityPulse(session.tenantId),
-    Promise.resolve(getTrendSignals())
+    Promise.resolve(getTrendSignals()),
+    getTenantDemoPathViewModel(session.tenantId),
+    getTenantAdoptionModeViewModel(session.tenantId)
   ]);
 
   const capabilities = getSoloCisoCapabilities();
@@ -39,6 +44,7 @@ export default async function CommandCenterPage() {
         description="Run the VantageAI security operating system from one cross-module surface: open work, executive carry-over, trust pressure, incident activity, and guided next actions."
         primaryAction={{ label: 'Open Copilot', href: '/app/copilot' }}
         secondaryActions={[
+          { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
           { label: 'Pulse', href: '/app/pulse', variant: 'outline' },
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
           { label: 'Response Ops', href: '/app/response-ops', variant: 'outline' },
@@ -51,6 +57,9 @@ export default async function CommandCenterPage() {
       >
         <p className="text-xs text-muted-foreground">
           Workspace: {session.tenantName} | Pulse captured at {new Date(pulse.capturedAt).toLocaleString()}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Use Vantage as the operating layer across your existing stack. Start in Adoption Mode when the next conversation is about fit, migration pressure, or imported work.
         </p>
       </PageHeader>
 
@@ -80,6 +89,45 @@ export default async function CommandCenterPage() {
           icon={<TrendingUp className="h-5 w-5" />}
         />
       </div>
+
+      <DemoPathCard demoPath={demoPath} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Adoption Mode / Work With Your Existing Stack</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <KpiCard
+            label="Configured Connectors"
+            value={String(adoptionMode.metrics.connectorCount)}
+            hint="Slack, Jira, publishing, and downstream hooks already configured"
+            icon={<Shield className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Imported Records"
+            value={String(adoptionMode.metrics.importCount)}
+            hint="Durable adoption imports already recorded"
+            icon={<TrendingUp className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Reusable Trust Answers"
+            value={String(adoptionMode.metrics.approvedAnswerCount)}
+            hint="Bring approved answers forward before the next questionnaire lands"
+            icon={<CalendarClock className="h-5 w-5" />}
+          />
+          <KpiCard
+            label="Open Risks"
+            value={String(adoptionMode.metrics.openRiskCount)}
+            hint="Imported or generated risk carry-over already visible in Pulse"
+            icon={<AlertTriangle className="h-5 w-5" />}
+          />
+          <div className="flex items-center">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/adoption">Open Adoption Mode</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

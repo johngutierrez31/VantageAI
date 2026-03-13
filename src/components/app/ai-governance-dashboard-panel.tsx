@@ -53,14 +53,19 @@ export function AIGovernanceDashboardPanel({
       <PageHeader
         title="AI Governance"
         helpKey="aiGovernance"
-        description="Register AI use cases, review AI vendors, map policies and data classes, and push high-risk AI decisions into findings and Pulse."
+        description="AI Governance is the governed AI adoption layer: register use cases, review vendors, map policies and data classes, and carry high-risk AI decisions into findings and Pulse."
         primaryAction={{ label: 'Register AI Use Case', href: '/app/ai-governance/use-cases' }}
         secondaryActions={[
+          { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
           { label: 'Vendor Intake', href: '/app/ai-governance/vendors', variant: 'outline' },
           { label: 'Review Queue', href: '/app/ai-governance/reviews', variant: 'outline' },
           { label: 'Pulse Risks', href: '/app/pulse/risks', variant: 'outline' }
         ]}
-      />
+      >
+        <p className="text-xs text-muted-foreground">
+          Start here: register the use case, review the vendor if one is involved, confirm the policy fit, then carry any blockers into findings and Pulse.
+        </p>
+      </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <KpiCard

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSessionContext } from '@/lib/auth/session';
 import { handleRouteError } from '@/lib/http';
 import { writeAuditLog } from '@/lib/audit';
+import { dispatchIntegrationEvent } from '@/lib/integrations/events';
 import { listQuarterlyReviews, prepareQuarterlyReviewRecord } from '@/lib/pulse/quarterly-reviews';
 import { quarterlyReviewCreateSchema } from '@/lib/validation/pulse';
 
@@ -34,6 +35,21 @@ export async function POST(request: Request) {
       entityType: 'quarterly_review',
       entityId: review.id,
       action: 'quarterly_review_prepared',
+      metadata: {
+        reviewPeriod: review.reviewPeriod,
+        status: review.status
+      }
+    });
+
+    await dispatchIntegrationEvent({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      eventKey: 'quarterly_review_ready',
+      title: `${review.reviewPeriod} quarterly review is ready`,
+      body: `Pulse prepared the leadership review package in ${review.status.toLowerCase()} status.`,
+      href: '/app/pulse',
+      entityType: 'quarterly_review',
+      entityId: review.id,
       metadata: {
         reviewPeriod: review.reviewPeriod,
         status: review.status

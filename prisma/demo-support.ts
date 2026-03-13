@@ -57,6 +57,9 @@ export const DEMO_IDS = {
   approvedAi: 'approved_answer_demo_ai',
   trustInbox: 'trust_inbox_demo_northbridge',
   trustPacket: 'trust_packet_demo_northbridge',
+  trustRoom: 'trust_room_demo_northbridge',
+  trustRoomRequestApproved: 'trust_room_request_demo_approved',
+  trustRoomRequestPending: 'trust_room_request_demo_pending',
   evidenceMap: 'evidence_map_demo_northbridge',
   evidenceMapPolicies: 'evidence_map_item_demo_policies',
   evidenceMapMfa: 'evidence_map_item_demo_mfa',
@@ -94,7 +97,13 @@ export const DEMO_IDS = {
   roadmap60: 'roadmap_item_demo_60',
   roadmap90: 'roadmap_item_demo_90',
   boardBrief: 'board_brief_demo_2026_q1',
-  quarterlyReview: 'quarterly_review_demo_2026_q1'
+  quarterlyReview: 'quarterly_review_demo_2026_q1',
+  connectorSlack: 'connector_demo_slack',
+  connectorJira: 'connector_demo_jira',
+  connectorConfluence: 'connector_demo_confluence',
+  connectorWebhook: 'connector_demo_webhook',
+  adoptionImportAnswers: 'adoption_import_demo_answers',
+  adoptionImportRisk: 'adoption_import_demo_risk'
 } as const;
 
 type SeedTemplate = {
@@ -207,6 +216,13 @@ export async function resetTenantScopedData(prisma: PrismaClient, tenantId: stri
     await tx.aIVendorReview.deleteMany({ where: { tenantId } });
     await tx.reportExport.deleteMany({ where: { tenantId } });
     await tx.report.deleteMany({ where: { tenantId } });
+    await tx.connectorActivity.deleteMany({ where: { tenantId } });
+    await tx.connectorObjectLink.deleteMany({ where: { tenantId } });
+    await tx.connectorConfig.deleteMany({ where: { tenantId } });
+    await tx.adoptionImport.deleteMany({ where: { tenantId } });
+    await tx.trustRoomEngagementEvent.deleteMany({ where: { tenantId } });
+    await tx.trustRoomAccessRequest.deleteMany({ where: { tenantId } });
+    await tx.trustRoom.deleteMany({ where: { tenantId } });
     await tx.trustPacket.deleteMany({ where: { tenantId } });
     await tx.evidenceMapItem.deleteMany({ where: { tenantId } });
     await tx.evidenceMap.deleteMany({ where: { tenantId } });

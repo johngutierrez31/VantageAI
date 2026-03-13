@@ -4,6 +4,7 @@ import { handleRouteError, badRequest } from '@/lib/http';
 import { requireRole } from '@/lib/rbac/authorize';
 import { writeAuditLog } from '@/lib/audit';
 import { createIncidentRecord, listIncidents } from '@/lib/response-ops/records';
+import { dispatchIntegrationEvent } from '@/lib/integrations/events';
 import { incidentCreateSchema } from '@/lib/validation/response-ops';
 
 export async function GET(request: Request) {
@@ -64,6 +65,22 @@ export async function POST(request: Request) {
         status: created.incident.status,
         guidedStart: payload.guidedStart,
         launchRunbookPack: payload.launchRunbookPack
+      }
+    });
+
+    await dispatchIntegrationEvent({
+      tenantId: session.tenantId,
+      actorUserId: session.userId,
+      eventKey: 'incident_created',
+      title: `New ${created.incident.severity.toLowerCase()} incident: ${created.incident.title}`,
+      body: `Response Ops opened a ${created.incident.incidentType.toLowerCase()} incident in ${created.incident.status.toLowerCase()} status.`,
+      href: `/app/response-ops/incidents/${created.incident.id}`,
+      entityType: 'incident',
+      entityId: created.incident.id,
+      metadata: {
+        incidentType: created.incident.incidentType,
+        severity: created.incident.severity,
+        status: created.incident.status
       }
     });
 

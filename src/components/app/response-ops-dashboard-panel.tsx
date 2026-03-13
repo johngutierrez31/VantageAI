@@ -174,15 +174,20 @@ export function ResponseOpsDashboardPanel({
       <PageHeader
         title="Response Ops"
         helpKey="responseOps"
-        description="Run first-hour incident triage, launch incident-linked runbook packs, capture decision trails, draft after-action reports, and turn exercises into owned follow-up."
+        description="Response Ops is the incident execution layer: run first-hour triage, launch incident-linked runbook packs, capture decisions, draft after-action reports, and push follow-up into the rest of the suite."
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
+          { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
           { label: 'Runbooks', href: '/app/runbooks', variant: 'outline' },
           { label: 'Findings', href: '/app/findings', variant: 'outline' },
           { label: 'Pulse', href: '/app/pulse', variant: 'outline' },
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' }
         ]}
-      />
+      >
+        <p className="text-xs text-muted-foreground">
+          Start here: open or import the incident, capture the first decision trail, launch the runbook pack, then use after-action and tabletop follow-up to feed Pulse.
+        </p>
+      </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <KpiCard

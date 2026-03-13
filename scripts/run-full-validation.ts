@@ -1,10 +1,11 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createWriteStream } from 'node:fs';
 import fs from 'node:fs/promises';
+import net from 'node:net';
 import path from 'node:path';
 
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const baseUrl = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
+const requestedBaseUrl = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
 const serverScript = process.env.APP_SERVER_SCRIPT ?? (process.env.CI ? 'start' : 'dev');
 const outputDir = path.join(process.cwd(), 'output');
 const serverStdoutPath = path.join(outputDir, 'full-validation-server.stdout.log');
@@ -19,19 +20,28 @@ function quoteWindowsArg(arg: string) {
   return `"${arg.replace(/"/g, '\\"')}"`;
 }
 
-function spawnNpm(args: string[], stdio: 'inherit' | ['ignore', 'pipe', 'pipe']) {
+function spawnNpm(
+  args: string[],
+  stdio: 'inherit' | ['ignore', 'pipe', 'pipe'],
+  envOverrides?: Record<string, string>
+) {
+  const childEnv = {
+    ...process.env,
+    ...envOverrides
+  };
+
   if (process.platform === 'win32') {
     const commandLine = [npmCommand, ...args].map(quoteWindowsArg).join(' ');
     return spawn(process.env.ComSpec ?? 'cmd.exe', ['/d', '/s', '/c', commandLine], {
       cwd: process.cwd(),
-      env: process.env,
+      env: childEnv,
       stdio
     });
   }
 
   return spawn(npmCommand, args, {
     cwd: process.cwd(),
-    env: process.env,
+    env: childEnv,
     stdio
   });
 }
@@ -40,10 +50,10 @@ async function ensureOutputDir() {
   await fs.mkdir(outputDir, { recursive: true });
 }
 
-async function runNpmScript(args: string[], label: string) {
+async function runNpmScript(args: string[], label: string, envOverrides?: Record<string, string>) {
   log(`running ${label}`);
   await new Promise<void>((resolve, reject) => {
-    const child = spawnNpm(args, 'inherit');
+    const child = spawnNpm(args, 'inherit', envOverrides);
 
     child.on('error', reject);
     child.on('exit', (code) => {
@@ -57,23 +67,51 @@ async function runNpmScript(args: string[], label: string) {
   });
 }
 
-async function waitForUrl(url: string, timeoutMs: number) {
+async function waitForUrl(urls: string[], timeoutMs: number) {
   const startedAt = Date.now();
   let lastError = 'No response received';
 
   while (Date.now() - startedAt < timeoutMs) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return;
-      lastError = `Unexpected status ${response.status}`;
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+    for (const url of urls) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) return;
+        lastError = `${url} returned ${response.status}`;
+      } catch (error) {
+        lastError = `${url}: ${error instanceof Error ? error.message : String(error)}`;
+      }
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  throw new Error(`Timed out waiting for ${url}: ${lastError}`);
+  throw new Error(`Timed out waiting for server readiness: ${lastError}`);
+}
+
+async function isPortAvailable(port: number) {
+  return new Promise<boolean>((resolve) => {
+    const server = net.createServer();
+    server.once('error', () => resolve(false));
+    server.once('listening', () => {
+      server.close(() => resolve(true));
+    });
+    server.listen(port, '127.0.0.1');
+  });
+}
+
+async function resolveBaseUrl() {
+  const parsed = new URL(requestedBaseUrl);
+  const requestedPort = Number(parsed.port || (parsed.protocol === 'https:' ? 443 : 80));
+
+  for (let offset = 0; offset < 10; offset += 1) {
+    const candidatePort = requestedPort + offset;
+    if (await isPortAvailable(candidatePort)) {
+      parsed.port = String(candidatePort);
+      return parsed.toString().replace(/\/$/, '');
+    }
+  }
+
+  throw new Error(`Unable to find an open port near ${requestedPort} for full validation.`);
 }
 
 async function waitForProcessExit(child: ChildProcess, timeoutMs: number) {
@@ -126,17 +164,20 @@ async function terminateProcessTree(child: ChildProcess) {
   }
 }
 
-async function startServer() {
+async function startServer(baseUrl: string) {
   await ensureOutputDir();
   const stdoutStream = createWriteStream(serverStdoutPath, { flags: 'w' });
   const stderrStream = createWriteStream(serverStderrPath, { flags: 'w' });
+  const parsed = new URL(baseUrl);
+  const port = parsed.port || '3000';
+  const envOverrides = { BASE_URL: baseUrl };
   const serverArgs =
     serverScript === 'start'
-      ? ['run', 'start', '--', '--hostname', '127.0.0.1', '--port', '3000']
-      : ['run', 'dev', '--', '--hostname', '127.0.0.1'];
+      ? ['run', 'start', '--', '--hostname', '127.0.0.1', '--port', port]
+      : ['run', 'dev', '--', '--hostname', '127.0.0.1', '--port', port];
 
   log(`starting ${serverScript} server`);
-  const child = spawnNpm(serverArgs, ['ignore', 'pipe', 'pipe']);
+  const child = spawnNpm(serverArgs, ['ignore', 'pipe', 'pipe'], envOverrides);
 
   child.stdout?.pipe(stdoutStream);
   child.stderr?.pipe(stderrStream);
@@ -145,18 +186,20 @@ async function startServer() {
     log(`dev server exited with code ${code ?? 'unknown'}`);
   });
 
-  await waitForUrl(`${baseUrl}/login`, 120_000);
+  await waitForUrl([`${baseUrl}/app/tools`, `${baseUrl}/login`], 120_000);
   return child;
 }
 
 async function main() {
   let server: ChildProcess | null = null;
   let primaryError: unknown = null;
+  const baseUrl = await resolveBaseUrl();
+  const envOverrides = { BASE_URL: baseUrl };
 
   try {
     await runNpmScript(['run', 'demo:reset'], 'demo reset');
-    server = await startServer();
-    await runNpmScript(['run', 'test:local-full'], 'local full validation');
+    server = await startServer(baseUrl);
+    await runNpmScript(['run', 'test:local-full'], 'local full validation', envOverrides);
     log('completed successfully');
   } catch (error) {
     primaryError = error;

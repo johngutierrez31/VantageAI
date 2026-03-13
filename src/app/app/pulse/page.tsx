@@ -79,15 +79,20 @@ export default async function PulsePage() {
       <PageHeader
         title="Pulse"
         helpKey="pulse"
-        description="Executive visibility, risk register, roadmap, board briefing, and quarterly review workflow built on live app signals."
+        description="Pulse is the executive risk and reporting layer: turn live trust, finding, AI, and incident signals into a scorecard, risk register, roadmap, board brief, and quarterly review."
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
+          { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
           { label: 'Risk Register', href: '/app/pulse/risks', variant: 'outline' },
           { label: 'Roadmap', href: '/app/pulse/roadmap', variant: 'outline' },
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
           { label: 'TrustOps', href: '/app/trust', variant: 'outline' }
         ]}
-      />
+      >
+        <p className="text-xs text-muted-foreground">
+          Start here: generate the scorecard first, then sync risks, build the roadmap, draft the board brief, and finalize the quarterly review.
+        </p>
+      </PageHeader>
 
       <PulseDashboardPanel
         metrics={{

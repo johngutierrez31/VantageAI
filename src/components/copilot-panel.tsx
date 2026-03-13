@@ -22,16 +22,21 @@ type CopilotMode = 'general' | 'incident_response' | 'threat_modeling' | 'compli
 type RecommendedTool = {
   id:
     | 'command-center'
+    | 'adoption'
     | 'security-analyst'
     | 'policies'
     | 'cyber-range'
     | 'assessments'
     | 'evidence'
     | 'trustops'
+    | 'trust-rooms'
+    | 'buyer-requests'
+    | 'buyer-engagement'
     | 'questionnaires'
     | 'review-queue'
     | 'answer-library'
     | 'evidence-maps'
+    | 'connectors'
     | 'pulse'
     | 'risk-register'
     | 'roadmap'
@@ -47,6 +52,7 @@ type RecommendedTool = {
 
 const starterPromptsByMode: Record<CopilotMode, string[]> = {
   general: [
+    'Show me how Vantage fits alongside our existing stack.',
     'Summarize what to do first for onboarding a new assessment.',
     'Give me a 30/60/90 day governance plan for a small SaaS company.',
     'What evidence should I collect first for access control and incident response?'

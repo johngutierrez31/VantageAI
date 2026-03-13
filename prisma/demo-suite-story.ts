@@ -14,6 +14,10 @@
   ApprovedAnswerStatus,
   AssessmentStatus,
   BoardBriefStatus,
+  ConnectorActivityStatus,
+  ConnectorMode,
+  ConnectorProvider,
+  ConnectorStatus,
   DraftAnswerStatus,
   EvidenceMapStatus,
   EvidenceMapSupportStrength,
@@ -44,10 +48,18 @@
   TaskStatus,
   TrustInboxStatus,
   TrustPacketShareMode,
-  TrustPacketStatus
+  TrustPacketStatus,
+  TrustRoomAccessMode,
+  TrustRoomAccessRequestStatus,
+  TrustRoomStatus,
+  AdoptionImportSource,
+  AdoptionImportStatus,
+  AdoptionImportTarget
 } from '@prisma/client';
+import { encryptConnectorSecret } from '../src/lib/integrations/crypto';
 import { buildTrustPacketRecord } from '../src/lib/trust/packets';
 import { buildTrustPacketManifest } from '../src/lib/trust/package-export';
+import { getDefaultTrustRoomSections, hashTrustRoomToken } from '../src/lib/trust/trust-rooms';
 import {
   DEMO_IDS,
   DEMO_REPORTING_PERIOD,
@@ -169,8 +181,8 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       tenantId,
       templateId: requireValue(securityTemplate?.id, 'Missing security template id.'),
       templateVersionId: securityVersionId,
-      name: 'Q1 Operating Readiness Review',
-      customerName: 'VantageAI Demo Tenant',
+      name: 'Q1 executive operating readiness review',
+      customerName: 'Astera Cloud Security',
       status: AssessmentStatus.IN_PROGRESS,
       createdBy: DEMO_USER_ID,
       createdAt: addDays(now, -7)
@@ -381,7 +393,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     data: {
       id: DEMO_IDS.trustInbox,
       tenantId,
-      title: 'Northbridge Payments due diligence package',
+      title: 'Northbridge Payments trust request',
       requesterEmail: 'security@northbridge-payments.example',
       status: TrustInboxStatus.IN_REVIEW,
       questionnaireUploadId: DEMO_IDS.questionnaireUpload,
@@ -422,7 +434,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       tenantId,
       questionnaireUploadId: DEMO_IDS.questionnaireUpload,
       trustInboxItemId: DEMO_IDS.trustInbox,
-      name: 'Northbridge buyer evidence map',
+      name: 'Northbridge Payments evidence map',
       status: EvidenceMapStatus.NEEDS_REVIEW,
       assignedReviewerUserId: DEMO_USERS[1].id,
       reviewDueAt: oneDayAgo,
@@ -472,7 +484,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     { rowKey: 'A18', questionText: 'Is MFA enforced for privileged accounts?', answerText: 'Yes. MFA is enforced for privileged accounts and validated during quarterly access review.', confidenceScore: 0.95, supportingEvidenceIds: [accessEvidence.id], mappedControlIds: [mfaQuestion.control.id] },
     { rowKey: 'A27', questionText: 'Are AI use cases classified by impact tier and reviewed?', answerText: 'Yes. AI use cases are registered, risk-tiered, and reviewed before customer-facing deployment.', confidenceScore: 0.9, supportingEvidenceIds: [aiEvidence.id], mappedControlIds: [aiTieringQuestion.control.id] }
   ];
-  const packetBase = buildTrustPacketRecord({ packetName: 'Northbridge buyer trust packet', shareMode: TrustPacketShareMode.EXTERNAL_SHARE, approvedRows, trustDocs, includeAiGovernanceSummary: true, organizationName: 'Northbridge Payments' });
+  const packetBase = buildTrustPacketRecord({ packetName: 'Northbridge Payments trust packet - external share', shareMode: TrustPacketShareMode.EXTERNAL_SHARE, approvedRows, trustDocs, includeAiGovernanceSummary: true, organizationName: 'Northbridge Payments' });
   const packetManifest = buildTrustPacketManifest({
     packetName: packetBase.name,
     shareMode: packetBase.shareMode,
@@ -519,6 +531,154 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       createdAt: twoDaysAgo
     }
   });
+
+  const seededGrantToken = 'northbridge-buyer-grant-demo';
+
+  await prisma.trustRoom.create({
+    data: {
+      id: DEMO_IDS.trustRoom,
+      tenantId,
+      trustPacketId: DEMO_IDS.trustPacket,
+      trustInboxItemId: DEMO_IDS.trustInbox,
+      questionnaireUploadId: DEMO_IDS.questionnaireUpload,
+      name: 'Northbridge Payments Trust Room',
+      slug: 'northbridge-payments-room',
+      status: TrustRoomStatus.PUBLISHED,
+      accessMode: TrustRoomAccessMode.REQUEST_ACCESS,
+      roomSections: getDefaultTrustRoomSections(packetManifest),
+      summaryText: 'Buyer-safe room with approved questionnaire answers, evidence posture, trust packet sections, and security contact details.',
+      termsRequired: true,
+      ndaRequired: true,
+      publishedAt: twoDaysAgo,
+      publishedBy: DEMO_USERS[1].id,
+      createdBy: DEMO_USER_ID,
+      createdAt: twoDaysAgo
+    }
+  });
+
+  await prisma.trustRoomAccessRequest.createMany({
+    data: [
+      {
+        id: DEMO_IDS.trustRoomRequestApproved,
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        trustInboxItemId: DEMO_IDS.trustInbox,
+        questionnaireUploadId: DEMO_IDS.questionnaireUpload,
+        requesterName: 'Nadia Gomez',
+        requesterEmail: 'nadia.gomez@northbridge-payments.example',
+        companyName: 'Northbridge Payments',
+        requestReason: 'Review approved FAQ responses, the trust packet summary, and AI governance posture for procurement approval.',
+        status: TrustRoomAccessRequestStatus.FULFILLED,
+        assignedOwnerUserId: DEMO_USERS[1].id,
+        internalNotes: `Seeded grant token for demo walkthrough: ${seededGrantToken}`,
+        approvedAccessTokenHash: hashTrustRoomToken(seededGrantToken),
+        approvedAt: oneDayAgo,
+        respondedAt: oneDayAgo,
+        lastViewedAt: addHours(oneDayAgo, 6),
+        viewCount: 6,
+        createdAt: twoDaysAgo
+      },
+      {
+        id: DEMO_IDS.trustRoomRequestPending,
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        trustInboxItemId: DEMO_IDS.trustInbox,
+        questionnaireUploadId: DEMO_IDS.questionnaireUpload,
+        requesterName: 'Olivia Hart',
+        requesterEmail: 'olivia.hart@northbridge-payments.example',
+        companyName: 'Northbridge Payments',
+        requestReason: 'Need external review access for legal and security sign-off.',
+        status: TrustRoomAccessRequestStatus.PENDING,
+        assignedOwnerUserId: DEMO_USERS[1].id,
+        internalNotes: 'Hold until legal confirms NDA scope for the buyer review group.',
+        createdAt: addHours(oneDayAgo, -8)
+      }
+    ]
+  });
+
+  await prisma.trustRoomEngagementEvent.createMany({
+    data: [
+      {
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        accessRequestId: DEMO_IDS.trustRoomRequestApproved,
+        eventType: 'REQUEST_SUBMITTED',
+        actorEmail: 'nadia.gomez@northbridge-payments.example',
+        actorLabel: 'Nadia Gomez',
+        metadata: { companyName: 'Northbridge Payments' },
+        createdAt: twoDaysAgo
+      },
+      {
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        accessRequestId: DEMO_IDS.trustRoomRequestApproved,
+        eventType: 'ACCESS_GRANTED',
+        actorEmail: 'nadia.gomez@northbridge-payments.example',
+        actorLabel: 'Nadia Gomez',
+        metadata: { approvedBy: DEMO_USERS[1].id },
+        createdAt: oneDayAgo
+      },
+      {
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        accessRequestId: DEMO_IDS.trustRoomRequestApproved,
+        eventType: 'ROOM_VIEWED',
+        actorEmail: 'nadia.gomez@northbridge-payments.example',
+        actorLabel: 'Nadia Gomez',
+        createdAt: addHours(oneDayAgo, 2)
+      },
+      {
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        accessRequestId: DEMO_IDS.trustRoomRequestApproved,
+        eventType: 'SECTION_VIEWED',
+        sectionKey: 'approved-security-faq',
+        actorEmail: 'nadia.gomez@northbridge-payments.example',
+        actorLabel: 'Nadia Gomez',
+        createdAt: addHours(oneDayAgo, 2)
+      },
+      {
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        accessRequestId: DEMO_IDS.trustRoomRequestApproved,
+        eventType: 'SECTION_VIEWED',
+        sectionKey: 'evidence-map-summary',
+        actorEmail: 'nadia.gomez@northbridge-payments.example',
+        actorLabel: 'Nadia Gomez',
+        createdAt: addHours(oneDayAgo, 3)
+      },
+      {
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        accessRequestId: DEMO_IDS.trustRoomRequestApproved,
+        eventType: 'PACKET_DOWNLOADED',
+        actorEmail: 'nadia.gomez@northbridge-payments.example',
+        actorLabel: 'Nadia Gomez',
+        metadata: { format: 'html' },
+        createdAt: addHours(oneDayAgo, 4)
+      },
+      {
+        tenantId,
+        trustRoomId: DEMO_IDS.trustRoom,
+        trustPacketId: DEMO_IDS.trustPacket,
+        accessRequestId: DEMO_IDS.trustRoomRequestPending,
+        eventType: 'REQUEST_SUBMITTED',
+        actorEmail: 'olivia.hart@northbridge-payments.example',
+        actorLabel: 'Olivia Hart',
+        metadata: { companyName: 'Northbridge Payments' },
+        createdAt: addHours(oneDayAgo, -8)
+      }
+    ]
+  });
+
   await prisma.aIVendorReview.create({
     data: {
       id: DEMO_IDS.aiVendorReview,
@@ -566,7 +726,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       id: DEMO_IDS.aiUseCase,
       tenantId,
       vendorReviewId: DEMO_IDS.aiVendorReview,
-      name: 'Buyer questionnaire draft copilot',
+      name: 'TrustOps questionnaire response copilot',
       description: 'Draft buyer answers from approved evidence before human approval.',
       businessOwner: 'Morgan Trust',
       department: 'Security',
@@ -650,7 +810,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     data: {
       id: DEMO_IDS.activeIncident,
       tenantId,
-      title: 'AnswerFlow AI vendor notice review',
+      title: 'AnswerFlow retention assurance vendor notice',
       description: 'Review a vendor notice that may affect retention assurances for the TrustOps copilot workflow.',
       incidentType: IncidentType.THIRD_PARTY_BREACH,
       severity: IncidentSeverity.HIGH,
@@ -777,7 +937,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       id: DEMO_IDS.afterAction,
       tenantId,
       incidentId: DEMO_IDS.resolvedIncident,
-      title: 'After Action Report',
+      title: 'Privileged mailbox phishing after-action',
       status: AfterActionReportStatus.APPROVED,
       summary: 'The phishing attempt was contained quickly and follow-up work focuses on mailbox triage discipline.',
       affectedScope: 'One privileged mailbox and related executive communication paths.',
@@ -823,7 +983,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     data: {
       id: DEMO_IDS.tabletop,
       tenantId,
-      title: 'Q2 ransomware executive tabletop',
+      title: 'Q2 ransomware leadership tabletop',
       scenarioType: IncidentType.RANSOMWARE,
       status: 'DRAFT',
       exerciseDate: twoWeeksOut,
@@ -867,7 +1027,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     data: {
       id: DEMO_IDS.pulseSnapshot,
       tenantId,
-      name: 'Quarterly posture scorecard',
+      name: 'Q1 executive posture scorecard',
       periodType: PulseSnapshotPeriodType.QUARTERLY,
       reportingPeriod: DEMO_REPORTING_PERIOD,
       snapshotDate: now,
@@ -914,7 +1074,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       id: DEMO_IDS.roadmap,
       tenantId,
       snapshotId: DEMO_IDS.pulseSnapshot,
-      name: '30/60/90 execution roadmap',
+      name: 'Q2 30/60/90 risk reduction roadmap',
       reportingPeriod: DEMO_REPORTING_PERIOD,
       status: RoadmapStatus.APPROVED,
       reviewerNotes: 'Focus 30-day work on buyer-safe commitments and incident carry-over.',
@@ -941,7 +1101,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       tenantId,
       snapshotId: DEMO_IDS.pulseSnapshot,
       roadmapId: DEMO_IDS.roadmap,
-      title: 'Board brief - quarterly cyber posture',
+      title: 'Q1 board brief - cyber posture and buyer readiness',
       reportingPeriod: DEMO_REPORTING_PERIOD,
       status: BoardBriefStatus.APPROVED,
       overallPostureSummary: 'Core posture is stronger than last quarter, but buyer commitment discipline, AI vendor diligence, and a live vendor-linked incident still need visible ownership.',
@@ -986,11 +1146,285 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     }
   });
 
+  await prisma.connectorConfig.createMany({
+    data: [
+      {
+        id: DEMO_IDS.connectorSlack,
+        tenantId,
+        provider: ConnectorProvider.SLACK,
+        name: 'Security Ops Slack',
+        description: 'Routes buyer requests, incident starts, and quarterly review updates into the demo operations channel.',
+        mode: ConnectorMode.SIMULATED,
+        status: ConnectorStatus.ACTIVE,
+        configJson: {
+          defaultChannel: '#security-ops',
+          enabledEventKeys: ['trust_room_request_received', 'incident_created', 'quarterly_review_ready']
+        } satisfies Prisma.InputJsonObject,
+        secretCiphertext: encryptConnectorSecret(
+          JSON.stringify({ webhookUrl: 'https://hooks.slack.example/services/demo/vantage' })
+        ),
+        lastHealthStatus: ConnectorActivityStatus.SUCCEEDED,
+        lastHealthCheckedAt: oneDayAgo,
+        lastSuccessAt: oneDayAgo,
+        createdBy: DEMO_USER_ID,
+        updatedBy: DEMO_USER_ID,
+        createdAt: twoDaysAgo,
+        updatedAt: oneDayAgo
+      },
+      {
+        id: DEMO_IDS.connectorJira,
+        tenantId,
+        provider: ConnectorProvider.JIRA,
+        name: 'Delivery Jira Sync',
+        description: 'Creates or refreshes delivery issues for open findings, risks, incident tasks, and roadmap items.',
+        mode: ConnectorMode.SIMULATED,
+        status: ConnectorStatus.ACTIVE,
+        configJson: {
+          jiraBaseUrl: 'https://vantage-demo.atlassian.net',
+          jiraProjectKey: 'SEC',
+          jiraIssueType: 'Task',
+          jiraEmail: 'jira-demo@vantageciso.local',
+          statusMappings: [
+            { source: 'OPEN', target: 'to-do' },
+            { source: 'IN_PROGRESS', target: 'in-progress' },
+            { source: 'PLANNED', target: 'queued' }
+          ]
+        } satisfies Prisma.InputJsonObject,
+        secretCiphertext: encryptConnectorSecret(JSON.stringify({ jiraApiToken: 'jira-demo-token' })),
+        lastHealthStatus: ConnectorActivityStatus.SUCCEEDED,
+        lastHealthCheckedAt: oneDayAgo,
+        lastSuccessAt: oneDayAgo,
+        createdBy: DEMO_USER_ID,
+        updatedBy: DEMO_USER_ID,
+        createdAt: twoDaysAgo,
+        updatedAt: oneDayAgo
+      },
+      {
+        id: DEMO_IDS.connectorConfluence,
+        tenantId,
+        provider: ConnectorProvider.CONFLUENCE,
+        name: 'Leadership Confluence Publisher',
+        description: 'Publishes board briefs, quarterly reviews, and share-safe reports into a buyer-ready knowledge space.',
+        mode: ConnectorMode.SIMULATED,
+        status: ConnectorStatus.ACTIVE,
+        configJson: {
+          confluenceBaseUrl: 'https://vantage-demo.atlassian.net',
+          confluenceSpaceKey: 'SEC',
+          confluenceParentPageId: '100100',
+          confluenceEmail: 'confluence-demo@vantageciso.local'
+        } satisfies Prisma.InputJsonObject,
+        secretCiphertext: encryptConnectorSecret(JSON.stringify({ confluenceApiToken: 'confluence-demo-token' })),
+        lastHealthStatus: ConnectorActivityStatus.SUCCEEDED,
+        lastHealthCheckedAt: oneDayAgo,
+        lastSuccessAt: oneDayAgo,
+        createdBy: DEMO_USER_ID,
+        updatedBy: DEMO_USER_ID,
+        createdAt: twoDaysAgo,
+        updatedAt: oneDayAgo
+      },
+      {
+        id: DEMO_IDS.connectorWebhook,
+        tenantId,
+        provider: ConnectorProvider.OUTBOUND_WEBHOOK,
+        name: 'Automation Hook',
+        description: 'Sends narrow operational payloads into downstream automations without expanding into a full iPaaS.',
+        mode: ConnectorMode.SIMULATED,
+        status: ConnectorStatus.ACTIVE,
+        configJson: {
+          outboundWebhookUrl: 'https://automation.example.test/hooks/vantage',
+          enabledEventKeys: ['trust_room_request_received', 'incident_created']
+        } satisfies Prisma.InputJsonObject,
+        secretCiphertext: encryptConnectorSecret(JSON.stringify({ outboundWebhookSecret: 'automation-demo-secret' })),
+        lastHealthStatus: ConnectorActivityStatus.SUCCEEDED,
+        lastHealthCheckedAt: oneDayAgo,
+        lastSuccessAt: oneDayAgo,
+        createdBy: DEMO_USER_ID,
+        updatedBy: DEMO_USER_ID,
+        createdAt: twoDaysAgo,
+        updatedAt: oneDayAgo
+      }
+    ]
+  });
+
+  await prisma.connectorObjectLink.createMany({
+    data: [
+      {
+        tenantId,
+        connectorId: DEMO_IDS.connectorJira,
+        provider: ConnectorProvider.JIRA,
+        entityType: 'risk',
+        entityId: DEMO_IDS.riskTrust,
+        externalObjectId: 'SEC-201',
+        externalObjectKey: 'SEC-201',
+        externalObjectUrl: 'https://vantage-demo.atlassian.net/browse/SEC-201',
+        lastSyncStatus: ConnectorActivityStatus.SUCCEEDED,
+        lastSyncedAt: oneDayAgo,
+        createdAt: oneDayAgo,
+        updatedAt: oneDayAgo
+      },
+      {
+        tenantId,
+        connectorId: DEMO_IDS.connectorJira,
+        provider: ConnectorProvider.JIRA,
+        entityType: 'task',
+        entityId: DEMO_IDS.activeIncidentTaskContainment,
+        externalObjectId: 'SEC-208',
+        externalObjectKey: 'SEC-208',
+        externalObjectUrl: 'https://vantage-demo.atlassian.net/browse/SEC-208',
+        lastSyncStatus: ConnectorActivityStatus.SUCCEEDED,
+        lastSyncedAt: oneDayAgo,
+        createdAt: oneDayAgo,
+        updatedAt: oneDayAgo
+      },
+      {
+        tenantId,
+        connectorId: DEMO_IDS.connectorConfluence,
+        provider: ConnectorProvider.CONFLUENCE,
+        entityType: 'board_brief',
+        entityId: DEMO_IDS.boardBrief,
+        externalObjectId: '200100',
+        externalObjectKey: 'Q1 board brief - cyber posture and buyer readiness',
+        externalObjectUrl: 'https://vantage-demo.atlassian.net/wiki/spaces/SEC/pages/200100',
+        lastSyncStatus: ConnectorActivityStatus.SUCCEEDED,
+        lastSyncedAt: oneDayAgo,
+        createdAt: oneDayAgo,
+        updatedAt: oneDayAgo
+      }
+    ]
+  });
+
+  await prisma.connectorActivity.createMany({
+    data: [
+      {
+        tenantId,
+        connectorId: DEMO_IDS.connectorSlack,
+        provider: ConnectorProvider.SLACK,
+        action: 'notify',
+        entityType: 'trust_room_request',
+        entityId: DEMO_IDS.trustRoomRequestPending,
+        targetLabel: 'Security Ops Slack',
+        status: ConnectorActivityStatus.SUCCEEDED,
+        summary: 'Buyer request notification delivered to Slack',
+        payloadJson: { channel: '#security-ops', eventKey: 'trust_room_request_received' },
+        createdBy: DEMO_USER_ID,
+        createdAt: oneDayAgo
+      },
+      {
+        tenantId,
+        connectorId: DEMO_IDS.connectorJira,
+        provider: ConnectorProvider.JIRA,
+        action: 'sync',
+        entityType: 'risk',
+        entityId: DEMO_IDS.riskTrust,
+        targetLabel: 'Delivery Jira Sync',
+        externalObjectId: 'SEC-201',
+        externalObjectKey: 'SEC-201',
+        externalObjectUrl: 'https://vantage-demo.atlassian.net/browse/SEC-201',
+        status: ConnectorActivityStatus.SUCCEEDED,
+        summary: 'Synced buyer-safe data residency risk into Jira',
+        payloadJson: { status: 'to-do' },
+        createdBy: DEMO_USER_ID,
+        createdAt: oneDayAgo
+      },
+      {
+        tenantId,
+        connectorId: DEMO_IDS.connectorConfluence,
+        provider: ConnectorProvider.CONFLUENCE,
+        action: 'publish',
+        entityType: 'board_brief',
+        entityId: DEMO_IDS.boardBrief,
+        targetLabel: 'Leadership Confluence Publisher',
+        externalObjectId: '200100',
+        externalObjectKey: 'Q1 board brief - cyber posture and buyer readiness',
+        externalObjectUrl: 'https://vantage-demo.atlassian.net/wiki/spaces/SEC/pages/200100',
+        status: ConnectorActivityStatus.SUCCEEDED,
+        summary: 'Published Q1 board brief into Confluence',
+        payloadJson: { artifactType: 'board_brief' },
+        createdBy: DEMO_USER_ID,
+        createdAt: oneDayAgo
+      },
+      {
+        tenantId,
+        connectorId: DEMO_IDS.connectorWebhook,
+        provider: ConnectorProvider.OUTBOUND_WEBHOOK,
+        action: 'notify',
+        entityType: 'incident',
+        entityId: DEMO_IDS.activeIncident,
+        targetLabel: 'Automation Hook',
+        status: ConnectorActivityStatus.SUCCEEDED,
+        summary: 'Pushed incident-created payload into downstream automation hook',
+        payloadJson: { eventKey: 'incident_created' },
+        createdBy: DEMO_USER_ID,
+        createdAt: oneDayAgo
+      }
+    ]
+  });
+
+  await prisma.adoptionImport.createMany({
+    data: [
+      {
+        id: DEMO_IDS.adoptionImportAnswers,
+        tenantId,
+        target: AdoptionImportTarget.APPROVED_ANSWERS,
+        source: AdoptionImportSource.CONNECTOR_EXPORT,
+        status: AdoptionImportStatus.SUCCEEDED,
+        connectorId: DEMO_IDS.connectorJira,
+        sourceLabel: 'Imported from prior diligence tracker export',
+        summary: 'connector-assisted import created 2 approved answers.',
+        rawInput: {
+          content: 'questionText,answerText,scope',
+          ownerUserId: DEMO_USERS[1].id
+        },
+        resultJson: {
+          rows: [
+            { index: 0, label: 'Do you maintain approved security policies?', entityId: DEMO_IDS.approvedPolicies, action: 'updated' },
+            { index: 1, label: 'Is MFA enforced for privileged accounts?', entityId: DEMO_IDS.approvedMfa, action: 'updated' }
+          ]
+        },
+        createdCount: 2,
+        failedCount: 0,
+        createdBy: DEMO_USER_ID,
+        createdAt: twoDaysAgo
+      },
+      {
+        id: DEMO_IDS.adoptionImportRisk,
+        tenantId,
+        target: AdoptionImportTarget.RISKS,
+        source: AdoptionImportSource.CSV,
+        status: AdoptionImportStatus.SUCCEEDED,
+        sourceLabel: 'Leadership backlog import',
+        summary: 'CSV import created 1 risk.',
+        rawInput: {
+          content: 'title,description,businessImpactSummary,severity,likelihood,impact,status',
+          ownerUserId: DEMO_USERS[2].id
+        },
+        resultJson: {
+          rows: [
+            {
+              index: 0,
+              label: 'Buyer-safe residency commitments remain manual',
+              entityId: DEMO_IDS.riskTrust,
+              action: 'created'
+            }
+          ]
+        },
+        createdCount: 1,
+        failedCount: 0,
+        createdBy: DEMO_USER_ID,
+        createdAt: oneDayAgo
+      }
+    ]
+  });
+
   await prisma.auditLog.createMany({
     data: [
       { tenantId, actorUserId: DEMO_USER_ID, entityType: 'questionnaire_upload', entityId: DEMO_IDS.questionnaireUpload, action: 'seeded', metadata: { organizationName: 'Northbridge Payments', status: QuestionnaireUploadStatus.NEEDS_REVIEW }, createdAt: fiveDaysAgo },
       { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'trust_packet', entityId: DEMO_IDS.trustPacket, action: 'trust_packet_exported', metadata: { format: 'html', shareMode: TrustPacketShareMode.EXTERNAL_SHARE }, createdAt: twoDaysAgo },
+      { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'trust_room', entityId: DEMO_IDS.trustRoom, action: 'publish', metadata: { accessMode: TrustRoomAccessMode.REQUEST_ACCESS, slug: 'northbridge-payments-room' }, createdAt: twoDaysAgo },
+      { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'trust_room_request', entityId: DEMO_IDS.trustRoomRequestApproved, action: 'update', metadata: { status: TrustRoomAccessRequestStatus.FULFILLED }, createdAt: oneDayAgo },
       { tenantId, actorUserId: DEMO_USER_ID, entityType: 'pulse_snapshot', entityId: DEMO_IDS.pulseSnapshot, action: 'pulse_snapshot_published', metadata: { overallScore: 74, reportingPeriod: DEMO_REPORTING_PERIOD }, createdAt: oneDayAgo },
+      { tenantId, actorUserId: DEMO_USER_ID, entityType: 'adoption_import', entityId: DEMO_IDS.adoptionImportAnswers, action: 'adoption_import_completed', metadata: { target: AdoptionImportTarget.APPROVED_ANSWERS, source: AdoptionImportSource.CONNECTOR_EXPORT, createdCount: 2 }, createdAt: twoDaysAgo },
+      { tenantId, actorUserId: DEMO_USER_ID, entityType: 'adoption_import', entityId: DEMO_IDS.adoptionImportRisk, action: 'adoption_import_completed', metadata: { target: AdoptionImportTarget.RISKS, source: AdoptionImportSource.CSV, createdCount: 1 }, createdAt: oneDayAgo },
       { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'board_brief', entityId: DEMO_IDS.boardBrief, action: 'board_brief_exported', metadata: { format: 'html' }, createdAt: oneDayAgo },
       { tenantId, actorUserId: DEMO_USER_ID, entityType: 'ai_use_case', entityId: DEMO_IDS.aiUseCase, action: 'decision_updated', metadata: { status: AIGovernanceStatus.APPROVED_WITH_CONDITIONS, linkedRiskId: DEMO_IDS.riskAi }, createdAt: twoDaysAgo },
       { tenantId, actorUserId: DEMO_USERS[2].id, entityType: 'incident', entityId: DEMO_IDS.activeIncident, action: 'incident_created', metadata: { incidentType: IncidentType.THIRD_PARTY_BREACH, severity: IncidentSeverity.HIGH }, createdAt: oneDayAgo },

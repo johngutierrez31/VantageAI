@@ -11,6 +11,7 @@ import {
   ChevronRight,
   FileText,
   Flame,
+  Link2,
   Menu,
   Radar,
   Search,
@@ -53,6 +54,7 @@ type SearchItem = {
     | 'command'
     | 'copilot'
     | 'analyst'
+    | 'adoption'
     | 'tools'
     | 'policy'
     | 'range'
@@ -103,6 +105,7 @@ type Props = {
 
 const navItems: NavItem[] = [
   { href: '/app/command-center', label: 'Command Center', icon: ShieldCheck },
+  { href: '/app/adoption', label: 'Adoption Mode', icon: Link2 },
   { href: '/app/pulse', label: 'Pulse', icon: TrendingUp },
   { href: '/app/ai-governance', label: 'AI Governance', icon: Bot },
   { href: '/app/response-ops', label: 'Response Ops', icon: Flame },

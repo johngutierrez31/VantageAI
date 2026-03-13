@@ -1,89 +1,110 @@
 # Demo Walkthrough: VantageAI Suite
 
-## Best end-to-end demo path
+Date: 2026-03-12
+
+## Best click path
 
 1. `/app/command-center`
-2. `/app/trust`
-3. `/app/questionnaires/[seeded questionnaire]`
-4. `/app/pulse`
-5. `/app/pulse/board-briefs/[seeded board brief]`
-6. `/app/ai-governance`
-7. `/app/ai-governance/use-cases/[seeded use case]`
-8. `/app/response-ops`
-9. `/app/response-ops/incidents/[seeded active incident]`
-10. `/app/response-ops/incidents/[seeded resolved incident]`
-11. back to `/app/command-center`
+2. `/app/trust/inbox/trust_inbox_demo_northbridge`
+3. `/app/pulse/board-briefs/board_brief_demo_2026_q1`
+4. `/app/ai-governance/use-cases/ai_use_case_demo_questionnaire_copilot`
+5. `/app/response-ops/incidents/incident_demo_answerflow_notice`
+6. back to `/app/command-center`
 
-## Recommended click path
+This is the shortest strong story: buyer diligence pressure becomes executive posture, governed AI, and live incident carry-over in one workspace.
 
-### 1. Start in Command Center
+## Recommended talking points
 
-Talking points:
+### Command Center
 
-- this is the operator’s cross-module control surface
-- open trust work, executive posture, AI approvals, and incidents are visible together
-- the suite is designed for lean teams, not separate admin products
+- This is the cross-module operating surface for a lean security team.
+- The seeded demo shows real carry-over instead of separate dashboards.
+- The new `Start Here: Demo Path` card makes the walkthrough obvious without trainer knowledge.
 
-### 2. Move into TrustOps
+### TrustOps
 
-Open the trust packet and questionnaire flow.
+- Open the Northbridge trust request to show intake, questionnaire status, evidence map linkage, and trust packet history in one record.
+- Highlight that three questionnaire answers are approved and one buyer commitment is still review-gated.
+- The trust story ends with an external-share trust packet built only from approved materials.
 
-Talking points:
+### Pulse
 
-- approved answers are reusable
-- evidence maps make buyer support visible
-- weak or missing support creates owned follow-up work instead of hidden ambiguity
+- The seeded board brief shows that TrustOps, AI Governance, and Response Ops are all feeding one executive artifact.
+- Use the brief to show leadership decisions needed, overdue work, and the 30 / 60 / 90 roadmap.
+- This is the recurring layer that keeps the product valuable after the questionnaire is finished.
 
-### 3. Show Pulse
+### AI Governance
 
-Open the Pulse dashboard and board brief.
+- The seeded use case is conditionally approved, not blindly approved.
+- Show that policy mapping, vendor review, and Pulse risk linkage are explicit.
+- This proves the suite does not treat AI as a side chat surface.
 
-Talking points:
+### Response Ops
 
-- Pulse turns operational work into executive posture and owned risk
-- risks, roadmap, board brief, and quarterly review are durable records
-- this is the recurring layer that keeps leadership engaged
+- The active incident shows first-hour work, runbook tasks, timeline, and buyer-safe communication pressure.
+- The incident is linked back into trust and executive reporting, which makes the suite feel operationally connected.
+- If time allows, open the resolved incident to show the approved after-action report.
 
-### 4. Show AI Governance
+## 3-minute version
 
-Open the AI Governance dashboard and the seeded use case.
+1. Open `/app/command-center`.
+2. Use the `Start Here: Demo Path` card and click the seeded Northbridge trust request.
+3. Show packet history, questionnaire status, and evidence-map linkage.
+4. Open the Q1 board brief and read the top risks plus decisions needed.
+5. Open the AI use case and point out the conditional approval.
+6. Open the active vendor-linked incident and show runbook pack plus timeline.
+7. Return to Command Center and close on one connected operating system.
 
-Talking points:
+## 10-minute version
 
-- AI use cases and vendors are reviewed in the same operating system
-- policy conditions and approval state are explicit
-- unresolved AI issues flow into findings and Pulse risk
+1. Start on `/app/command-center` and frame the four confirmed modules already visible there.
+2. Open `/app/trust/inbox/trust_inbox_demo_northbridge`.
+3. Open `/app/questionnaires/questionnaire_demo_northbridge` and show approved answers plus one review-gated gap.
+4. Open `/app/trust/evidence-maps/evidence_map_demo_northbridge`.
+5. Open `/app/pulse/board-briefs/board_brief_demo_2026_q1`.
+6. Open `/app/pulse/quarterly-reviews/quarterly_review_demo_2026_q1`.
+7. Open `/app/ai-governance/use-cases/ai_use_case_demo_questionnaire_copilot`.
+8. Open `/app/ai-governance/vendors/ai_vendor_review_demo_answerflow`.
+9. Open `/app/response-ops/incidents/incident_demo_answerflow_notice`.
+10. Open `/app/response-ops/incidents/incident_demo_privileged_mailbox` to show the approved after-action report.
+11. Open `/app/response-ops/tabletops/tabletop_demo_ransomware_q2`.
+12. Return to `/app/command-center`.
 
-### 5. Show Response Ops
+## Strongest wow-moment sequence
 
-Open the active incident, then the after-action path.
+1. Start on `/app/command-center` and show the new demo-path card.
+2. Jump into the Northbridge trust request and point out that the evidence map, approved answers, and packet history are already linked.
+3. Open the Q1 board brief and show the same trust issue, AI issue, and incident issue translated into executive language.
+4. Open the active vendor-linked incident and show that the live incident is affecting both trust messaging and Pulse.
+5. Close back in Command Center to prove the suite is one operating model, not four disconnected modules.
 
-Talking points:
+## Module-specific artifact highlights
 
-- first-hour work is structured immediately
-- runbook tasks, timeline, and decision trail stay durable
-- after-action work feeds findings, risks, and roadmap follow-up
+### TrustOps
 
-### 6. Close back in Command Center
+- Trust request: `Northbridge Payments trust request`
+- Questionnaire: `northbridge-security-questionnaire.xlsx`
+- Evidence map: `Northbridge Payments evidence map`
+- Trust packet: `Northbridge Payments trust packet - external share`
+- Proof point: approved answer reuse plus one visible review-gated buyer commitment
 
-Talking points:
+### Pulse
 
-- this is one suite, not four disconnected tools
-- procurement readiness, executive reporting, AI governance, and incident work all carry into one place
+- Snapshot: `Q1 executive posture scorecard`
+- Roadmap: `Q2 30/60/90 risk reduction roadmap`
+- Board brief: `Q1 board brief - cyber posture and buyer readiness`
+- Quarterly review: `2026 Q1`
+- Proof point: live module carry-over translated into executive decisions
 
-## Best artifacts to show
+### AI Governance
 
-- trust packet export
-- approved answer library entries
-- Pulse board brief
-- AI use case conditional approval
-- active incident timeline
-- approved after-action report
+- Use case: `TrustOps questionnaire response copilot`
+- Vendor intake: `AnswerFlow AI / AnswerFlow Copilot`
+- Proof point: conditional approval with explicit follow-up conditions and linked Pulse risk
 
-## Quickest wow-moment sequence
+### Response Ops
 
-1. Command Center
-2. Trust packet
-3. Pulse board brief
-4. Active incident with linked carry-over
-5. Back to Command Center
+- Active incident: `AnswerFlow retention assurance vendor notice`
+- Approved after-action path: `Privileged mailbox phishing after-action`
+- Tabletop: `Q2 ransomware leadership tabletop`
+- Proof point: first-hour execution, durable timeline, and follow-up work tied back into the suite
