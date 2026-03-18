@@ -22,8 +22,17 @@ type Entitlements = {
   };
 };
 
+type Workspace = {
+  workspaceMode: 'DEMO' | 'TRIAL' | 'PAID';
+  trialStatus: 'NOT_STARTED' | 'ACTIVE' | 'EXPIRED' | 'CONVERTED';
+  trialEndsAt: string | null;
+  trialDaysRemaining: number | null;
+  isTrialActive: boolean;
+};
+
 export function BillingPanel() {
   const [entitlements, setEntitlements] = useState<Entitlements | null>(null);
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [plan, setPlan] = useState<'STARTER' | 'PRO' | 'BUSINESS' | 'ENTERPRISE'>('PRO');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -33,6 +42,7 @@ export function BillingPanel() {
     if (!response.ok) return;
     const json = await response.json();
     setEntitlements(json.entitlements);
+    setWorkspace(json.workspace);
   }
 
   useEffect(() => {
@@ -78,16 +88,28 @@ export function BillingPanel() {
   return (
     <div className="space-y-2">
       <p className="text-sm font-semibold">
-        Plan: {entitlements ? formatPlanLabel(entitlements.plan) : 'Free'} ({entitlements?.status ?? 'active'})
+        {workspace?.isTrialActive
+          ? `14-day full-access trial (${workspace.trialDaysRemaining ?? 0} day${workspace?.trialDaysRemaining === 1 ? '' : 's'} remaining)`
+          : `Plan: ${entitlements ? formatPlanLabel(entitlements.plan) : 'Free'} (${entitlements?.status ?? 'active'})`}
       </p>
-      <p className="text-sm text-muted-foreground">
-        AI: {entitlements?.limits?.canUseAI ? 'Enabled' : 'Disabled'} | PDF Export:{' '}
-        {entitlements?.limits?.canExportPdf ? 'Enabled' : 'Disabled'}
-      </p>
+      {workspace?.isTrialActive ? (
+        <p className="text-sm text-muted-foreground">
+          All suite modules, AI workflows, questionnaire imports, and export paths are available during the trial.
+          {workspace.trialEndsAt ? ` Trial ends ${new Date(workspace.trialEndsAt).toLocaleDateString()}.` : ''}
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          AI: {entitlements?.limits?.canUseAI ? 'Enabled' : 'Disabled'} | PDF Export:{' '}
+          {entitlements?.limits?.canExportPdf ? 'Enabled' : 'Disabled'}
+        </p>
+      )}
       {entitlements ? (
         <div className="grid gap-2 rounded-md border border-border p-3 md:grid-cols-2">
           {MODULE_CATALOG.map((module) => {
-            const commercialState = getModuleCommercialState(entitlements.plan, module);
+            const commercialState = getModuleCommercialState(entitlements.plan, module, {
+              workspaceMode: workspace?.workspaceMode,
+              isTrialActive: workspace?.isTrialActive
+            });
             return (
               <div key={module.id} className="rounded-md border border-border bg-background/60 p-3">
                 <div className="flex items-center justify-between gap-2">
@@ -102,20 +124,22 @@ export function BillingPanel() {
           })}
         </div>
       ) : null}
-      <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={plan}
-          onChange={(event) => setPlan(event.target.value as 'STARTER' | 'PRO' | 'BUSINESS' | 'ENTERPRISE')}
-          className="w-[220px]"
-        >
-          <option value="STARTER">Starter</option>
-          <option value="PRO">Pro</option>
-          <option value="BUSINESS">Business</option>
-          <option value="ENTERPRISE">Enterprise</option>
-        </Select>
-        <Button onClick={startCheckout} disabled={busy}>{busy ? 'Working...' : 'Upgrade / change plan'}</Button>
-        <Button variant="outline" onClick={openPortal} disabled={busy}>Manage billing portal</Button>
-      </div>
+      {workspace?.isTrialActive ? null : (
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={plan}
+            onChange={(event) => setPlan(event.target.value as 'STARTER' | 'PRO' | 'BUSINESS' | 'ENTERPRISE')}
+            className="w-[220px]"
+          >
+            <option value="STARTER">Starter</option>
+            <option value="PRO">Pro</option>
+            <option value="BUSINESS">Business</option>
+            <option value="ENTERPRISE">Enterprise</option>
+          </Select>
+          <Button onClick={startCheckout} disabled={busy}>{busy ? 'Working...' : 'Upgrade / change plan'}</Button>
+          <Button variant="outline" onClick={openPortal} disabled={busy}>Manage billing portal</Button>
+        </div>
+      )}
       {message ? <p className="text-sm text-danger">{message}</p> : null}
     </div>
   );

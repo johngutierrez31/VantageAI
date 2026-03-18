@@ -107,17 +107,17 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Execution Automation</CardTitle>
-      </CardHeader>
+      <Card>
+        <CardHeader>
+        <CardTitle>Operational Actions</CardTitle>
+        </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Materialize mission queue items into actionable tasks and export weekly leadership brief artifacts.
+          Turn the mission queue into owned work and export a leadership-ready weekly summary.
         </p>
         <div className="rounded-md border border-border p-3">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium">Mission Task Pack</p>
+            <p className="text-sm font-medium">Create Mission Tasks</p>
             <Button variant="outline" size="sm" type="button" onClick={toggleAll}>
               {allSelected ? 'Clear all' : 'Select all'}
             </Button>
@@ -148,7 +148,7 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
         </div>
 
         <div className="rounded-md border border-border p-3">
-          <p className="text-sm font-medium">Weekly Brief Export</p>
+          <p className="text-sm font-medium">Weekly Leadership Brief</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => exportBrief('markdown')} disabled={busy} type="button">
               Download Markdown

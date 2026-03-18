@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vantage Demo vs Trial Mode Auditor"
+  short_description: "Audit demo, trial, and paid workspace separation"
+  default_prompt: "Use this skill to audit whether VantageAI clearly separates demo, trial, and paid workspace behavior across provisioning, entitlements, and UX surfaces."

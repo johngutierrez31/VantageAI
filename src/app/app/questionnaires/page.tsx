@@ -1,35 +1,40 @@
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { QuestionnaireUploadsPanel } from '@/components/app/questionnaire-uploads-panel';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export default async function QuestionnairesPage() {
   const session = await getPageSessionContext();
-  const uploads = await prisma.questionnaireUpload.findMany({
-    where: { tenantId: session.tenantId },
-    include: {
-      _count: {
-        select: { items: true }
-      },
-      evidenceMap: {
-        select: {
-          id: true,
-          status: true
+  const [workspace, uploads] = await Promise.all([
+    getTenantWorkspaceContext(session.tenantId),
+    prisma.questionnaireUpload.findMany({
+      where: { tenantId: session.tenantId },
+      include: {
+        _count: {
+          select: { items: true }
+        },
+        evidenceMap: {
+          select: {
+            id: true,
+            status: true
+          }
+        },
+        trustInboxItem: {
+          select: {
+            id: true,
+            title: true,
+            status: true
+          }
         }
       },
-      trustInboxItem: {
-        select: {
-          id: true,
-          title: true,
-          status: true
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 100
-  });
+      orderBy: { createdAt: 'desc' },
+      take: 100
+    })
+  ]);
 
   return (
     <QuestionnaireUploadsPanel
+      isTrial={workspace.isTrial}
       uploads={uploads.map((upload) => ({
         id: upload.id,
         organizationName: upload.organizationName,

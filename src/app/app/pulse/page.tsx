@@ -1,12 +1,15 @@
 import { PageHeader } from '@/components/app/page-header';
+import { EmptyState } from '@/components/app/empty-state';
 import { PulseDashboardPanel } from '@/components/app/pulse-dashboard-panel';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { getTenantSecurityPulse } from '@/lib/intel/pulse';
 import { prisma } from '@/lib/db/prisma';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export default async function PulsePage() {
   const session = await getPageSessionContext();
-  const [metrics, snapshots, roadmaps, boardBriefs, quarterlyReviews, risks] = await Promise.all([
+  const [workspace, metrics, snapshots, roadmaps, boardBriefs, quarterlyReviews, risks] = await Promise.all([
+    getTenantWorkspaceContext(session.tenantId),
     getTenantSecurityPulse(session.tenantId),
     prisma.pulseSnapshot.findMany({
       where: { tenantId: session.tenantId },
@@ -93,6 +96,26 @@ export default async function PulsePage() {
           Start here: generate the scorecard first, then sync risks, build the roadmap, draft the board brief, and finalize the quarterly review.
         </p>
       </PageHeader>
+
+      {workspace.isTrial &&
+      snapshots.length === 0 &&
+      roadmaps.length === 0 &&
+      boardBriefs.length === 0 &&
+      quarterlyReviews.length === 0 &&
+      risks.length === 0 ? (
+        <EmptyState
+          title="Generate your first Pulse snapshot"
+          description="Pulse is where the suite becomes an executive operating cadence. Start with the scorecard, then let risks, roadmap items, and board-ready reporting accumulate from real workspace signals."
+          actionLabel="Open Guided Pulse Workflows"
+          actionHref="/app/pulse#guided-pulse-workflows"
+          eyebrow="Pulse"
+          supportingPoints={[
+            'What it is for: executive posture, risks, roadmap, and board reporting.',
+            'First action: generate the scorecard from current tenant signals.',
+            'Output: a persisted snapshot that can drive risks, roadmap, and quarterly review.'
+          ]}
+        />
+      ) : null}
 
       <PulseDashboardPanel
         metrics={{

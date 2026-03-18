@@ -40,6 +40,19 @@ enum PlanTier {
   ENTERPRISE
 }
 
+enum WorkspaceMode {
+  DEMO
+  TRIAL
+  PAID
+}
+
+enum TrialStatus {
+  NOT_STARTED
+  ACTIVE
+  EXPIRED
+  CONVERTED
+}
+
 enum StorageProvider {
   LOCAL
   S3
@@ -527,6 +540,10 @@ model Tenant {
   id                    String                   @id @default(cuid())
   name                  String
   slug                  String                   @unique
+  workspaceMode         WorkspaceMode            @default(PAID)
+  trialStatus           TrialStatus              @default(NOT_STARTED)
+  trialStartedAt        DateTime?
+  trialEndsAt           DateTime?
   activeStorageProvider StorageProvider          @default(LOCAL)
   activeVectorProvider  VectorProvider           @default(HASHED)
   activeEmailProvider   EmailProvider            @default(RESEND)

@@ -1,23 +1,21 @@
-import { cookies } from 'next/headers';
 import { AppShell } from '@/components/app/app-shell';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
-import { isDemoModeEnabled } from '@/lib/auth/demo';
 import { getTenantEntitlements } from '@/lib/billing/entitlements';
 import { getTenantSecurityPulse } from '@/lib/intel/pulse';
-import { FUN_MODE_COOKIE } from '@/lib/ui/fun-mode';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getPageSessionContext();
-  const initialFunMode = cookies().get(FUN_MODE_COOKIE)?.value === 'true';
 
-  const [activeUser, pulse, entitlements] = await Promise.all([
+  const [activeUser, pulse, entitlements, workspace] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.userId },
       select: { email: true, name: true }
     }),
     getTenantSecurityPulse(session.tenantId),
-    getTenantEntitlements(session.tenantId)
+    getTenantEntitlements(session.tenantId),
+    getTenantWorkspaceContext(session.tenantId)
   ]);
 
   const searchItems = [
@@ -332,12 +330,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       tenantId={session.tenantId}
       memberships={session.memberships}
       role={session.role}
-      demoMode={isDemoModeEnabled()}
+      demoMode={workspace.isDemo}
       userLabel={activeUser?.name ?? activeUser?.email ?? session.userId}
       searchItems={searchItems}
       notifications={notifications}
       currentPlan={entitlements.plan}
-      initialFunMode={initialFunMode}
+      workspaceMode={workspace.workspaceMode}
+      trialStatus={workspace.trialStatus}
+      trialEndsAt={workspace.trialEndsAt?.toISOString() ?? null}
+      trialDaysRemaining={workspace.trialDaysRemaining}
+      initialFunMode={false}
     >
       {children}
     </AppShell>

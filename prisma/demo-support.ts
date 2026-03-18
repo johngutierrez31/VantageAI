@@ -8,10 +8,10 @@ import {
 
 export const DEMO_TENANT_ID = 'tenant_demo';
 export const DEMO_TENANT_SLUG = 'demo-tenant';
-export const DEMO_TENANT_NAME = 'Demo Tenant';
+export const DEMO_TENANT_NAME = 'Astera Manufacturing Demo Workspace';
 export const DEMO_USER_ID = 'user_demo_admin';
-export const DEMO_USER_EMAIL = 'admin@vantageciso.local';
-export const DEMO_USER_NAME = 'Demo Admin';
+export const DEMO_USER_EMAIL = 'alex.mercer@astera-demo.example';
+export const DEMO_USER_NAME = 'Alex Mercer';
 export const DEMO_EMAIL_VERIFIED_AT = new Date('2026-01-01T00:00:00.000Z');
 export const DEMO_REPORTING_PERIOD = '2026 Q1';
 
@@ -24,14 +24,14 @@ export const DEMO_USERS = [
   },
   {
     id: 'user_demo_trust_reviewer',
-    email: 'trust.reviewer@vantageciso.local',
-    name: 'Morgan Trust',
+    email: 'jordan.lee@astera-demo.example',
+    name: 'Jordan Lee',
     role: TenantRole.ADMIN
   },
   {
     id: 'user_demo_ops_lead',
-    email: 'ops.lead@vantageciso.local',
-    name: 'Taylor Ops',
+    email: 'samira.khan@astera-demo.example',
+    name: 'Samira Khan',
     role: TenantRole.MEMBER
   }
 ] as const;
@@ -377,8 +377,9 @@ export async function createEvidenceRecord(
 export async function ensureDemoUsers(prisma: PrismaClient, tenantId: string) {
   for (const demoUser of DEMO_USERS) {
     await prisma.user.upsert({
-      where: { email: demoUser.email },
+      where: { id: demoUser.id },
       update: {
+        email: demoUser.email,
         name: demoUser.name,
         emailVerified: DEMO_EMAIL_VERIFIED_AT
       },

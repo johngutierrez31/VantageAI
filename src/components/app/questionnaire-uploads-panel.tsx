@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { FileSpreadsheet, FileText, LayoutTemplate } from 'lucide-react';
 import { PageHeader } from '@/components/app/page-header';
+import { EmptyState } from '@/components/app/empty-state';
 import { StatusPill } from '@/components/app/status-pill';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +33,13 @@ type UploadRow = {
   } | null;
 };
 
-export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] }) {
+export function QuestionnaireUploadsPanel({
+  uploads,
+  isTrial = false
+}: {
+  uploads: UploadRow[];
+  isTrial?: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -85,25 +93,51 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
       <PageHeader
         title="Questionnaires"
         helpKey="questionnaires"
-        description="Upload customer questionnaires, map to controls, generate AI drafts with citations, and export completed responses."
+        description="Bring buyer questionnaires into a reviewable workflow, map them to controls, generate cited drafts, and export only approved answers."
       />
 
-      <Card>
+      <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
+        <CardContent className="grid gap-4 p-5 md:grid-cols-3">
+          <div className="rounded-md border border-border bg-background/60 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <FileSpreadsheet className="h-4 w-4 text-primary" />
+              Common source formats
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">XLSX, CSV, PDF, DOCX, and pasted tables are common inputs in real buyer diligence.</p>
+          </div>
+          <div className="rounded-md border border-border bg-background/60 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <LayoutTemplate className="h-4 w-4 text-primary" />
+              Current structured import path
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">CSV and JSON parse directly today. For XLSX, PDF, or DOCX, export to CSV or paste cleaned row text below.</p>
+          </div>
+          <div className="rounded-md border border-border bg-background/60 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <FileText className="h-4 w-4 text-primary" />
+              Output you should expect
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">Mapped rows, cited drafts, reviewer assignment, evidence-map follow-up, and buyer-safe export options.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card id="start-questionnaire-intake">
         <CardHeader>
-          <CardTitle>Upload Questionnaire</CardTitle>
+          <CardTitle>Start Questionnaire Intake</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <Input
             value={organizationName}
             onChange={(event) => setOrganizationName(event.target.value)}
-            placeholder="Customer or buyer organization"
+            placeholder="Buyer or customer organization"
           />
           <Input
             type="file"
             accept=".csv,.json,.txt"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
-          <p className="text-xs text-muted-foreground">No file? Paste content inline.</p>
+          <p className="text-xs text-muted-foreground">No structured export yet? Paste cleaned row text inline and route the file cleanup separately.</p>
           <div className="grid gap-2 md:grid-cols-[120px_1fr]">
             <Select value={format} onChange={(event) => setFormat(event.target.value as 'csv' | 'json')}>
               <option value="csv">CSV</option>
@@ -112,14 +146,14 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
             <Input
               value={inlineContent}
               onChange={(event) => setInlineContent(event.target.value)}
-              placeholder="question,answer,score,confidence"
-            />
+            placeholder="question,answer,score,confidence"
+          />
           </div>
           <Button
             onClick={uploadFile}
             disabled={busy || (!file && !inlineContent.trim())}
           >
-            {busy ? 'Uploading...' : 'Upload'}
+            {busy ? 'Uploading...' : 'Create intake'}
           </Button>
           {error ? <p className="text-sm text-danger">{error}</p> : null}
         </CardContent>
@@ -131,7 +165,22 @@ export function QuestionnaireUploadsPanel({ uploads }: { uploads: UploadRow[] })
         </CardHeader>
         <CardContent className="space-y-2">
           {uploads.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No uploads yet.</p>
+            <EmptyState
+              title={isTrial ? 'Start your first buyer questionnaire' : 'No questionnaires in review yet'}
+              description={
+                isTrial
+                  ? 'Use this module when procurement sends a spreadsheet, CSV, or cleaned table. Your first intake creates a durable questionnaire record with mapped rows, review routing, and export-ready answer work.'
+                  : 'New uploads become durable intake records with mapped rows, reviewer routing, and export-ready outputs.'
+              }
+              actionLabel={isTrial ? 'Create first intake' : 'Start intake'}
+              actionHref="#start-questionnaire-intake"
+              eyebrow="Questionnaire Workflow"
+              supportingPoints={[
+                isTrial ? 'What it is for: buyer diligence intake and response workflow.' : 'Import the buyer question set.',
+                isTrial ? 'First action: upload or paste the questionnaire.' : 'Draft answers from approved evidence.',
+                isTrial ? 'Output: a reviewable questionnaire record with evidence-backed answer work.' : 'Review and export only approved responses.'
+              ]}
+            />
           ) : (
             uploads.map((upload) => (
               <div key={upload.id} className="rounded-md border border-border p-3">

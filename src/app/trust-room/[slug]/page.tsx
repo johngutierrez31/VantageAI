@@ -40,6 +40,12 @@ export default async function TrustRoomPage({
     );
   }
 
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: roomView.room.tenantId },
+    select: { workspaceMode: true }
+  });
+  const demoMode = tenant?.workspaceMode === 'DEMO';
+
   const queryString = buildSearch(searchParams);
   const acknowledged = searchParams.ack === '1' || !roomView.room.termsRequired;
 
@@ -80,12 +86,24 @@ export default async function TrustRoomPage({
       <div className="mx-auto max-w-6xl space-y-8">
         {!roomView.canView ? (
           <div className="rounded-3xl border border-slate-200 bg-white/95 p-8 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">VantageAI Trust Room</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">VantageAI Trust Room</p>
+              {demoMode ? (
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+                  Demo-safe sample deliverable
+                </span>
+              ) : null}
+            </div>
             <h1 className="mt-3 text-3xl font-semibold text-slate-950">{roomView.room.name}</h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-600">
               {roomView.room.summaryText?.trim() ||
                 'Buyer-safe trust materials are available through a review-gated external sharing workflow.'}
             </p>
+            {demoMode ? (
+              <p className="mt-3 max-w-2xl text-sm text-slate-600">
+                This trust room belongs to a synthetic demo tenant and contains example data only.
+              </p>
+            ) : null}
             {coverSection?.items[0] ? (
               <div className="mt-6 grid gap-3 md:grid-cols-3">
                 {Object.entries(coverSection.items[0])
@@ -135,6 +153,7 @@ export default async function TrustRoomPage({
             roomName={roomView.room.name}
             organizationName={roomView.roomManifest.organizationName}
             sections={roomView.roomManifest.sections}
+            demoMode={demoMode}
             viewerLabel={roomView.approvedRequest?.requesterEmail ?? null}
             eventEndpoint={`/trust-room/${params.slug}/event${queryString}`}
             downloadLinks={{
@@ -193,7 +212,11 @@ export default async function TrustRoomPage({
             </div>
 
             <div>
-              <PublicTrustRoomRequestForm requestEndpoint={`/trust-room/${params.slug}/request`} roomName={roomView.room.name} />
+              <PublicTrustRoomRequestForm
+                requestEndpoint={`/trust-room/${params.slug}/request`}
+                roomName={roomView.room.name}
+                demoMode={demoMode}
+              />
             </div>
           </div>
         ) : null}

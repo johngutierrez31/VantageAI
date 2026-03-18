@@ -1,16 +1,19 @@
 import Link from 'next/link';
-import { AlertTriangle, ArrowRight, CalendarClock, Shield, TrendingUp } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CalendarClock, Shield, Sparkles, TrendingUp } from 'lucide-react';
 import { PageHeader } from '@/components/app/page-header';
 import { KpiCard } from '@/components/app/kpi-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CommandCenterOperations } from '@/components/app/command-center-operations';
 import { DemoPathCard } from '@/components/app/demo-path-card';
+import { TrialOnboardingCard } from '@/components/app/trial-onboarding-card';
 import { getTenantAdoptionModeViewModel } from '@/lib/adoption/adoption-mode';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { getTenantDemoPathViewModel } from '@/lib/demo/demo-path';
 import { buildSevenDayMissionQueue, getTenantSecurityPulse } from '@/lib/intel/pulse';
 import { getSoloCisoCapabilities, getTrendSignals, type TrendSeverity } from '@/lib/intel/trends';
+import { getTenantTrialOnboarding } from '@/lib/trial/onboarding';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 function severityClasses(severity: TrendSeverity) {
   if (severity === 'critical') {
@@ -26,11 +29,13 @@ function severityClasses(severity: TrendSeverity) {
 
 export default async function CommandCenterPage() {
   const session = await getPageSessionContext();
-  const [pulse, trends, demoPath, adoptionMode] = await Promise.all([
+  const [pulse, trends, demoPath, adoptionMode, workspace, trialOnboarding] = await Promise.all([
     getTenantSecurityPulse(session.tenantId),
     Promise.resolve(getTrendSignals()),
     getTenantDemoPathViewModel(session.tenantId),
-    getTenantAdoptionModeViewModel(session.tenantId)
+    getTenantAdoptionModeViewModel(session.tenantId),
+    getTenantWorkspaceContext(session.tenantId),
+    getTenantTrialOnboarding(session.tenantId)
   ]);
 
   const capabilities = getSoloCisoCapabilities();
@@ -40,28 +45,76 @@ export default async function CommandCenterPage() {
     <div className="space-y-6">
       <PageHeader
         title="Command Center"
-        helpKey="commandCenter"
-        description="Run the VantageAI security operating system from one cross-module surface: open work, executive carry-over, trust pressure, incident activity, and guided next actions."
-        primaryAction={{ label: 'Open Copilot', href: '/app/copilot' }}
+        helpKey={workspace.isTrial ? undefined : 'commandCenter'}
+        description={
+          workspace.isTrial
+            ? 'Start the workspace with real operator records: buyer diligence, posture, AI review, incident response, and evidence work that stays durable and tenant-scoped.'
+            : 'See the whole operating picture in one screen: buyer pressure, top risks, governed AI decisions, executive carry-over, and the next action that matters.'
+        }
+        primaryAction={{
+          label: workspace.isTrial ? 'Open Questionnaires' : 'Open TrustOps Intake',
+          href: workspace.isTrial ? '/app/questionnaires' : '/app/trust/inbox'
+        }}
         secondaryActions={[
-          { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
+          { label: workspace.isTrial ? 'Tools Hub' : 'Show The Story', href: '/app/tools', variant: 'outline' },
           { label: 'Pulse', href: '/app/pulse', variant: 'outline' },
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
-          { label: 'Response Ops', href: '/app/response-ops', variant: 'outline' },
-          { label: 'TrustOps', href: '/app/trust', variant: 'outline' },
-          { label: 'Security Analyst', href: '/app/security-analyst', variant: 'outline' },
-          { label: 'Runbooks', href: '/app/runbooks', variant: 'outline' },
-          { label: 'Findings Workbench', href: '/app/findings', variant: 'outline' },
-          { label: 'Billing & Packaging', href: '/app/settings/billing', variant: 'outline' }
+          { label: 'Response Ops', href: '/app/response-ops', variant: 'outline' }
         ]}
       >
         <p className="text-xs text-muted-foreground">
-          Workspace: {session.tenantName} | Pulse captured at {new Date(pulse.capturedAt).toLocaleString()}
+          Workspace: {session.tenantName}
+          {workspace.isTrial && workspace.trialEndsAt ? ` | Trial ends ${workspace.trialEndsAt.toLocaleDateString()}` : ''}
+          {!workspace.isTrial ? ` | Pulse captured at ${new Date(pulse.capturedAt).toLocaleString()}` : ''}
         </p>
         <p className="text-xs text-muted-foreground">
-          Use Vantage as the operating layer across your existing stack. Start in Adoption Mode when the next conversation is about fit, migration pressure, or imported work.
+          {workspace.isTrial
+            ? 'Start with the first checklist item that matches the pressure you have today. Each action creates a real record inside this blank workspace.'
+            : 'Start with the current buyer request, then open Pulse for the executive summary and AI Governance for the escalated review.'}
         </p>
       </PageHeader>
+
+      {workspace.isDemo ? (
+        <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
+          <CardContent className="grid gap-4 p-5 md:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded border border-warning/40 bg-warning/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-warning">
+                  Demo Workspace
+                </span>
+                <span className="rounded border border-border bg-background px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Sample Tenant
+                </span>
+              </div>
+              <p className="mt-3 text-lg font-semibold">One coherent story, ready for prospects and partners</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                A buyer request from Northbridge Payments exposed one trust-language gap, one AI approval condition, and one live vendor-linked incident. The rest of the suite shows how those issues are reviewed, assigned, and reported upward.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {[
+                'Buyer request and trust packet are review-gated and citation-backed.',
+                'Executive scorecard and board brief reflect live module carry-over.',
+                'AI use case and incident follow-up stay owned across the suite.'
+              ].map((item) => (
+                <div key={item} className="rounded-md border border-border bg-background/60 p-3 text-sm text-muted-foreground">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {workspace.isTrial ? (
+        <TrialOnboardingCard
+          trialDaysRemaining={workspace.trialDaysRemaining}
+          trialEndsAt={workspace.trialEndsAt?.toISOString() ?? null}
+          completedCount={trialOnboarding.completedCount}
+          totalCount={trialOnboarding.totalCount}
+          items={trialOnboarding.items}
+        />
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-4">
         <KpiCard
@@ -90,44 +143,46 @@ export default async function CommandCenterPage() {
         />
       </div>
 
-      <DemoPathCard demoPath={demoPath} />
+      {workspace.isDemo ? <DemoPathCard demoPath={demoPath} /> : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Adoption Mode / Work With Your Existing Stack</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <KpiCard
-            label="Configured Connectors"
-            value={String(adoptionMode.metrics.connectorCount)}
-            hint="Slack, Jira, publishing, and downstream hooks already configured"
-            icon={<Shield className="h-5 w-5" />}
-          />
-          <KpiCard
-            label="Imported Records"
-            value={String(adoptionMode.metrics.importCount)}
-            hint="Durable adoption imports already recorded"
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-          <KpiCard
-            label="Reusable Trust Answers"
-            value={String(adoptionMode.metrics.approvedAnswerCount)}
-            hint="Bring approved answers forward before the next questionnaire lands"
-            icon={<CalendarClock className="h-5 w-5" />}
-          />
-          <KpiCard
-            label="Open Risks"
-            value={String(adoptionMode.metrics.openRiskCount)}
-            hint="Imported or generated risk carry-over already visible in Pulse"
-            icon={<AlertTriangle className="h-5 w-5" />}
-          />
-          <div className="flex items-center">
-            <Button asChild size="sm" variant="outline">
-              <Link href="/app/adoption">Open Adoption Mode</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {!workspace.isTrial ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Work With Your Existing Stack</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <KpiCard
+              label="Configured Connectors"
+              value={String(adoptionMode.metrics.connectorCount)}
+              hint="Slack, Jira, publishing, and downstream hooks already configured"
+              icon={<Shield className="h-5 w-5" />}
+            />
+            <KpiCard
+              label="Imported Records"
+              value={String(adoptionMode.metrics.importCount)}
+              hint="Durable adoption imports already recorded"
+              icon={<TrendingUp className="h-5 w-5" />}
+            />
+            <KpiCard
+              label="Reusable Trust Answers"
+              value={String(adoptionMode.metrics.approvedAnswerCount)}
+              hint="Bring approved answers forward before the next questionnaire lands"
+              icon={<CalendarClock className="h-5 w-5" />}
+            />
+            <KpiCard
+              label="Open Risks"
+              value={String(adoptionMode.metrics.openRiskCount)}
+              hint="Imported or generated risk carry-over already visible in Pulse"
+              icon={<AlertTriangle className="h-5 w-5" />}
+            />
+            <div className="flex items-center">
+              <Button asChild size="sm" variant="outline">
+                <Link href="/app/adoption">Open Adoption Mode</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -202,7 +257,7 @@ export default async function CommandCenterPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>AI Governance Operational Layer</CardTitle>
+          <CardTitle>AI Governance Carry-Over</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <KpiCard
@@ -254,7 +309,7 @@ export default async function CommandCenterPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Response Ops Operational Layer</CardTitle>
+          <CardTitle>Response Ops Carry-Over</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <KpiCard
@@ -303,7 +358,7 @@ export default async function CommandCenterPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>TrustOps Operational Pulse</CardTitle>
+          <CardTitle>TrustOps Current Pressure</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <KpiCard
@@ -385,7 +440,7 @@ export default async function CommandCenterPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Module Launch Map</CardTitle>
+            <CardTitle>What To Open Next</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {capabilities.map((capability) => (
@@ -411,7 +466,10 @@ export default async function CommandCenterPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Threat Trend Radar (2025-2026)</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            Threat Trend Radar (2025-2026)
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {trends.map((trend) => (

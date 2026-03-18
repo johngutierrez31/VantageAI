@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vantage Trial Empty State Writer"
+  short_description: "Write trial-mode empty states tied to real workflows"
+  default_prompt: "Use this skill to write blank-state copy and CTA guidance for VantageAI trial workspaces without leaking demo or packaging language."

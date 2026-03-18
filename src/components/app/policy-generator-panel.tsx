@@ -263,7 +263,7 @@ export function PolicyGeneratorPanel({
         description="Generate customized policy packages using the vendored template library in this repository."
       />
 
-      <Card>
+      <Card id="policy-generator-form">
         <CardHeader>
           <CardTitle>Organization Profile</CardTitle>
         </CardHeader>

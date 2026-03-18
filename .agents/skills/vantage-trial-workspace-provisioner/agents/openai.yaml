@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vantage Trial Workspace Provisioner"
+  short_description: "Provision and validate blank 14-day trial workspaces"
+  default_prompt: "Use this skill to plan or validate a real blank 14-day trial workspace flow in VantageAI."

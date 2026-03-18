@@ -21,9 +21,9 @@ export default async function SettingsMembersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Members"
+        title="Workspace Team"
         helpKey="members"
-        description="Manage workspace access and role assignments."
+        description="See who owns reviews, approvals, and operating work across the workspace."
         secondaryActions={[
           { label: 'Connectors', href: '/app/settings/connectors', variant: 'outline' },
           { label: 'Billing', href: '/app/settings/billing', variant: 'outline' }
@@ -32,14 +32,14 @@ export default async function SettingsMembersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Active Members</CardTitle>
+          <CardTitle>Active Team Members</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {members.map((member) => (
             <div key={member.id} className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">{member.user.name ?? member.user.email}</p>
               <p className="text-xs text-muted-foreground">
-                {member.user.email} - {member.role}
+                {member.user.email} | {member.role}
               </p>
             </div>
           ))}

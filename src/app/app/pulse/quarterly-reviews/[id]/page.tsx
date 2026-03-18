@@ -1,10 +1,11 @@
+import { notFound } from 'next/navigation';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { QuarterlyReviewDetailPanel } from '@/components/app/quarterly-review-detail-panel';
 
 export default async function QuarterlyReviewDetailPage({ params }: { params: { id: string } }) {
   const session = await getPageSessionContext();
-  const review = await prisma.quarterlyReview.findFirstOrThrow({
+  const review = await prisma.quarterlyReview.findFirst({
     where: {
       tenantId: session.tenantId,
       id: params.id
@@ -32,6 +33,10 @@ export default async function QuarterlyReviewDetailPage({ params }: { params: { 
       }
     }
   });
+
+  if (!review) {
+    notFound();
+  }
 
   const risks = review.topRiskIds.length
     ? await prisma.riskRegisterItem.findMany({

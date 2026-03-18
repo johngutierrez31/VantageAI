@@ -1,4 +1,4 @@
-import { PlanTier, PrismaClient } from '@prisma/client';
+import { PlanTier, PrismaClient, TrialStatus, WorkspaceMode } from '@prisma/client';
 import {
   DEMO_TENANT_ID,
   DEMO_TENANT_NAME,
@@ -24,6 +24,10 @@ export async function seedDemoWorkspace(prisma: PrismaClient) {
     where: { slug: DEMO_TENANT_SLUG },
     update: {
       name: DEMO_TENANT_NAME,
+      workspaceMode: WorkspaceMode.DEMO,
+      trialStatus: TrialStatus.NOT_STARTED,
+      trialStartedAt: null,
+      trialEndsAt: null,
       activeStorageProvider: 'LOCAL',
       activeVectorProvider: 'HASHED',
       activeEmailProvider: 'RESEND'
@@ -32,6 +36,8 @@ export async function seedDemoWorkspace(prisma: PrismaClient) {
       id: DEMO_TENANT_ID,
       slug: DEMO_TENANT_SLUG,
       name: DEMO_TENANT_NAME,
+      workspaceMode: WorkspaceMode.DEMO,
+      trialStatus: TrialStatus.NOT_STARTED,
       activeStorageProvider: 'LOCAL',
       activeVectorProvider: 'HASHED',
       activeEmailProvider: 'RESEND'
@@ -44,17 +50,17 @@ export async function seedDemoWorkspace(prisma: PrismaClient) {
   await prisma.tenantBranding.upsert({
     where: { tenantId: tenant.id },
     update: {
-      companyName: 'Astera Cloud Security',
+      companyName: 'Astera Manufacturing',
       primaryColor: '#0f172a',
       accentColor: '#2563eb',
-      footerNote: 'Confidential internal demo workspace. Buyer-safe sharing remains review-gated.'
+      footerNote: 'Demo workspace with synthetic identities and example data. Buyer-safe sharing remains review-gated.'
     },
     create: {
       tenantId: tenant.id,
-      companyName: 'Astera Cloud Security',
+      companyName: 'Astera Manufacturing',
       primaryColor: '#0f172a',
       accentColor: '#2563eb',
-      footerNote: 'Confidential internal demo workspace. Buyer-safe sharing remains review-gated.'
+      footerNote: 'Demo workspace with synthetic identities and example data. Buyer-safe sharing remains review-gated.'
     }
   });
 

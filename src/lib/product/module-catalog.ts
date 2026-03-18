@@ -80,7 +80,23 @@ export function planIncludesModule(plan: CommercialPlanTier, module: ModuleDefin
   return PLAN_ORDER[plan] >= PLAN_ORDER[module.includedFrom];
 }
 
-export function getModuleCommercialState(plan: CommercialPlanTier, module: ModuleDefinition) {
+export function getModuleCommercialState(
+  plan: CommercialPlanTier,
+  module: ModuleDefinition,
+  options?: {
+    workspaceMode?: 'DEMO' | 'TRIAL' | 'PAID';
+    isTrialActive?: boolean;
+  }
+) {
+  if (options?.workspaceMode === 'TRIAL' && options.isTrialActive) {
+    return {
+      included: true,
+      badge: 'Included in 14-day trial',
+      helperText: `${module.premiumLabel}. Use this module now to create durable records and evaluate the full suite in a blank workspace.`,
+      upgradeCtaLabel: 'Open module'
+    };
+  }
+
   const included = planIncludesModule(plan, module);
   return {
     included,

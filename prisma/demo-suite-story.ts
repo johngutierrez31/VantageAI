@@ -182,7 +182,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       templateId: requireValue(securityTemplate?.id, 'Missing security template id.'),
       templateVersionId: securityVersionId,
       name: 'Q1 executive operating readiness review',
-      customerName: 'Astera Cloud Security',
+      customerName: 'Astera Manufacturing',
       status: AssessmentStatus.IN_PROGRESS,
       createdBy: DEMO_USER_ID,
       createdAt: addDays(now, -7)
@@ -491,8 +491,8 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     status: TrustPacketStatus.READY_TO_SHARE,
     reviewerRequired: false,
     organizationName: 'Northbridge Payments',
-    approvedContactName: 'Morgan Trust',
-    approvedContactEmail: 'trust.reviewer@vantageciso.local',
+    approvedContactName: 'Jordan Lee',
+    approvedContactEmail: 'jordan.lee@astera-demo.example',
     approvedRows,
     evidenceMapStatus: EvidenceMapStatus.NEEDS_REVIEW,
     evidenceMapItems: [
@@ -523,8 +523,8 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       reviewerRequired: false,
       assignedReviewerUserId: DEMO_USERS[1].id,
       reviewDueAt: tomorrow,
-      approvedContactName: 'Morgan Trust',
-      approvedContactEmail: 'trust.reviewer@vantageciso.local',
+      approvedContactName: 'Jordan Lee',
+      approvedContactEmail: 'jordan.lee@astera-demo.example',
       lastExportedAt: twoDaysAgo,
       exportCount: 1,
       createdBy: DEMO_USER_ID,
@@ -728,7 +728,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       vendorReviewId: DEMO_IDS.aiVendorReview,
       name: 'TrustOps questionnaire response copilot',
       description: 'Draft buyer answers from approved evidence before human approval.',
-      businessOwner: 'Morgan Trust',
+      businessOwner: 'Jordan Lee',
       department: 'Security',
       useCaseType: AIUseCaseType.SECURITY_WORKFLOW,
       workflowType: AIWorkflowType.ASSISTANT,
@@ -1183,7 +1183,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
           jiraBaseUrl: 'https://vantage-demo.atlassian.net',
           jiraProjectKey: 'SEC',
           jiraIssueType: 'Task',
-          jiraEmail: 'jira-demo@vantageciso.local',
+          jiraEmail: 'jira@astera-demo.example',
           statusMappings: [
             { source: 'OPEN', target: 'to-do' },
             { source: 'IN_PROGRESS', target: 'in-progress' },
@@ -1211,7 +1211,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
           confluenceBaseUrl: 'https://vantage-demo.atlassian.net',
           confluenceSpaceKey: 'SEC',
           confluenceParentPageId: '100100',
-          confluenceEmail: 'confluence-demo@vantageciso.local'
+          confluenceEmail: 'docs@astera-demo.example'
         } satisfies Prisma.InputJsonObject,
         secretCiphertext: encryptConnectorSecret(JSON.stringify({ confluenceApiToken: 'confluence-demo-token' })),
         lastHealthStatus: ConnectorActivityStatus.SUCCEEDED,

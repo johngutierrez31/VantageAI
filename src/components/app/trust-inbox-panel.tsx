@@ -66,23 +66,37 @@ export function TrustInboxPanel({ items, uploads }: { items: InboxRow[]; uploads
       <PageHeader
         title="Trust Inbox"
         helpKey="trustInbox"
-        description="Queue incoming security questionnaires and move from new intake to delivered package."
+        description="Track incoming buyer diligence requests from first intake through reviewed trust materials and final delivery."
       />
+
+      <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
+        <CardContent className="grid gap-3 p-5 md:grid-cols-3">
+          {[
+            'Each buyer request keeps its questionnaire, evidence, reviewers, and packet state in one durable record.',
+            'Weak support stays visible as a review item instead of slipping into the final response.',
+            'Trust packets and trust rooms stay tied back to the original intake for clean auditability.'
+          ].map((item) => (
+            <div key={item} className="rounded-md border border-border bg-background/60 p-3 text-sm text-muted-foreground">
+              {item}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>New Intake</CardTitle>
+          <CardTitle>Create Buyer Request</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 md:grid-cols-[1fr_260px_260px_auto]">
           <Input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Prospect questionnaire title"
+            placeholder="Buyer request title"
           />
           <Input
             value={requesterEmail}
             onChange={(event) => setRequesterEmail(event.target.value)}
-            placeholder="requester@company.com"
+            placeholder="buyer@company.com"
           />
           <Select value={questionnaireUploadId} onChange={(event) => setQuestionnaireUploadId(event.target.value)}>
             <option value="">No upload linked yet</option>
@@ -93,7 +107,7 @@ export function TrustInboxPanel({ items, uploads }: { items: InboxRow[]; uploads
             ))}
           </Select>
           <Button onClick={createItem} disabled={busy || !title.trim()}>
-            {busy ? 'Creating...' : 'Create'}
+            {busy ? 'Creating...' : 'Create request'}
           </Button>
           {error ? <p className="md:col-span-4 text-sm text-danger">{error}</p> : null}
         </CardContent>
@@ -105,7 +119,9 @@ export function TrustInboxPanel({ items, uploads }: { items: InboxRow[]; uploads
         </CardHeader>
         <CardContent className="space-y-2">
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No trust intake items yet.</p>
+            <p className="text-sm text-muted-foreground">
+              New trust requests will appear here with ownership, review status, linked questionnaires, and delivery state.
+            </p>
           ) : (
             items.map((item) => (
               <div key={item.id} className="rounded-md border border-border p-3">

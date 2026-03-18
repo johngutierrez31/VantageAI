@@ -22,6 +22,7 @@ export function PublicTrustRoomViewer({
   roomName,
   organizationName,
   sections,
+  demoMode = false,
   eventEndpoint,
   viewerLabel,
   downloadLinks
@@ -29,6 +30,7 @@ export function PublicTrustRoomViewer({
   roomName: string;
   organizationName: string;
   sections: RoomSection[];
+  demoMode?: boolean;
   eventEndpoint: string;
   viewerLabel?: string | null;
   downloadLinks: {
@@ -59,13 +61,25 @@ export function PublicTrustRoomViewer({
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-white/95 p-8 shadow-sm">
-        <p className="text-xs uppercase tracking-[0.24em] text-slate-500">VantageAI Trust Room</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">VantageAI Trust Room</p>
+          {demoMode ? (
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+              Demo Workspace
+            </span>
+          ) : null}
+        </div>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold text-slate-950">{roomName}</h1>
             <p className="mt-2 text-sm text-slate-600">
               External-safe diligence package for {organizationName}. Approved responses and packet sections only.
             </p>
+            {demoMode ? (
+              <p className="mt-2 text-xs text-slate-500">
+                Example materials from a synthetic sample tenant. Safe to review in guided demos.
+              </p>
+            ) : null}
             {viewerLabel ? <p className="mt-2 text-xs text-slate-500">Access granted for {viewerLabel}</p> : null}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -137,10 +151,12 @@ export function PublicTrustRoomViewer({
 
 export function PublicTrustRoomRequestForm({
   requestEndpoint,
-  roomName
+  roomName,
+  demoMode = false
 }: {
   requestEndpoint: string;
   roomName: string;
+  demoMode?: boolean;
 }) {
   const [requesterName, setRequesterName] = useState('');
   const [requesterEmail, setRequesterEmail] = useState('');
@@ -185,6 +201,11 @@ export function PublicTrustRoomRequestForm({
         <CardTitle>Request Access</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {demoMode ? (
+          <p className="text-sm text-slate-600">
+            This request form belongs to a sample trust room used for guided evaluation.
+          </p>
+        ) : null}
         <Input placeholder="Your name" value={requesterName} onChange={(event) => setRequesterName(event.target.value)} />
         <Input placeholder="Work email" value={requesterEmail} onChange={(event) => setRequesterEmail(event.target.value)} />
         <Input placeholder="Company" value={companyName} onChange={(event) => setCompanyName(event.target.value)} />

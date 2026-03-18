@@ -204,6 +204,31 @@ export function PulseDashboardPanel({
 
   return (
     <div className="space-y-6">
+      <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
+        <CardContent className="grid gap-4 p-5 md:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Executive Story</p>
+            <p className="mt-3 text-lg font-semibold">
+              Pulse translates live operating work into a posture summary leadership can actually use.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This scorecard reflects trust review pressure, AI governance conditions, overdue remediation, and incident carry-over instead of a disconnected reporting layer.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              'Score changes are tied to real workflow signals.',
+              'Top risks and roadmap items remain owned and due-dated.',
+              'Board and quarterly outputs stay anchored to the latest snapshot.'
+            ].map((item) => (
+              <div key={item} className="rounded-md border border-border bg-background/60 p-3 text-sm text-muted-foreground">
+                {item}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Current Posture Score"
@@ -262,7 +287,7 @@ export function PulseDashboardPanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="guided-pulse-workflows">
         <CardHeader>
           <CardTitle>Response Ops Carry-Over</CardTitle>
         </CardHeader>
@@ -377,7 +402,7 @@ export function PulseDashboardPanel({
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No Pulse snapshot has been generated yet.</p>
+              <p className="text-sm text-muted-foreground">Generate the first executive scorecard to establish a posture baseline and trendline.</p>
             )}
           </CardContent>
         </Card>
@@ -433,7 +458,7 @@ export function PulseDashboardPanel({
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No risks are recorded yet.</p>
+              <p className="text-sm text-muted-foreground">Sync the risk register from findings, trust gaps, AI reviews, and overdue work to populate this view.</p>
             )}
           </CardContent>
         </Card>
@@ -465,7 +490,7 @@ export function PulseDashboardPanel({
                 </Button>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">No roadmap has been generated yet.</p>
+              <p className="text-sm text-muted-foreground">Generate a 30/60/90 roadmap once the current risk picture is stable enough to assign owners and dates.</p>
             )}
           </CardContent>
         </Card>
@@ -500,7 +525,7 @@ export function PulseDashboardPanel({
               </div>
             ) : null}
             {!latestBoardBrief && !latestQuarterlyReview ? (
-              <p className="text-sm text-muted-foreground">No board brief or quarterly review has been prepared yet.</p>
+              <p className="text-sm text-muted-foreground">Draft the board brief and quarterly review after the scorecard and roadmap are current.</p>
             ) : null}
           </CardContent>
         </Card>

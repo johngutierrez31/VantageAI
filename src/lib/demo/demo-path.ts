@@ -274,9 +274,9 @@ export function buildDemoPathViewModel(records: DemoPathRecords): DemoPathViewMo
   const tabletop = tabletopRecord(records);
 
   return {
-    title: 'Start Here: Demo Path',
+    title: 'Guided Product Tour',
     subtitle:
-      'Lead with the shortest proof of value: buyer diligence to board visibility to governed AI to a live incident, all from one seeded workspace.',
+      'Lead with the shortest proof of value: buyer diligence to executive visibility to governed AI to incident carry-over, all from one sample workspace.',
     threeMinutePath: [
       {
         label: 'Command Center',

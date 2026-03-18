@@ -3,6 +3,7 @@ import { getSessionContext } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
 import { getTenantEntitlements } from '@/lib/billing/entitlements';
 import { handleRouteError } from '@/lib/http';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export async function GET() {
   try {
@@ -13,11 +14,15 @@ export async function GET() {
       orderBy: { updatedAt: 'desc' }
     });
 
-    const entitlements = await getTenantEntitlements(session.tenantId);
+    const [entitlements, workspace] = await Promise.all([
+      getTenantEntitlements(session.tenantId),
+      getTenantWorkspaceContext(session.tenantId)
+    ]);
 
     return NextResponse.json({
       subscription,
-      entitlements
+      entitlements,
+      workspace
     });
   } catch (error) {
     return handleRouteError(error);

@@ -1,8 +1,6 @@
 import './globals.css';
 import { Cinzel, Cormorant_Garamond, Crimson_Pro } from 'next/font/google';
-import { cookies } from 'next/headers';
 import { cn } from '@/lib/utils';
-import { FUN_MODE_COOKIE } from '@/lib/ui/fun-mode';
 
 const headingFont = Cormorant_Garamond({
   subsets: ['latin'],
@@ -23,16 +21,14 @@ const displayFont = Cinzel({
 });
 
 export const metadata = {
-  title: 'VantageCISO',
-  description: 'Assessment and AI readiness SaaS MVP'
+  title: 'VantageAI',
+  description: 'Security operating system for buyer diligence, executive posture, AI risk, and response workflows.'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const funModeEnabled = cookies().get(FUN_MODE_COOKIE)?.value === 'true';
-
   return (
     <html lang="en" className={cn(headingFont.variable, bodyFont.variable, displayFont.variable)}>
-      <body className={cn('font-sans antialiased', funModeEnabled && 'fun-mode')}>
+      <body className="font-sans antialiased">
         <main>{children}</main>
       </body>
     </html>

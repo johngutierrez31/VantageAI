@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vantage Trial Onboarding Planner"
+  short_description: "Plan first-run onboarding for blank trial workspaces"
+  default_prompt: "Use this skill to design or review the first-run onboarding checklist for a blank VantageAI trial workspace."

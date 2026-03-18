@@ -3,10 +3,14 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import { ShieldCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/app/tools', [searchParams]);
+  const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/app/command-center', [searchParams]);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -38,18 +42,34 @@ export function LoginForm() {
   }
 
   return (
-    <form className="card" onSubmit={onSubmit}>
-      <h2>Sign in</h2>
-      <p>Use your organization email. Access requires an active tenant membership.</p>
-      <input
-        type="email"
-        value={email}
-        placeholder="name@company.com"
-        onChange={(event) => setEmail(event.target.value)}
-        required
-      />
-      <button type="submit" disabled={loading}>{loading ? 'Sending link...' : 'Send magic link'}</button>
-      {message ? <p>{message}</p> : null}
-    </form>
+    <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Sign in to an existing workspace
+          </CardTitle>
+        </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <p className="text-sm text-muted-foreground">
+            Use your organization email. Access is tenant-scoped and requires an active membership.
+          </p>
+          <Input
+            type="email"
+            value={email}
+            placeholder="name@company.com"
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Sending secure link...' : 'Send secure sign-in link'}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Magic links expire automatically and open the workspace assigned to your account.
+          </p>
+          {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
+        </form>
+      </CardContent>
+    </Card>
   );
 }

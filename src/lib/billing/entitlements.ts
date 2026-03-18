@@ -1,6 +1,7 @@
 import { PlanTier } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import { getLimitsForPlan, isBillingActive } from '@/lib/billing/limits';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export type TenantEntitlements = {
   plan: PlanTier;
@@ -9,21 +10,40 @@ export type TenantEntitlements = {
 };
 
 export async function getTenantEntitlements(tenantId: string): Promise<TenantEntitlements> {
-  const subscription = await prisma.subscription.findFirst({
-    where: { tenantId },
-    orderBy: { updatedAt: 'desc' }
-  });
+  const [workspace, subscription] = await Promise.all([
+    getTenantWorkspaceContext(tenantId),
+    prisma.subscription.findFirst({
+      where: { tenantId },
+      orderBy: { updatedAt: 'desc' }
+    })
+  ]);
+
+  if (workspace.isTrialActive) {
+    return {
+      plan: 'ENTERPRISE',
+      status: 'trialing',
+      limits: getLimitsForPlan('ENTERPRISE')
+    };
+  }
 
   if (!subscription) {
     return {
       plan: 'FREE',
-      status: 'active',
+      status: workspace.isTrialExpired ? 'trial_expired' : 'active',
       limits: getLimitsForPlan('FREE')
     };
   }
 
   const plan = subscription.plan ?? 'FREE';
   const status = subscription.status;
+
+  if (workspace.isTrialExpired && status === 'trialing') {
+    return {
+      plan: 'FREE',
+      status: 'trial_expired',
+      limits: getLimitsForPlan('FREE')
+    };
+  }
 
   if (!isBillingActive(status)) {
     return {

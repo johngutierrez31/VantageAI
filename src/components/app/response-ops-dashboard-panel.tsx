@@ -227,7 +227,7 @@ export function ResponseOpsDashboardPanel({
         </div>
       </div>
 
-      <Card>
+      <Card id="guided-response-ops-workflows">
         <CardHeader>
           <CardTitle>Guided Response Ops Workflows</CardTitle>
         </CardHeader>

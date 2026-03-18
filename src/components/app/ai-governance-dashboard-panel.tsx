@@ -63,9 +63,34 @@ export function AIGovernanceDashboardPanel({
         ]}
       >
         <p className="text-xs text-muted-foreground">
-          Start here: register the use case, review the vendor if one is involved, confirm the policy fit, then carry any blockers into findings and Pulse.
+          Start here: review the proposed AI workflow, confirm the vendor and policy fit, then carry the remaining conditions into findings and Pulse.
         </p>
       </PageHeader>
+
+      <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
+        <CardContent className="grid gap-4 p-5 md:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Current Decision Story</p>
+            <p className="mt-3 text-lg font-semibold">
+              High-value AI adoption can move forward, but only with explicit conditions and defensible review notes.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              The sample tenant shows a customer-facing AI workflow under conditional approval because retention, logging, and buyer-safe controls still need visible follow-up.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              'Risk tier, ownership, and review status are immediately visible.',
+              'Policy links and blockers make approvals board-safe and buyer-safe.',
+              'Open AI work feeds findings and Pulse instead of sitting in a silo.'
+            ].map((item) => (
+              <div key={item} className="rounded-md border border-border bg-background/60 p-3 text-sm text-muted-foreground">
+                {item}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <KpiCard
@@ -100,7 +125,7 @@ export function AIGovernanceDashboardPanel({
         />
       </div>
 
-      <Card>
+      <Card id="guided-ai-governance-workflows">
         <CardHeader>
           <CardTitle>Guided AI Governance Workflows</CardTitle>
         </CardHeader>
@@ -176,7 +201,7 @@ export function AIGovernanceDashboardPanel({
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No AI decisions have been recorded yet.</p>
+              <p className="text-sm text-muted-foreground">Register the first AI use case or vendor review to create a durable decision trail here.</p>
             )}
           </CardContent>
         </Card>
@@ -216,7 +241,7 @@ export function AIGovernanceDashboardPanel({
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No AI-linked risk register items are open yet.</p>
+              <p className="text-sm text-muted-foreground">Open AI findings and Pulse-linked risks will appear here once decisions create follow-up work.</p>
             )}
             <Button asChild size="sm" variant="outline">
               <Link href="/app/pulse/risks">Open Pulse Risk Register</Link>

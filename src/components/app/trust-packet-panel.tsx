@@ -76,8 +76,8 @@ export function TrustPacketPanel({
   const [packetName, setPacketName] = useState('Standard Trust Packet');
   const [packetInboxId, setPacketInboxId] = useState(inbox[0]?.id ?? '');
   const [packetShareMode, setPacketShareMode] = useState<'INTERNAL_REVIEW' | 'EXTERNAL_SHARE'>('INTERNAL_REVIEW');
-  const [packetContactName, setPacketContactName] = useState('Security Lead');
-  const [packetContactEmail, setPacketContactEmail] = useState('security@example.com');
+  const [packetContactName, setPacketContactName] = useState('Jordan Lee');
+  const [packetContactEmail, setPacketContactEmail] = useState('jordan.lee@astera-demo.example');
   const [busy, setBusy] = useState<'doc' | 'packet' | 'export' | 'review' | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -195,8 +195,22 @@ export function TrustPacketPanel({
         </p>
       </PageHeader>
 
+      <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
+        <CardContent className="grid gap-3 p-5 md:grid-cols-3">
+          {[
+            'Buyer-safe trust materials stay separate from internal notes and unsupported commitments.',
+            'Evidence maps make strong support, weak support, and missing support visible before sharing.',
+            'Trust packets and rooms reuse approved answers instead of recreating diligence from scratch.'
+          ].map((item) => (
+            <div key={item} className="rounded-md border border-border bg-background/60 p-3 text-sm text-muted-foreground">
+              {item}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
+        <Card id="guided-trustops-workflows">
           <CardHeader>
             <CardTitle>Guided TrustOps Workflows</CardTitle>
           </CardHeader>
@@ -278,7 +292,7 @@ export function TrustPacketPanel({
 
       <Card>
         <CardHeader>
-          <CardTitle>Security Docs Vault</CardTitle>
+          <CardTitle>Trust Materials Library</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 md:grid-cols-[220px_280px_1fr_auto]">
           <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Category" />
@@ -304,7 +318,7 @@ export function TrustPacketPanel({
           </CardHeader>
           <CardContent className="space-y-2">
             {evidenceMaps.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No evidence maps generated yet.</p>
+            <p className="text-sm text-muted-foreground">Evidence maps appear here once a questionnaire is mapped into packet-ready support clusters.</p>
             ) : (
               evidenceMaps.map((map) => (
                 <div key={map.id} className="rounded-md border border-border p-3">
@@ -334,7 +348,7 @@ export function TrustPacketPanel({
           </CardHeader>
           <CardContent className="space-y-2">
             {docs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No trust docs registered yet.</p>
+            <p className="text-sm text-muted-foreground">Approved trust materials registered from policies and evidence will appear here for packet reuse.</p>
             ) : (
               docs.map((doc) => (
                 <div key={doc.id} className="rounded-md border border-border p-3">
@@ -355,7 +369,7 @@ export function TrustPacketPanel({
         </CardHeader>
         <CardContent className="space-y-2">
           {packets.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No trust packets assembled yet.</p>
+            <p className="text-sm text-muted-foreground">Build the first buyer diligence packet to show external-safe materials, share mode, and reviewer state here.</p>
           ) : (
             packets.map((packet) => (
               <div key={packet.id} className="rounded-md border border-border p-3">
@@ -411,7 +425,7 @@ export function TrustPacketPanel({
         </CardHeader>
         <CardContent className="space-y-2">
           {inbox.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No trust intake items yet.</p>
+            <p className="text-sm text-muted-foreground">Buyer requests waiting for trust work will appear here with their current delivery status.</p>
           ) : (
             inbox.map((item) => (
               <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3">

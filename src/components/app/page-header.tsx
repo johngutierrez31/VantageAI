@@ -61,9 +61,7 @@ export function PageHeader({
           {volumeLabel ? <p className="academia-volume">{volumeLabel}</p> : null}
           <h1 className="text-3xl font-medium tracking-tight text-foreground md:text-4xl">{title}</h1>
           {description ? (
-            <p
-              className={`max-w-3xl text-base text-muted-foreground ${showDropCap ? 'academia-drop-cap' : 'italic'}`}
-            >
+            <p className={`max-w-3xl text-base text-muted-foreground ${showDropCap ? 'academia-drop-cap' : ''}`}>
               {description}
             </p>
           ) : null}

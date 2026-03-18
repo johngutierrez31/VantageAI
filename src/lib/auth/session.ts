@@ -32,13 +32,16 @@ export class SessionContextError extends Error {
 }
 
 async function buildDemoSessionContext(): Promise<SessionContext> {
-  const email = getDemoUserEmail();
+  const configuredEmail = getDemoUserEmail();
+  const fallbackEmail = 'alex.mercer@astera-demo.example';
+  const candidateEmails = Array.from(new Set([configuredEmail, fallbackEmail].filter(Boolean)));
   const preferredTenantSlug = getDemoTenantSlug();
 
-  const user = await prisma.user.findUnique({
-    where: { email },
+  const demoUsers = await prisma.user.findMany({
+    where: { email: { in: candidateEmails } },
     select: {
       id: true,
+      email: true,
       memberships: {
         where: { status: MembershipStatus.ACTIVE },
         include: {
@@ -50,13 +53,17 @@ async function buildDemoSessionContext(): Promise<SessionContext> {
       }
     }
   });
+  const user =
+    candidateEmails
+      .map((email) => demoUsers.find((entry) => entry.email === email))
+      .find(Boolean) ?? null;
 
   if (!user) {
-    throw new Error(`Demo mode is enabled, but user "${email}" was not found.`);
+    throw new Error(`Demo mode is enabled, but no configured demo user was found for ${candidateEmails.join(', ')}.`);
   }
 
   if (!user.memberships.length) {
-    throw new Error(`Demo mode user "${email}" does not have an active tenant membership.`);
+    throw new Error(`Demo mode user "${user.email}" does not have an active tenant membership.`);
   }
 
   const activeMembership = preferredTenantSlug
@@ -65,7 +72,7 @@ async function buildDemoSessionContext(): Promise<SessionContext> {
 
   if (!activeMembership) {
     throw new Error(
-      `Demo mode tenant slug "${preferredTenantSlug}" was not found for user "${email}".`
+      `Demo mode tenant slug "${preferredTenantSlug}" was not found for user "${user.email}".`
     );
   }
 

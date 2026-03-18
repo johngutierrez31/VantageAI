@@ -4,10 +4,13 @@ import { PageHeader } from '@/components/app/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DemoPathCard } from '@/components/app/demo-path-card';
+import { TrialOnboardingCard } from '@/components/app/trial-onboarding-card';
 import { getTenantAdoptionModeViewModel } from '@/lib/adoption/adoption-mode';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { getTenantEntitlements } from '@/lib/billing/entitlements';
 import { getTenantDemoPathViewModel } from '@/lib/demo/demo-path';
+import { getTenantTrialOnboarding } from '@/lib/trial/onboarding';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 import {
   MODULE_CATALOG,
   formatPlanLabel,
@@ -160,67 +163,107 @@ const guidedSkills = [
 
 export default async function ToolsHubPage() {
   const session = await getPageSessionContext();
-  const [entitlements, demoPath, adoptionMode] = await Promise.all([
+  const [entitlements, demoPath, adoptionMode, workspace, trialOnboarding] = await Promise.all([
     getTenantEntitlements(session.tenantId),
     getTenantDemoPathViewModel(session.tenantId),
-    getTenantAdoptionModeViewModel(session.tenantId)
+    getTenantAdoptionModeViewModel(session.tenantId),
+    getTenantWorkspaceContext(session.tenantId),
+    getTenantTrialOnboarding(session.tenantId)
   ]);
+
+  const visibleSupportingTools = workspace.isTrial
+    ? supportingTools.filter((tool) => !['adoption', 'connectors'].includes(tool.id))
+    : supportingTools;
+  const visibleWorkflowCards = workspace.isTrial
+    ? workflowCards.filter((workflow) => !['Integration Pack Flow', 'Adoption Mode Flow'].includes(workflow.title))
+    : workflowCards;
+  const visibleGuidedSkills = workspace.isTrial
+    ? guidedSkills.filter(
+        ([title, , href]) =>
+          !href.startsWith('/app/adoption') &&
+          ![
+            'Configure Connectors',
+            'Send to Slack',
+            'Sync to Jira',
+            'Publish to Docs',
+            'Review Connector Health'
+          ].includes(title)
+      )
+    : guidedSkills;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Tools Hub"
-        helpKey="toolsHub"
-        description="Launch the VantageAI operating layer by job to be done: TrustOps for buyer diligence, Pulse for executive cadence, AI Governance for governed adoption, Response Ops for incident execution, and Adoption Mode for working with your existing stack."
+        helpKey={workspace.isTrial ? undefined : 'toolsHub'}
+        description={
+          workspace.isTrial
+            ? 'Open the shortest path into the first real workflows that make this blank workspace useful: TrustOps, Pulse, AI Governance, Response Ops, evidence, and policy work.'
+            : 'Launch the VantageAI operating layer by job to be done: TrustOps for buyer diligence, Pulse for executive cadence, AI Governance for governed adoption, Response Ops for incident execution, and Adoption Mode for working with your existing stack.'
+        }
         primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
         secondaryActions={[
-          { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
+          ...(!workspace.isTrial ? [{ label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' as const }] : []),
           { label: 'Pulse', href: '/app/pulse', variant: 'outline' },
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
           { label: 'Response Ops', href: '/app/response-ops', variant: 'outline' },
           { label: 'TrustOps', href: '/app/trust', variant: 'outline' },
-          { label: 'Connectors', href: '/app/settings/connectors', variant: 'outline' },
-          { label: 'Billing & Packaging', href: '/app/settings/billing', variant: 'outline' }
+          ...(!workspace.isTrial ? [{ label: 'Connectors', href: '/app/settings/connectors', variant: 'outline' as const }] : []),
+          ...(!workspace.isTrial ? [{ label: 'Billing & Packaging', href: '/app/settings/billing', variant: 'outline' as const }] : [])
         ]}
       >
         <p className="text-xs text-muted-foreground">
-          Current plan: {formatPlanLabel(entitlements.plan)} | Use this page to open the right module, show where to start, and explain how Vantage works alongside the rest of the stack.
+          {workspace.isTrial
+            ? `14-day full-access trial${workspace.trialDaysRemaining !== null ? ` • ${workspace.trialDaysRemaining} day${workspace.trialDaysRemaining === 1 ? '' : 's'} remaining` : ''} | Use this page to open the right workflow and build the first durable records in your blank workspace.`
+            : `Current plan: ${formatPlanLabel(entitlements.plan)} | Use this page to open the right module, show where to start, and explain how Vantage works alongside the rest of the stack.`}
         </p>
       </PageHeader>
 
-      <DemoPathCard demoPath={demoPath} compact />
+      {workspace.isTrial ? (
+        <TrialOnboardingCard
+          trialDaysRemaining={workspace.trialDaysRemaining}
+          trialEndsAt={workspace.trialEndsAt?.toISOString() ?? null}
+          completedCount={trialOnboarding.completedCount}
+          totalCount={trialOnboarding.totalCount}
+          items={trialOnboarding.items}
+        />
+      ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Operating Layer / Adoption Story</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-md border border-border p-3">
-            <p className="text-sm font-semibold">Start with the urgent job</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Questionnaire response, board brief, AI review, incident, or stack-fit conversation.
-            </p>
-          </div>
-          <div className="rounded-md border border-border p-3">
-            <p className="text-sm font-semibold">Import what already exists</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {adoptionMode.metrics.importCount} adoption import{adoptionMode.metrics.importCount === 1 ? '' : 's'} recorded so far.
-            </p>
-          </div>
-          <div className="rounded-md border border-border p-3">
-            <p className="text-sm font-semibold">Keep the existing stack</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {adoptionMode.metrics.connectorCount} connector{adoptionMode.metrics.connectorCount === 1 ? '' : 's'} can keep Slack, Jira, and publishing in the loop.
-            </p>
-          </div>
-          <div className="rounded-md border border-border p-3">
-            <p className="text-sm font-semibold">Show the carry-over</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Move trust work into evidence, findings, risks, roadmap, board reporting, and response follow-up.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {workspace.isDemo ? <DemoPathCard demoPath={demoPath} compact /> : null}
+
+      {!workspace.isTrial ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Operating Layer / Adoption Story</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-md border border-border p-3">
+              <p className="text-sm font-semibold">Start with the urgent job</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Questionnaire response, board brief, AI review, incident, or stack-fit conversation.
+              </p>
+            </div>
+            <div className="rounded-md border border-border p-3">
+              <p className="text-sm font-semibold">Import what already exists</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {adoptionMode.metrics.importCount} adoption import{adoptionMode.metrics.importCount === 1 ? '' : 's'} recorded so far.
+              </p>
+            </div>
+            <div className="rounded-md border border-border p-3">
+              <p className="text-sm font-semibold">Keep the existing stack</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {adoptionMode.metrics.connectorCount} connector{adoptionMode.metrics.connectorCount === 1 ? '' : 's'} can keep Slack, Jira, and publishing in the loop.
+              </p>
+            </div>
+            <div className="rounded-md border border-border p-3">
+              <p className="text-sm font-semibold">Show the carry-over</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Move trust work into evidence, findings, risks, roadmap, board reporting, and response follow-up.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -231,7 +274,10 @@ export default async function ToolsHubPage() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {MODULE_CATALOG.map((module) => {
-            const commercialState = getModuleCommercialState(entitlements.plan, module);
+            const commercialState = getModuleCommercialState(entitlements.plan, module, {
+              workspaceMode: workspace.workspaceMode,
+              isTrialActive: workspace.isTrialActive
+            });
             return (
               <div key={module.id} className="rounded-md border border-border p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -267,7 +313,7 @@ export default async function ToolsHubPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {supportingTools.map((tool) => (
+        {visibleSupportingTools.map((tool) => (
           <Card key={tool.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -290,7 +336,7 @@ export default async function ToolsHubPage() {
           <CardTitle>Integrated Workflows</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
-          {workflowCards.map((workflow) => (
+          {visibleWorkflowCards.map((workflow) => (
             <div key={workflow.title} className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">{workflow.title}</p>
               <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
@@ -308,7 +354,7 @@ export default async function ToolsHubPage() {
           <CardTitle>Guided Workflows</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {guidedSkills.map(([title, description, href]) => (
+          {visibleGuidedSkills.map(([title, description, href]) => (
             <div key={title} className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">{title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{description}</p>
