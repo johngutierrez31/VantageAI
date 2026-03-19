@@ -86,7 +86,9 @@ export function EvidenceRequestsPanel({ assessmentId, requests: initial }: Props
 
         <div className="space-y-2">
           {requests.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No evidence requests yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Evidence Requests is for chasing missing artifacts with ownership and due dates. Create one request to produce a durable collection record that can feed assessments, TrustOps review, and future packet refreshes.
+            </p>
           ) : (
             requests.map((request) => (
               <div key={request.id} className="rounded-md border border-border p-3">

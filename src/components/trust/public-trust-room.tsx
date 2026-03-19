@@ -62,7 +62,7 @@ export function PublicTrustRoomViewer({
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-white/95 p-8 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">VantageAI Trust Room</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">VantageCISO Trust Room</p>
           {demoMode ? (
             <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">
               Demo Workspace

@@ -85,14 +85,24 @@ export function BillingPanel() {
     window.location.href = json.url;
   }
 
+  const isDemoWorkspace = workspace?.workspaceMode === 'DEMO';
+  const isTrialWorkspace = workspace?.isTrialActive;
+
   return (
     <div className="space-y-2">
       <p className="text-sm font-semibold">
-        {workspace?.isTrialActive
+        {isDemoWorkspace
+          ? 'Demo-unlocked workspace'
+          : isTrialWorkspace
           ? `14-day full-access trial (${workspace.trialDaysRemaining ?? 0} day${workspace?.trialDaysRemaining === 1 ? '' : 's'} remaining)`
           : `Plan: ${entitlements ? formatPlanLabel(entitlements.plan) : 'Free'} (${entitlements?.status ?? 'active'})`}
       </p>
-      {workspace?.isTrialActive ? (
+      {isDemoWorkspace ? (
+        <p className="text-sm text-muted-foreground">
+          This demo workspace keeps premium modules, AI workflows, questionnaire imports, and PDF/HTML export paths enabled for evaluation.
+          Billing checkout and packaging controls are hidden here so the product story stays internally consistent.
+        </p>
+      ) : isTrialWorkspace ? (
         <p className="text-sm text-muted-foreground">
           All suite modules, AI workflows, questionnaire imports, and export paths are available during the trial.
           {workspace.trialEndsAt ? ` Trial ends ${new Date(workspace.trialEndsAt).toLocaleDateString()}.` : ''}
@@ -124,7 +134,7 @@ export function BillingPanel() {
           })}
         </div>
       ) : null}
-      {workspace?.isTrialActive ? null : (
+      {isDemoWorkspace || isTrialWorkspace ? null : (
         <div className="flex flex-wrap items-center gap-2">
           <Select
             value={plan}

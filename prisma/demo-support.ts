@@ -8,10 +8,10 @@ import {
 
 export const DEMO_TENANT_ID = 'tenant_demo';
 export const DEMO_TENANT_SLUG = 'demo-tenant';
-export const DEMO_TENANT_NAME = 'Astera Manufacturing Demo Workspace';
+export const DEMO_TENANT_NAME = 'Astera Cloud Security';
 export const DEMO_USER_ID = 'user_demo_admin';
-export const DEMO_USER_EMAIL = 'alex.mercer@astera-demo.example';
-export const DEMO_USER_NAME = 'Alex Mercer';
+export const DEMO_USER_EMAIL = 'morgan.hale@astera.example';
+export const DEMO_USER_NAME = 'Morgan Hale';
 export const DEMO_EMAIL_VERIFIED_AT = new Date('2026-01-01T00:00:00.000Z');
 export const DEMO_REPORTING_PERIOD = '2026 Q1';
 
@@ -24,13 +24,13 @@ export const DEMO_USERS = [
   },
   {
     id: 'user_demo_trust_reviewer',
-    email: 'jordan.lee@astera-demo.example',
+    email: 'jordan.lee@astera.example',
     name: 'Jordan Lee',
     role: TenantRole.ADMIN
   },
   {
     id: 'user_demo_ops_lead',
-    email: 'samira.khan@astera-demo.example',
+    email: 'samira.khan@astera.example',
     name: 'Samira Khan',
     role: TenantRole.MEMBER
   }
@@ -69,8 +69,11 @@ export const DEMO_IDS = {
   trustFinding: 'finding_demo_trust_residency_gap',
   aiVendorReview: 'ai_vendor_review_demo_answerflow',
   aiUseCase: 'ai_use_case_demo_questionnaire_copilot',
+  aiUseCaseReview: 'ai_use_case_demo_customer_call_summary',
   aiTask: 'task_demo_ai_retention_followup',
+  aiTaskReview: 'task_demo_ai_customer_call_review',
   aiFinding: 'finding_demo_ai_governance_gap',
+  aiFindingReview: 'finding_demo_ai_customer_call_gap',
   activeIncident: 'incident_demo_answerflow_notice',
   activeIncidentPack: 'incident_pack_demo_answerflow',
   activeIncidentTaskTriage: 'task_demo_incident_vendor_triage',
@@ -83,9 +86,12 @@ export const DEMO_IDS = {
   afterActionFinding: 'finding_demo_after_action_gap',
   tabletop: 'tabletop_demo_ransomware_q2',
   tabletopTask: 'task_demo_tabletop_followup',
+  tabletopFinding: 'finding_demo_tabletop_ransomware_gap',
   riskTrust: 'risk_demo_trust_residency',
   riskAi: 'risk_demo_ai_vendor',
+  riskAiReview: 'risk_demo_ai_customer_call_summary',
   riskIncident: 'risk_demo_incident_vendor',
+  riskTabletop: 'risk_demo_tabletop_ransomware_comms',
   pulseSnapshot: 'pulse_snapshot_demo_2026_q1',
   pulseCategoryAssessment: 'pulse_category_demo_assessment',
   pulseCategoryFindings: 'pulse_category_demo_findings',

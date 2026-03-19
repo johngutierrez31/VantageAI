@@ -21,7 +21,7 @@ const displayFont = Cinzel({
 });
 
 export const metadata = {
-  title: 'VantageAI',
+  title: 'VantageCISO',
   description: 'Security operating system for buyer diligence, executive posture, AI risk, and response workflows.'
 };
 

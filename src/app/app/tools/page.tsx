@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Layers3, Wrench } from 'lucide-react';
 import { PageHeader } from '@/components/app/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import {
   formatPlanLabel,
   getModuleCommercialState
 } from '@/lib/product/module-catalog';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 
 const supportingTools = [
   {
@@ -130,35 +131,35 @@ const guidedSkills = [
   ['Plan Stack Import', 'Bring in findings, risks, approved answers, or incidents without overclaiming unsupported imports.', '/app/adoption'],
   ['Explain Value Path', 'Show how trust, risk, roadmap, board reporting, AI review, and incident carry-over connect.', '/app/adoption'],
   ['Recommend Next Workflow', 'Use the operating-layer framing to move a new operator into the strongest starting workflow.', '/app/adoption'],
-  ['Draft Questionnaire Answers', 'Create evidence-backed answer drafts with confidence and review routing.', '/app/questionnaires'],
-  ['Build Evidence Map', 'Persist a buyer-ready evidence map with support strength, next actions, and related findings.', '/app/questionnaires'],
+  ['Draft Questionnaire Answers', 'Create evidence-backed answer drafts with confidence and review routing.', workflowRoutes.questionnairesIntake()],
+  ['Build Evidence Map', 'Persist a buyer-ready evidence map with support strength, next actions, and related findings.', workflowRoutes.questionnairesEvidenceMapEntry()],
   ['Promote Approved Answers to Library', 'Curate reusable buyer-safe answers, ownership, and reuse quality from approved drafts.', '/app/trust/answer-library'],
   ['Review TrustOps Queue', 'Assign reviewers, set due dates, and control SLA risk across questionnaires, evidence maps, and trust packets.', '/app/trust/reviews'],
-  ['Assemble Buyer Trust Packet', 'Package approved responses, evidence-map summaries, policy artifacts, and approved contacts into a buyer-ready export.', '/app/trust'],
-  ['Publish Trust Room', 'Turn an approved trust packet into a buyer-facing trust room with protected-link or request-gated access.', '/app/trust/rooms'],
-  ['Prepare Buyer Packet', 'Open TrustOps packet assembly and package only the approved external-safe materials.', '/app/trust'],
-  ['Review Access Requests', 'Assign an internal owner, approve or deny buyer access requests, and issue gated room links.', '/app/trust/rooms'],
-  ['Summarize Buyer Engagement', 'Review buyer room views, downloads, request counts, and the sections buyers actually opened.', '/app/trust/rooms'],
+  ['Assemble Buyer Trust Packet', 'Package approved responses, evidence-map summaries, policy artifacts, and approved contacts into a buyer-ready export.', workflowRoutes.trustPacketAssembly()],
+  ['Publish Trust Room', 'Turn an approved trust packet into a buyer-facing trust room with protected-link or request-gated access.', workflowRoutes.trustRoomPublish()],
+  ['Prepare Buyer Packet', 'Open TrustOps packet assembly and package only the approved external-safe materials.', workflowRoutes.trustPacketAssembly()],
+  ['Review Access Requests', 'Assign an internal owner, approve or deny buyer access requests, and issue gated room links.', workflowRoutes.trustRoomAccessRequests()],
+  ['Summarize Buyer Engagement', 'Review buyer room views, downloads, request counts, and the sections buyers actually opened.', workflowRoutes.trustRoomEngagement()],
   ['Configure Connectors', 'Set up Slack, Jira, Confluence, and outbound hooks with tenant-scoped settings and health checks.', '/app/settings/connectors'],
   ['Send to Slack', 'Push a high-signal buyer, incident, or leadership update into Slack with a deep link back into Vantage.', '/app/settings/connectors'],
   ['Sync to Jira', 'Create or refresh Jira issues for risks, findings, incident follow-up tasks, and roadmap items.', '/app/settings/connectors'],
   ['Publish to Docs', 'Publish a board brief, trust packet summary, after-action report, or quarterly review into Confluence.', '/app/settings/connectors'],
   ['Review Connector Health', 'See configured connectors, last sync/publish, linked objects, and recent errors without leaving Vantage.', '/app/settings/connectors'],
-  ['Generate Executive Scorecard', 'Persist a Pulse snapshot with explainable posture categories, deltas, and measured inputs.', '/app/pulse'],
+  ['Generate Executive Scorecard', 'Persist a Pulse snapshot with explainable posture categories, deltas, and measured inputs.', workflowRoutes.pulseScorecard()],
   ['Build Risk Register', 'Normalize and maintain executive risks from findings, evidence gaps, overdue work, and manual input.', '/app/pulse/risks'],
-  ['Generate 30/60/90 Roadmap', 'Turn current risk pressure into a reviewed remediation plan with owners, due dates, and expected impact.', '/app/pulse/roadmap'],
-  ['Draft Board Brief', 'Translate posture and remediation trends into a persisted executive-ready brief.', '/app/pulse'],
-  ['Prepare Quarterly Review', 'Assemble the recurring leadership review package from the current scorecard, roadmap, and board brief.', '/app/pulse'],
-  ['Register AI Use Case', 'Create a durable AI use case record with typed data classes, approval state, and Pulse hooks.', '/app/ai-governance/use-cases'],
-  ['Start AI Vendor Intake', 'Review vendor retention, training behavior, logging support, and approval conditions.', '/app/ai-governance/vendors'],
-  ['Map AI Policies', 'Surface matched policy templates, unmet requirements, and approval blockers.', '/app/ai-governance/use-cases'],
-  ['Review AI Governance Queue', 'Assign reviewers, set due dates, and work overdue AI decisions.', '/app/ai-governance/reviews'],
+  ['Generate 30/60/90 Roadmap', 'Turn current risk pressure into a reviewed remediation plan with owners, due dates, and expected impact.', workflowRoutes.pulseRoadmap()],
+  ['Draft Board Brief', 'Translate posture and remediation trends into a persisted executive-ready brief.', workflowRoutes.pulseBoardBrief()],
+  ['Prepare Quarterly Review', 'Assemble the recurring leadership review package from the current scorecard, roadmap, and board brief.', workflowRoutes.pulseQuarterlyReview()],
+  ['Register AI Use Case', 'Create a durable AI use case record with typed data classes, approval state, and Pulse hooks.', workflowRoutes.aiUseCaseCreate()],
+  ['Start AI Vendor Intake', 'Review vendor retention, training behavior, logging support, and approval conditions.', workflowRoutes.aiVendorIntakeCreate()],
+  ['Map AI Policies', 'Surface matched policy templates, unmet requirements, and approval blockers.', workflowRoutes.aiUseCaseCreate('policy-mapping')],
+  ['Review AI Governance Queue', 'Assign reviewers, set due dates, and work overdue AI decisions.', workflowRoutes.aiReviewQueue()],
   ['Generate AI Governance Summary', 'Open the operator dashboard for AI adoption, open reviews, and Pulse-linked risk pressure.', '/app/ai-governance'],
-  ['Start Incident Triage', 'Create a durable incident record, first-hour checklist, decision log scaffold, and incident-linked runbook pack.', '/app/response-ops'],
-  ['Launch Runbook Pack', 'Generate phase-based incident tasks for triage, containment, communications, recovery, and follow-up.', '/app/response-ops'],
-  ['Update Incident Timeline', 'Capture durable incident events and decision points without mixing internal-only notes into shareable outputs.', '/app/response-ops'],
-  ['Draft After-Action Report', 'Build a review-gated incident report from the incident record, timeline, tasks, findings, and risks.', '/app/response-ops'],
-  ['Prepare Tabletop Exercise', 'Create a lightweight exercise with scenario prompts, gap capture, and follow-up generation.', '/app/response-ops']
+  ['Start Incident Triage', 'Create a durable incident record, first-hour checklist, decision log scaffold, and incident-linked runbook pack.', workflowRoutes.responseIncidentTriage()],
+  ['Launch Runbook Pack', 'Generate phase-based incident tasks for triage, containment, communications, recovery, and follow-up.', workflowRoutes.runbookLauncher()],
+  ['Update Incident Timeline', 'Capture durable incident events and decision points without mixing internal-only notes into shareable outputs.', workflowRoutes.responseIncidentTimeline()],
+  ['Draft After-Action Report', 'Build a review-gated incident report from the incident record, timeline, tasks, findings, and risks.', workflowRoutes.responseAfterAction()],
+  ['Prepare Tabletop Exercise', 'Create a lightweight exercise with scenario prompts, gap capture, and follow-up generation.', workflowRoutes.responseTabletop()]
 ] as const;
 
 export default async function ToolsHubPage() {
@@ -199,10 +200,14 @@ export default async function ToolsHubPage() {
         description={
           workspace.isTrial
             ? 'Open the shortest path into the first real workflows that make this blank workspace useful: TrustOps, Pulse, AI Governance, Response Ops, evidence, and policy work.'
-            : 'Launch the VantageAI operating layer by job to be done: TrustOps for buyer diligence, Pulse for executive cadence, AI Governance for governed adoption, Response Ops for incident execution, and Adoption Mode for working with your existing stack.'
+            : 'Launch the VantageCISO operating layer by job to be done: TrustOps for buyer diligence, Pulse for executive cadence, AI Governance for governed adoption, Response Ops for incident execution, and Adoption Mode for working with your existing stack.'
         }
-        primaryAction={{ label: 'Open Command Center', href: '/app/command-center' }}
+        primaryAction={{
+          label: workspace.isDemo ? 'Start Demo Story' : 'Open Command Center',
+          href: workspace.isDemo ? '/app/trust/inbox' : '/app/command-center'
+        }}
         secondaryActions={[
+          ...(workspace.isDemo ? [{ label: 'Command Center', href: '/app/command-center', variant: 'outline' as const }] : []),
           ...(!workspace.isTrial ? [{ label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' as const }] : []),
           { label: 'Pulse', href: '/app/pulse', variant: 'outline' },
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
@@ -214,8 +219,10 @@ export default async function ToolsHubPage() {
       >
         <p className="text-xs text-muted-foreground">
           {workspace.isTrial
-            ? `14-day full-access trial${workspace.trialDaysRemaining !== null ? ` • ${workspace.trialDaysRemaining} day${workspace.trialDaysRemaining === 1 ? '' : 's'} remaining` : ''} | Use this page to open the right workflow and build the first durable records in your blank workspace.`
-            : `Current plan: ${formatPlanLabel(entitlements.plan)} | Use this page to open the right module, show where to start, and explain how Vantage works alongside the rest of the stack.`}
+            ? `14-day full-access trial${workspace.trialDaysRemaining !== null ? ` | ${workspace.trialDaysRemaining} day${workspace.trialDaysRemaining === 1 ? '' : 's'} remaining` : ''} | Use this page to open the right workflow and build the first durable records in your blank workspace.`
+            : workspace.isDemo
+              ? 'Demo-unlocked workspace | Premium modules, AI workflows, and export paths are visible for evaluation, so every launcher can open a real workflow instead of a gated dead end.'
+              : `Current plan: ${formatPlanLabel(entitlements.plan)} | Use this page to open the right module, show where to start, and explain how Vantage works alongside the rest of the stack.`}
         </p>
       </PageHeader>
 
@@ -368,4 +375,5 @@ export default async function ToolsHubPage() {
     </div>
   );
 }
+
 

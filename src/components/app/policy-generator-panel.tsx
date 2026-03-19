@@ -92,10 +92,14 @@ function openPrintWindow(htmlContent: string) {
   return true;
 }
 export function PolicyGeneratorPanel({
+  canExportPdf = true,
+  isDemo = false,
   templates,
   categories,
   frameworks
 }: {
+  canExportPdf?: boolean;
+  isDemo?: boolean;
   templates: PolicyTemplateItem[];
   categories: string[];
   frameworks: string[];
@@ -110,12 +114,16 @@ export function PolicyGeneratorPanel({
     json: false
   });
   const [pdfEnabled, setPdfEnabled] = useState(false);
-  const [companyName, setCompanyName] = useState('');
-  const [industry, setIndustry] = useState('Technology');
-  const [organizationSize, setOrganizationSize] = useState('50-500');
-  const [responsibleOfficer, setResponsibleOfficer] = useState('Chief Information Security Officer (CISO)');
-  const [responsibleDepartment, setResponsibleDepartment] = useState('Information Security');
-  const [contactEmail, setContactEmail] = useState('');
+  const [companyName, setCompanyName] = useState(isDemo ? 'Astera Cloud Security' : '');
+  const [industry, setIndustry] = useState(isDemo ? 'B2B SaaS' : 'Technology');
+  const [organizationSize, setOrganizationSize] = useState(isDemo ? '200-500' : '50-500');
+  const [responsibleOfficer, setResponsibleOfficer] = useState(
+    isDemo ? 'Morgan Hale, Chief Information Security Officer' : 'Chief Information Security Officer (CISO)'
+  );
+  const [responsibleDepartment, setResponsibleDepartment] = useState(
+    isDemo ? 'Security & Trust' : 'Information Security'
+  );
+  const [contactEmail, setContactEmail] = useState(isDemo ? 'security@astera.example' : '');
   const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().slice(0, 10));
   const [reviewSchedule, setReviewSchedule] = useState<(typeof reviewSchedules)[number]>('Annually');
   const [version, setVersion] = useState('1.0');
@@ -260,8 +268,22 @@ export function PolicyGeneratorPanel({
       <PageHeader
         title="Policies"
         helpKey="policies"
-        description="Generate customized policy packages using the vendored template library in this repository."
+        description="Generate polished policy packages from a curated template library, then export the versions you want to review, share, or print."
       />
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="grid gap-3 p-4 md:grid-cols-3">
+          <div className="rounded-md border border-border bg-background/80 p-3 text-sm text-muted-foreground">
+            Start with the policies you expect a buyer, auditor, or reviewer to ask for first.
+          </div>
+          <div className="rounded-md border border-border bg-background/80 p-3 text-sm text-muted-foreground">
+            Capture the organization profile once so every generated document reads like a finished workspace artifact.
+          </div>
+          <div className="rounded-md border border-border bg-background/80 p-3 text-sm text-muted-foreground">
+            Export Markdown, HTML, JSON, or printable PDF output without leaving the in-app workflow.
+          </div>
+        </CardContent>
+      </Card>
 
       <Card id="policy-generator-form">
         <CardHeader>
@@ -309,7 +331,7 @@ export function PolicyGeneratorPanel({
           <Textarea
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
-            placeholder="Optional implementation notes to append to generated policies."
+            placeholder="Optional review notes, approval constraints, or customer-specific language to append to generated policies."
             className="md:col-span-2"
           />
         </CardContent>
@@ -340,7 +362,11 @@ export function PolicyGeneratorPanel({
           </div>
 
           <div className="grid gap-2 md:grid-cols-[1fr_220px_220px]">
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search templates..." />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search templates, categories, or sources"
+            />
             <Select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
               <option value="all">All categories</option>
               {categories.map((category) => (
@@ -376,10 +402,12 @@ export function PolicyGeneratorPanel({
                   <div className="space-y-1">
                     <p className="text-sm font-semibold">{template.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {template.source} | {template.category} | {template.type}
+                      {template.category} | {template.source} | {template.type}
                       {template.wordCount > 0 ? ` | ${template.wordCount.toLocaleString()} words` : ''}
                     </p>
-                    <p className="text-xs text-muted-foreground">{template.frameworks.join(', ') || 'No frameworks listed'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {template.frameworks.length ? `Frameworks: ${template.frameworks.join(', ')}` : 'Frameworks: none listed'}
+                    </p>
                   </div>
                 </label>
               );
@@ -410,12 +438,21 @@ export function PolicyGeneratorPanel({
               JSON (.json)
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={pdfEnabled} onChange={(event) => setPdfEnabled(event.target.checked)} />
+              <input
+                type="checkbox"
+                checked={pdfEnabled}
+                onChange={(event) => setPdfEnabled(event.target.checked)}
+                disabled={!canExportPdf}
+              />
               PDF (.pdf via Print dialog)
             </label>
           </div>
           <p className="text-xs text-muted-foreground">
-            PDF export opens your browser print dialog from generated HTML. DOCX remains in vendored skill scripts.
+            {canExportPdf
+              ? isDemo
+                ? 'Demo workspace: PDF export is enabled through the browser print dialog from generated HTML output.'
+                : 'PDF export opens your browser print dialog from generated HTML output.'
+              : 'PDF export is not enabled for this workspace. Generate HTML instead if you need a printable artifact.'}
           </p>
           <Button onClick={generatePolicies} disabled={busy}>
             {busy ? 'Generating...' : 'Generate Policy Documents'}

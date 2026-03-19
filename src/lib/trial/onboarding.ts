@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/prisma';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 
 export type TrialChecklistItem = {
   id: string;
@@ -27,7 +28,7 @@ export async function getTenantTrialOnboarding(tenantId: string) {
       id: 'trustops',
       title: 'Answer or import your first questionnaire',
       description: 'Start the buyer diligence workflow and turn a live questionnaire into approved answers, evidence links, and next actions.',
-      href: '/app/questionnaires',
+      href: workflowRoutes.questionnairesIntake(),
       actionLabel: 'Open Questionnaires',
       completed: questionnaireCount > 0,
       outputLabel: 'A tenant-scoped questionnaire record with reviewable answer work.'
@@ -36,7 +37,7 @@ export async function getTenantTrialOnboarding(tenantId: string) {
       id: 'pulse',
       title: 'Generate your first Pulse snapshot',
       description: 'Create the executive scorecard that turns current trust, finding, AI, and incident signals into one posture view.',
-      href: '/app/pulse',
+      href: workflowRoutes.pulseScorecard(),
       actionLabel: 'Open Pulse',
       completed: pulseSnapshotCount > 0,
       outputLabel: 'A persisted posture snapshot with linked risks and roadmap follow-up.'
@@ -45,7 +46,7 @@ export async function getTenantTrialOnboarding(tenantId: string) {
       id: 'ai-governance',
       title: 'Register your first AI use case',
       description: 'Review one AI workflow with policy fit, data classes, approval conditions, and downstream risk visibility.',
-      href: '/app/ai-governance/use-cases',
+      href: workflowRoutes.aiUseCaseCreate(),
       actionLabel: 'Open AI Governance',
       completed: aiUseCaseCount > 0,
       outputLabel: 'A governed AI record with approval state and review ownership.'
@@ -54,7 +55,7 @@ export async function getTenantTrialOnboarding(tenantId: string) {
       id: 'response-ops',
       title: 'Start your first incident or tabletop workflow',
       description: 'Capture the first-hour response path or a tabletop exercise so follow-up work carries into findings and Pulse.',
-      href: '/app/response-ops',
+      href: workflowRoutes.responseIncidentTriage(),
       actionLabel: 'Open Response Ops',
       completed: incidentCount > 0 || tabletopCount > 0,
       outputLabel: 'A durable incident or tabletop record with owned response follow-up.'

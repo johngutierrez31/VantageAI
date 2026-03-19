@@ -110,7 +110,9 @@ export function EvidenceVaultPanel() {
 
         <div className="space-y-2">
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No evidence items yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Evidence Vault is for storing reusable proof, not loose notes. Add one policy, control artifact, or review memo to create a durable evidence record that other workflows can cite and package safely.
+            </p>
           ) : (
             items.map((item) => (
               <div key={item.id} className="rounded-md border border-border p-3">

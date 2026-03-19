@@ -7,6 +7,7 @@ import { writeAuditLog } from '@/lib/audit';
 import { buildSafetySystemPrompt, redactSecrets } from '@/lib/ai/safety';
 import { searchEvidenceChunks } from '@/lib/evidence/search';
 import { requireAIAccess, requireCopilotQuota } from '@/lib/billing/entitlements';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 
 type CopilotMessage = {
   role: 'user' | 'assistant';
@@ -203,7 +204,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     id: 'command-center',
     label: 'Command Center',
     href: '/app/command-center',
-    reason: 'Review daily mission queue and trend-informed priorities.'
+    reason: 'Review the weekly execution queue and trend-informed priorities.'
   });
 
   if (/adoption|onboard|migration|existing stack|overlay|operating layer|import|rip and replace|fit with/.test(normalized)) {
@@ -219,7 +220,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'pulse',
       label: 'Pulse',
-      href: '/app/pulse',
+      href: workflowRoutes.pulseScorecard(),
       reason: 'Open executive scorecards, risk register, roadmap, board brief, and quarterly review workflows.'
     });
     add({
@@ -231,7 +232,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'roadmap',
       label: 'Pulse Roadmap',
-      href: '/app/pulse/roadmap',
+      href: workflowRoutes.pulseRoadmap(),
       reason: 'Translate risks and weak posture categories into a 30/60/90 plan.'
     });
   }
@@ -246,13 +247,13 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'ai-use-cases',
       label: 'AI Use Cases',
-      href: '/app/ai-governance/use-cases',
+      href: workflowRoutes.aiUseCaseCreate(),
       reason: 'Register or review AI workflows with data classes, conditions, and decision state.'
     });
     add({
       id: 'ai-vendors',
       label: 'AI Vendor Intake',
-      href: '/app/ai-governance/vendors',
+      href: workflowRoutes.aiVendorIntakeCreate(),
       reason: 'Review AI vendor retention, training behavior, logging, and DPA status.'
     });
     add({
@@ -283,7 +284,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'trustops',
       label: 'TrustOps',
-      href: '/app/trust',
+      href: workflowRoutes.trustPacketAssembly(),
       reason: 'Manage trust packets, evidence linking, and buyer-facing response workflows.'
     });
     add({
@@ -295,19 +296,19 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'buyer-requests',
       label: 'Access Requests',
-      href: '/app/trust/rooms',
+      href: workflowRoutes.trustRoomAccessRequests(),
       reason: 'Review buyer requests, assign an owner, and issue access when the room is ready to share.'
     });
     add({
       id: 'buyer-engagement',
       label: 'Buyer Engagement',
-      href: '/app/trust/rooms',
+      href: workflowRoutes.trustRoomEngagement(),
       reason: 'See which trust-room sections buyers viewed and whether they downloaded the packet.'
     });
     add({
       id: 'questionnaires',
       label: 'Questionnaires',
-      href: '/app/questionnaires',
+      href: workflowRoutes.questionnairesReviewEntry(),
       reason: 'Draft, review, and approve questionnaire responses with evidence citations.'
     });
     add({
@@ -328,7 +329,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'evidence-maps',
       label: 'Evidence Maps',
-      href: '/app/questionnaires',
+      href: workflowRoutes.questionnairesEvidenceMapEntry(),
       reason: 'Build or review persisted evidence maps with support strength and next actions.'
     });
   }
@@ -337,7 +338,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'board-brief',
       label: 'Board Brief',
-      href: '/app/pulse',
+      href: workflowRoutes.pulseBoardBrief(),
       reason: 'Draft and review a persisted executive brief with export controls.'
     });
   }
@@ -346,7 +347,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'quarterly-review',
       label: 'Quarterly Review',
-      href: '/app/pulse',
+      href: workflowRoutes.pulseQuarterlyReview(),
       reason: 'Prepare the recurring leadership review from the latest scorecard, roadmap, and board brief.'
     });
   }
@@ -370,13 +371,13 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'response-ops',
       label: 'Response Ops',
-      href: '/app/response-ops',
+      href: workflowRoutes.responseIncidentTriage(),
       reason: 'Open incident triage, runbook packs, after-action reporting, and tabletop workflows.'
     });
     add({
       id: 'incident-triage',
       label: 'Incident Triage',
-      href: '/app/response-ops',
+      href: workflowRoutes.responseIncidentTriage(),
       reason: 'Start the first-hour incident record, checklist, and decision trail.'
     });
     add({
@@ -391,7 +392,7 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
     add({
       id: 'tabletops',
       label: 'Tabletop Exercises',
-      href: '/app/response-ops',
+      href: workflowRoutes.responseTabletop(),
       reason: 'Prepare or complete a tabletop exercise and convert gaps into tasks, findings, and risks.'
     });
   }

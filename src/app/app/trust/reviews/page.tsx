@@ -1,5 +1,6 @@
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 import { listTenantReviewers } from '@/lib/trust/reviewers';
 import { TrustReviewQueuePanel } from '@/components/app/trust-review-queue-panel';
 
@@ -54,7 +55,7 @@ export default async function TrustReviewQueuePage() {
           assignedReviewerUserId: item.assignedReviewerUserId,
           assignedReviewerLabel: item.assignedReviewerUserId ? reviewerLabels.get(item.assignedReviewerUserId) ?? null : null,
           reviewDueAt: item.reviewDueAt?.toISOString() ?? null,
-          href: `/app/questionnaires/${item.id}`
+          href: workflowRoutes.questionnaireReview(item.id)
         })),
         ...evidenceMaps.map((item) => ({
           id: item.id,
@@ -74,7 +75,7 @@ export default async function TrustReviewQueuePage() {
           assignedReviewerUserId: item.assignedReviewerUserId,
           assignedReviewerLabel: item.assignedReviewerUserId ? reviewerLabels.get(item.assignedReviewerUserId) ?? null : null,
           reviewDueAt: item.reviewDueAt?.toISOString() ?? null,
-          href: `/app/trust`
+          href: workflowRoutes.trustPacketAssembly(item.id)
         }))
       ]}
       reviewers={reviewers.map((reviewer) => ({

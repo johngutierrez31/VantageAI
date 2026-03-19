@@ -3,7 +3,7 @@ export function isDemoModeEnabled() {
 }
 
 export function getDemoUserEmail() {
-  return process.env.DEMO_USER_EMAIL ?? 'alex.mercer@astera-demo.example';
+  return process.env.DEMO_USER_EMAIL ?? 'morgan.hale@astera.example';
 }
 
 export function getDemoTenantSlug() {

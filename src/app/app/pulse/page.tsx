@@ -4,9 +4,14 @@ import { PulseDashboardPanel } from '@/components/app/pulse-dashboard-panel';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { getTenantSecurityPulse } from '@/lib/intel/pulse';
 import { prisma } from '@/lib/db/prisma';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
-export default async function PulsePage() {
+export default async function PulsePage({
+  searchParams
+}: {
+  searchParams?: { workflow?: string };
+}) {
   const session = await getPageSessionContext();
   const [workspace, metrics, snapshots, roadmaps, boardBriefs, quarterlyReviews, risks] = await Promise.all([
     getTenantWorkspaceContext(session.tenantId),
@@ -107,7 +112,7 @@ export default async function PulsePage() {
           title="Generate your first Pulse snapshot"
           description="Pulse is where the suite becomes an executive operating cadence. Start with the scorecard, then let risks, roadmap items, and board-ready reporting accumulate from real workspace signals."
           actionLabel="Open Guided Pulse Workflows"
-          actionHref="/app/pulse#guided-pulse-workflows"
+          actionHref={workflowRoutes.pulseScorecard()}
           eyebrow="Pulse"
           supportingPoints={[
             'What it is for: executive posture, risks, roadmap, and board reporting.',
@@ -118,6 +123,14 @@ export default async function PulsePage() {
       ) : null}
 
       <PulseDashboardPanel
+        activeWorkflow={
+          searchParams?.workflow === 'scorecard' ||
+          searchParams?.workflow === 'roadmap' ||
+          searchParams?.workflow === 'board-brief' ||
+          searchParams?.workflow === 'quarterly-review'
+            ? searchParams.workflow
+            : null
+        }
         metrics={{
           currentPostureScore: metrics.currentPostureScore,
           postureDelta: metrics.postureDelta,

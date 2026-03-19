@@ -15,7 +15,15 @@ type ReportRow = {
   createdAt: string;
 };
 
-export function ReportsHub({ reports }: { reports: ReportRow[] }) {
+export function ReportsHub({
+  reports,
+  canExportPdf = true,
+  isDemo = false
+}: {
+  reports: ReportRow[];
+  canExportPdf?: boolean;
+  isDemo?: boolean;
+}) {
   const [busyKey, setBusyKey] = useState<string | null>(null);
 
   async function exportFile(reportId: string, format: 'pdf' | 'html' | 'markdown' | 'json', view: 'executive' | 'detailed') {
@@ -50,7 +58,15 @@ export function ReportsHub({ reports }: { reports: ReportRow[] }) {
         helpKey="reports"
         description="Generate executive and detailed outputs for stakeholders, customers, and audit trails."
         primaryAction={{ label: 'Go to Assessments', href: '/app/assessments' }}
-      />
+      >
+        <p className="text-xs text-muted-foreground">
+          {canExportPdf
+            ? isDemo
+              ? 'Demo workspace: PDF, HTML, Markdown, and JSON report exports are enabled for evaluation.'
+              : 'PDF, HTML, Markdown, and JSON exports follow the current workspace entitlements.'
+            : 'PDF export is not enabled for this workspace. HTML, Markdown, and JSON exports remain available.'}
+        </p>
+      </PageHeader>
 
       {reports.length === 0 ? (
         <EmptyState
@@ -83,7 +99,7 @@ export function ReportsHub({ reports }: { reports: ReportRow[] }) {
                     <Button
                       size="sm"
                       onClick={() => exportFile(report.id, 'pdf', 'executive')}
-                      disabled={busyKey === `${report.id}:pdf:executive`}
+                      disabled={!canExportPdf || busyKey === `${report.id}:pdf:executive`}
                     >
                       Executive PDF
                     </Button>
@@ -91,7 +107,7 @@ export function ReportsHub({ reports }: { reports: ReportRow[] }) {
                       size="sm"
                       variant="outline"
                       onClick={() => exportFile(report.id, 'pdf', 'detailed')}
-                      disabled={busyKey === `${report.id}:pdf:detailed`}
+                      disabled={!canExportPdf || busyKey === `${report.id}:pdf:detailed`}
                     >
                       Detailed PDF
                     </Button>

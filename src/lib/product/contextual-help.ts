@@ -40,7 +40,7 @@ export const CONTEXTUAL_HELP = {
       'Use Adoption Mode when the next conversation is about stack fit, migration friction, or imported work.',
       'Review the KPI cards first to identify overdue or high-pressure work.',
       'Use the operational layers to decide whether the work belongs in TrustOps, Pulse, AI Governance, or Response Ops.',
-      'Open the 7-day mission queue or a linked workflow to move from insight into action.'
+      'Open the 7-day weekly execution queue or a linked workflow to move from insight into action.'
     ],
     [
       'The top open work is obvious within one screen.',

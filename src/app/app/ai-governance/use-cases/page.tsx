@@ -18,7 +18,11 @@ function pickAiRelevantPolicies(
     .slice(0, 12);
 }
 
-export default async function AIUseCasesPage() {
+export default async function AIUseCasesPage({
+  searchParams
+}: {
+  searchParams?: { workflow?: string };
+}) {
   const session = await getPageSessionContext();
   const [useCases, reviewers, vendorReviews, policyCatalog] = await Promise.all([
     prisma.aIUseCase.findMany({
@@ -42,6 +46,11 @@ export default async function AIUseCasesPage() {
 
   return (
     <AIUseCaseRegistryPanel
+      activeWorkflow={
+        searchParams?.workflow === 'create' || searchParams?.workflow === 'policy-mapping'
+          ? searchParams.workflow
+          : null
+      }
       useCases={useCases.map((useCase) => ({
         ...useCase,
         reviewDueAt: useCase.reviewDueAt?.toISOString() ?? null

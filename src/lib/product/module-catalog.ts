@@ -88,6 +88,15 @@ export function getModuleCommercialState(
     isTrialActive?: boolean;
   }
 ) {
+  if (options?.workspaceMode === 'DEMO') {
+    return {
+      included: true,
+      badge: 'Visible in demo',
+      helperText: `${module.premiumLabel}. Demo workspaces keep premium modules, AI workflows, and exports visible for evaluation without showing contradictory lockouts.`,
+      upgradeCtaLabel: 'Open module'
+    };
+  }
+
   if (options?.workspaceMode === 'TRIAL' && options.isTrialActive) {
     return {
       included: true,

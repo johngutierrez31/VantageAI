@@ -29,7 +29,7 @@ const curatedSkills = [
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'VantageAI Skills',
+  title: 'VantageCISO Skills',
   description: 'Skill inventory and recommendations for the Solo CISO operating system.'
 };
 
@@ -144,4 +144,3 @@ export default async function SkillsPage() {
     </div>
   );
 }
-

@@ -3,6 +3,7 @@ import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { getTenantEntitlements } from '@/lib/billing/entitlements';
 import { getTenantSecurityPulse } from '@/lib/intel/pulse';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     {
       id: 'command-center',
       label: 'Command Center',
-      description: 'Suite-wide mission queue, cross-module carry-over, and leadership-ready security priorities.',
+      description: 'Suite-wide weekly execution queue, cross-module carry-over, and leadership-ready security priorities.',
       href: '/app/command-center',
       kind: 'command' as const
     },
@@ -58,7 +59,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       id: 'pulse-roadmap',
       label: 'Pulse Roadmap',
       description: '30/60/90 remediation roadmap tied to current scorecards and risks.',
-      href: '/app/pulse/roadmap',
+      href: workflowRoutes.pulseRoadmap(),
       kind: 'roadmap' as const
     },
     {
@@ -72,35 +73,35 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       id: 'response-ops',
       label: 'Response Ops',
       description: 'Incident triage, runbook packs, after-action reviews, tabletop workflows, and operational hooks into Pulse.',
-      href: '/app/response-ops',
+      href: workflowRoutes.responseIncidentTriage(),
       kind: 'responseops' as const
     },
     {
       id: 'response-ops-incidents',
       label: 'Incident Triage',
       description: 'Create and manage durable incident records, first-hour triage, timeline events, and runbook packs.',
-      href: '/app/response-ops',
+      href: workflowRoutes.responseIncidentTriage(),
       kind: 'incident' as const
     },
     {
       id: 'response-ops-tabletops',
       label: 'Tabletop Exercises',
       description: 'Prepare and complete lightweight response exercises that create follow-up tasks, findings, and risks.',
-      href: '/app/response-ops',
+      href: workflowRoutes.responseTabletop(),
       kind: 'tabletop' as const
     },
     {
       id: 'ai-use-cases',
       label: 'AI Use Cases',
       description: 'Register, review, and update governed AI workflows and approvals.',
-      href: '/app/ai-governance/use-cases',
+      href: workflowRoutes.aiUseCaseCreate(),
       kind: 'ai' as const
     },
     {
       id: 'ai-vendors',
       label: 'AI Vendor Intake',
       description: 'Review AI vendors for retention, training behavior, logging, and approval conditions.',
-      href: '/app/ai-governance/vendors',
+      href: workflowRoutes.aiVendorIntakeCreate(),
       kind: 'vendor' as const
     },
     {
@@ -121,7 +122,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       id: 'questionnaires',
       label: 'Questionnaires',
       description: 'Import, draft, review, and export approved questionnaire answers.',
-      href: '/app/questionnaires',
+      href: workflowRoutes.questionnairesIntake(),
       kind: 'questionnaire' as const
     },
     {
@@ -156,14 +157,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       id: 'runbooks',
       label: 'Runbooks',
       description: 'Instantiate prebuilt incident and resilience task packs.',
-      href: '/app/runbooks',
+      href: workflowRoutes.runbookLauncher(),
       kind: 'runbook' as const
     },
     {
       id: 'policy-generator',
       label: 'Policies',
       description: 'Generate and review cybersecurity policy artifacts from curated templates.',
-      href: '/app/policies',
+      href: workflowRoutes.policiesGenerator(),
       kind: 'policy' as const
     },
     {
@@ -339,7 +340,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       trialStatus={workspace.trialStatus}
       trialEndsAt={workspace.trialEndsAt?.toISOString() ?? null}
       trialDaysRemaining={workspace.trialDaysRemaining}
-      initialFunMode={false}
     >
       {children}
     </AppShell>

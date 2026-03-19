@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db/prisma';
 import type { TrendSignal } from '@/lib/intel/trends';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 
 export type TenantSecurityPulse = {
   capturedAt: string;
@@ -475,7 +476,7 @@ export function buildSevenDayMissionQueue(
       title: 'Work active incident command and overdue response actions',
       priority: 'P0',
       why: `${pulse.activeIncidents} active incident(s) and ${pulse.overdueIncidentActions} overdue incident action(s) need immediate operator attention.`,
-      linkedRoute: '/app/response-ops',
+      linkedRoute: workflowRoutes.responseRunbookPack(),
       actions: [
         'Update current incident status, ownership, and next update checkpoints.',
         'Launch or refresh incident-linked runbook packs where work is still manual.',
@@ -499,15 +500,15 @@ export function buildSevenDayMissionQueue(
     mappedTrendIds: ['identity-velocity', 'cloud-and-saas-abuse']
   });
 
-  plans.push({
-    id: 'first-hour-ir-check',
-    title: 'Rehearse first-hour incident actions',
-    priority: 'P1',
-    why: 'Breakout timelines continue to shrink, so response speed determines impact.',
-    linkedRoute: '/app/security-analyst',
-    actions: [
-      'Run a short tabletop for account compromise and ransomware.',
-      'Verify emergency access revocation path.',
+    plans.push({
+      id: 'first-hour-ir-check',
+      title: 'Rehearse first-hour incident actions',
+      priority: 'P1',
+      why: 'Breakout timelines continue to shrink, so response speed determines impact.',
+      linkedRoute: workflowRoutes.responseTabletop(),
+      actions: [
+        'Run a short tabletop for account compromise and ransomware.',
+        'Verify emergency access revocation path.',
       'Confirm contact tree for legal and leadership updates.'
     ],
     mappedTrendIds: ['breakout-speed', 'ransomware-extortion-economics']
@@ -525,7 +526,7 @@ export function buildSevenDayMissionQueue(
       title: 'Refresh trust packet and evidence backlog',
       priority: 'P1',
       why: `${pulse.staleEvidenceOver90Days} stale evidence items, ${pulse.pendingEvidenceRequests} pending evidence requests, ${pulse.trustInboxBacklog} trust inbox items, and ${pulse.trustOverdueReviews} overdue reviews need attention.`,
-      linkedRoute: '/app/trust/inbox',
+      linkedRoute: '/app/trust/reviews',
       actions: [
         'Refresh stale artifacts for top controls.',
         'Resolve pending customer evidence requests.',
@@ -567,15 +568,15 @@ export function buildSevenDayMissionQueue(
     });
   }
 
-  plans.push({
-    id: 'policy-and-range-sync',
-    title: 'Sync policy updates with scenario validation',
-    priority: 'P2',
-    why: 'Controls should be tested against current threat trends, not treated as static paperwork.',
-    linkedRoute: '/app/tools',
-    actions: [
-      'Regenerate one high-priority policy set.',
-      'Create one cyber-range scenario aligned to top threat signals.',
+    plans.push({
+      id: 'policy-and-range-sync',
+      title: 'Sync policy updates with scenario validation',
+      priority: 'P2',
+      why: 'Controls should be tested against current threat trends, not treated as static paperwork.',
+      linkedRoute: workflowRoutes.policiesGenerator(),
+      actions: [
+        'Regenerate one high-priority policy set.',
+        'Create one cyber-range scenario aligned to top threat signals.',
       'Feed lessons back into control owners and task backlog.'
     ],
     mappedTrendIds: [...highTrendIds]

@@ -21,7 +21,7 @@ export default function LoginPage({ searchParams }: Props) {
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="default">Secure Workspace Access</Badge>
-            {demoMode ? <Badge variant="warning">Demo Sandbox Available</Badge> : null}
+            {demoMode ? <Badge variant="warning">Guided Demo Available</Badge> : null}
           </div>
           <div className="space-y-4">
             <p className="font-display text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -31,7 +31,7 @@ export default function LoginPage({ searchParams }: Props) {
               Start a real workspace for buyer diligence, executive posture, AI risk, and response workflows.
             </h1>
             <p className="max-w-2xl text-lg text-muted-foreground">
-              Sign in to an existing workspace, start a new 14-day full-access trial, or open the demo workspace if this environment is configured for guided evaluation.
+              Sign in to an existing workspace, start a new 14-day full-access trial, or open the guided demo if this environment is configured for evaluation.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
@@ -48,13 +48,13 @@ export default function LoginPage({ searchParams }: Props) {
           {demoMode ? (
             <Card className="border-warning/40 bg-warning/10">
               <CardHeader className="border-none pb-2">
-                <CardTitle className="text-lg">Demo workspace enabled</CardTitle>
+                <CardTitle className="text-lg">Guided demo available</CardTitle>
               </CardHeader>
               <CardContent className="pt-0 text-sm text-muted-foreground">
                 Open the sample tenant with synthetic identities and example data, or sign in to access a real tenant workspace.
                 <div className="mt-3">
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/app/command-center">Open Demo Workspace</Link>
+                    <Link href="/app/tools">Start Demo Story</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -66,7 +66,7 @@ export default function LoginPage({ searchParams }: Props) {
           {searchParams?.error === 'NoMembership' ? (
             <Card className="border-warning/40 bg-warning/10">
               <CardContent className="p-5 text-sm text-muted-foreground">
-                No active tenant membership was found for this account. Start a trial workspace, use a provisioned workspace email, or contact your VantageAI administrator.
+                No active tenant membership was found for this account. Start a trial workspace, use a provisioned workspace email, or contact your VantageCISO administrator.
               </CardContent>
             </Card>
           ) : null}

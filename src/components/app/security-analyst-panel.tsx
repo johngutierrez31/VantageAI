@@ -414,7 +414,9 @@ export function SecurityAnalystPanel({ tenantName }: { tenantName: string }) {
         </CardHeader>
         <CardContent className="space-y-4">
           {runs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No analysis runs yet. Submit a scenario to generate your first report.</p>
+            <p className="text-sm text-muted-foreground">
+              Security Analyst is for structured, evidence-cited analysis. Start with one incident, threat-model, or compliance scenario to create a durable report your team can reuse in reviews and follow-up work.
+            </p>
           ) : (
             runs.map((run) => (
               <div key={run.id} className="rounded-md border border-border bg-background/60 p-4">
@@ -422,7 +424,7 @@ export function SecurityAnalystPanel({ tenantName }: { tenantName: string }) {
                   <div>
                     <p className="text-sm font-semibold">{analysisTypeMeta[run.analysisType].label}</p>
                     <p className="text-xs text-muted-foreground">
-                      {run.systemName} · {new Date(run.createdAt).toLocaleString()}
+                      {run.systemName} | {new Date(run.createdAt).toLocaleString()}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">

@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       eventKey: 'quarterly_review_ready',
       title: `${review.reviewPeriod} quarterly review is ready`,
       body: `Pulse prepared the leadership review package in ${review.status.toLowerCase()} status.`,
-      href: '/app/pulse',
+      href: `/app/pulse/quarterly-reviews/${review.id}`,
       entityType: 'quarterly_review',
       entityId: review.id,
       metadata: {

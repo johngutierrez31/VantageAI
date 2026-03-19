@@ -12,11 +12,11 @@ function getBaseUrl() {
 
 async function sendVerificationRequest({ identifier, url }: { identifier: string; url: string }) {
   const resendApiKey = process.env.RESEND_API_KEY;
-  const subject = 'Your VantageAI sign-in link';
-  const text = `Sign in to VantageAI: ${url}`;
+  const subject = 'Your VantageCISO sign-in link';
+  const text = `Sign in to VantageCISO: ${url}`;
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;">
-      <h2>Sign in to VantageAI</h2>
+      <h2>Sign in to VantageCISO</h2>
       <p>Use the link below to continue:</p>
       <p><a href="${url}">Sign in</a></p>
       <p>If you did not request this email, you can ignore it.</p>

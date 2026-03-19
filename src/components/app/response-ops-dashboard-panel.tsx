@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
+import { cn } from '@/lib/utils';
 
 type ReviewerOption = {
   id: string;
@@ -80,6 +82,8 @@ type Metrics = {
   recentAfterActionReports: number;
 };
 
+type ResponseOpsWorkflow = 'incident-triage' | 'runbook-pack' | 'timeline' | 'after-action' | 'tabletop' | null;
+
 async function apiRequest(url: string, options?: RequestInit) {
   const response = await fetch(url, options);
   const text = await response.text();
@@ -97,7 +101,17 @@ function splitCsv(value: string) {
     .filter(Boolean);
 }
 
+function scenarioTypeForRunbook(runbookId: string | null | undefined): ScenarioOption['incidentType'] | null {
+  if (runbookId === 'identity-compromise') return 'IDENTITY_COMPROMISE';
+  if (runbookId === 'ransomware-extortion') return 'RANSOMWARE';
+  if (runbookId === 'third-party-breach') return 'THIRD_PARTY_BREACH';
+  if (runbookId === 'zero-day-vulnerability') return 'OTHER';
+  return null;
+}
+
 export function ResponseOpsDashboardPanel({
+  activeWorkflow,
+  initialRunbookId,
   metrics,
   incidents,
   tabletops,
@@ -105,6 +119,8 @@ export function ResponseOpsDashboardPanel({
   reviewers,
   scenarios
 }: {
+  activeWorkflow: ResponseOpsWorkflow;
+  initialRunbookId: string | null;
   metrics: Metrics;
   incidents: IncidentSummary[];
   tabletops: TabletopSummary[];
@@ -115,9 +131,11 @@ export function ResponseOpsDashboardPanel({
   const router = useRouter();
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const preferredScenarioType = scenarioTypeForRunbook(initialRunbookId) ?? scenarios[0]?.incidentType ?? 'IDENTITY_COMPROMISE';
+  const preferredScenario = scenarios.find((scenario) => scenario.incidentType === preferredScenarioType) ?? scenarios[0];
   const [incidentForm, setIncidentForm] = useState({
-    incidentType: scenarios[0]?.incidentType ?? 'IDENTITY_COMPROMISE',
-    severity: scenarios[0]?.defaultSeverity ?? 'HIGH',
+    incidentType: preferredScenario?.incidentType ?? 'IDENTITY_COMPROMISE',
+    severity: preferredScenario?.defaultSeverity ?? 'HIGH',
     title: '',
     description: '',
     detectionSource: '',
@@ -126,7 +144,7 @@ export function ResponseOpsDashboardPanel({
     guidedStart: true
   });
   const [tabletopForm, setTabletopForm] = useState({
-    scenarioType: scenarios[0]?.incidentType ?? 'RANSOMWARE',
+    scenarioType: preferredScenario?.incidentType ?? 'RANSOMWARE',
     title: '',
     participantNames: '',
     participantRoles: ''
@@ -156,6 +174,38 @@ export function ResponseOpsDashboardPanel({
       ),
     [tabletopStatusFilter, tabletops]
   );
+  const workflowNarrative =
+    activeWorkflow === 'incident-triage'
+      ? {
+          title: 'Start Incident Triage',
+          description:
+            'Open a named incident record first so the timeline, runbook pack, after-action report, findings, and Pulse carry-over all stay anchored to the same operational event.'
+        }
+      : activeWorkflow === 'runbook-pack'
+        ? {
+            title: 'Launch Runbook Pack',
+            description:
+              'Runbook packs are launched from a named incident record. Open an existing incident below or start a new triage workflow first so tasks never become orphaned.'
+          }
+        : activeWorkflow === 'timeline'
+          ? {
+              title: 'Update Incident Timeline',
+              description:
+                'Timeline and decision updates belong inside an incident record. Open the incident you want to update below to add durable, share-safe events.'
+            }
+          : activeWorkflow === 'after-action'
+            ? {
+                title: 'Draft After-Action Report',
+                description:
+                  'After-action reporting is generated from a specific incident record so lessons learned, follow-up tasks, and export state remain tied to the source incident.'
+              }
+            : activeWorkflow === 'tabletop'
+              ? {
+                  title: 'Prepare Tabletop Exercise',
+                  description:
+                    'Create the tabletop record first, then complete the exercise so follow-up tasks, findings, and Pulse risks are attached to the same readiness event.'
+                }
+              : null;
 
   async function run(actionId: string, callback: () => Promise<void>) {
     setBusyAction(actionId);
@@ -188,6 +238,16 @@ export function ResponseOpsDashboardPanel({
           Start here: open or import the incident, capture the first decision trail, launch the runbook pack, then use after-action and tabletop follow-up to feed Pulse.
         </p>
       </PageHeader>
+
+      {workflowNarrative ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">{workflowNarrative.title}</p>
+            <p className="text-sm text-muted-foreground">{workflowNarrative.description}</p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <KpiCard
@@ -233,15 +293,18 @@ export function ResponseOpsDashboardPanel({
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {[
-            ['Start Incident Triage', 'Creates a durable incident record, first-hour decision scaffold, and incident-linked runbook pack.'],
-            ['Launch Runbook Task Pack', 'Generates phase-based incident tasks for triage, containment, communications, recovery, and follow-up.'],
-            ['Update Incident Timeline', 'Adds durable timeline and decision-log entries without mixing internal-only notes into shareable summaries.'],
-            ['Draft After-Action Report', 'Builds a persisted review artifact from the incident record, timeline, tasks, findings, and risks.'],
-            ['Prepare Tabletop Exercise', 'Creates a lightweight exercise record with scenario prompts, gaps, decisions, and follow-up capture.']
-          ].map(([title, description]) => (
+            ['Start Incident Triage', 'Creates a durable incident record, first-hour decision scaffold, and incident-linked runbook pack.', workflowRoutes.responseIncidentTriage()],
+            ['Launch Runbook Task Pack', 'Generates phase-based incident tasks for triage, containment, communications, recovery, and follow-up.', workflowRoutes.runbookLauncher()],
+            ['Update Incident Timeline', 'Adds durable timeline and decision-log entries without mixing internal-only notes into shareable summaries.', workflowRoutes.responseIncidentTimeline()],
+            ['Draft After-Action Report', 'Builds a persisted review artifact from the incident record, timeline, tasks, findings, and risks.', workflowRoutes.responseAfterAction()],
+            ['Prepare Tabletop Exercise', 'Creates a lightweight exercise record with scenario prompts, gaps, decisions, and follow-up capture.', workflowRoutes.responseTabletop()]
+          ].map(([title, description, href]) => (
             <div key={title} className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">{title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+              <Button asChild size="sm" variant="outline" className="mt-3">
+                <Link href={href}>Open Workflow</Link>
+              </Button>
             </div>
           ))}
         </CardContent>
@@ -254,7 +317,10 @@ export function ResponseOpsDashboardPanel({
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card>
+        <Card
+          id="incident-triage-workflow"
+          className={cn(activeWorkflow === 'incident-triage' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+        >
           <CardHeader>
             <CardTitle>Start Incident Triage</CardTitle>
           </CardHeader>
@@ -386,7 +452,10 @@ export function ResponseOpsDashboardPanel({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          id="tabletop-workflow"
+          className={cn(activeWorkflow === 'tabletop' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+        >
           <CardHeader>
             <CardTitle>Prepare Tabletop</CardTitle>
           </CardHeader>
@@ -451,7 +520,14 @@ export function ResponseOpsDashboardPanel({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
+        <Card
+          id="open-incidents"
+          className={cn(
+            activeWorkflow === 'runbook-pack' || activeWorkflow === 'timeline'
+              ? 'border-primary/50 bg-primary/5 shadow-sm'
+              : null
+          )}
+        >
           <CardHeader>
             <CardTitle>Open Incident Work</CardTitle>
           </CardHeader>
@@ -526,7 +602,10 @@ export function ResponseOpsDashboardPanel({
         </Card>
 
         <div className="space-y-4">
-          <Card>
+          <Card
+            id="after-action-workflow"
+            className={cn(activeWorkflow === 'after-action' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+          >
             <CardHeader>
               <CardTitle>Recent After-Action Reports</CardTitle>
             </CardHeader>

@@ -18,6 +18,14 @@ export async function getTenantEntitlements(tenantId: string): Promise<TenantEnt
     })
   ]);
 
+  if (workspace.isDemo) {
+    return {
+      plan: 'ENTERPRISE',
+      status: 'demo_unlocked',
+      limits: getLimitsForPlan('ENTERPRISE')
+    };
+  }
+
   if (workspace.isTrialActive) {
     return {
       plan: 'ENTERPRISE',

@@ -12,6 +12,7 @@ import { getPageSessionContext } from '@/lib/auth/page-session';
 import { getTenantDemoPathViewModel } from '@/lib/demo/demo-path';
 import { buildSevenDayMissionQueue, getTenantSecurityPulse } from '@/lib/intel/pulse';
 import { getSoloCisoCapabilities, getTrendSignals, type TrendSeverity } from '@/lib/intel/trends';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 import { getTenantTrialOnboarding } from '@/lib/trial/onboarding';
 import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
@@ -53,13 +54,13 @@ export default async function CommandCenterPage() {
         }
         primaryAction={{
           label: workspace.isTrial ? 'Open Questionnaires' : 'Open TrustOps Intake',
-          href: workspace.isTrial ? '/app/questionnaires' : '/app/trust/inbox'
+          href: workspace.isTrial ? workflowRoutes.questionnairesIntake() : '/app/trust/inbox'
         }}
         secondaryActions={[
           { label: workspace.isTrial ? 'Tools Hub' : 'Show The Story', href: '/app/tools', variant: 'outline' },
-          { label: 'Pulse', href: '/app/pulse', variant: 'outline' },
-          { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
-          { label: 'Response Ops', href: '/app/response-ops', variant: 'outline' }
+          { label: 'Pulse', href: workflowRoutes.pulseScorecard(), variant: 'outline' },
+          { label: 'AI Governance', href: workflowRoutes.aiUseCaseCreate(), variant: 'outline' },
+          { label: 'Response Ops', href: workflowRoutes.responseIncidentTriage(), variant: 'outline' }
         ]}
       >
         <p className="text-xs text-muted-foreground">
@@ -225,7 +226,7 @@ export default async function CommandCenterPage() {
           />
           <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-5">
             <Button asChild size="sm" variant="outline">
-              <Link href={pulse.latestPulseSnapshotId ? `/app/pulse/snapshots/${pulse.latestPulseSnapshotId}` : '/app/pulse'}>
+              <Link href={pulse.latestPulseSnapshotId ? `/app/pulse/snapshots/${pulse.latestPulseSnapshotId}` : workflowRoutes.pulseScorecard()}>
                 Pulse Snapshot
               </Link>
             </Button>
@@ -233,10 +234,12 @@ export default async function CommandCenterPage() {
               <Link href="/app/pulse/risks">Risk Register</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/app/pulse/roadmap">Roadmap</Link>
+              <Link href={pulse.latestRoadmapId ? workflowRoutes.pulseRoadmapRecord(pulse.latestRoadmapId) : workflowRoutes.pulseRoadmap()}>
+                Roadmap
+              </Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href={pulse.latestBoardBriefId ? `/app/pulse/board-briefs/${pulse.latestBoardBriefId}` : '/app/pulse'}>
+              <Link href={pulse.latestBoardBriefId ? `/app/pulse/board-briefs/${pulse.latestBoardBriefId}` : workflowRoutes.pulseBoardBrief()}>
                 Board Brief
               </Link>
             </Button>
@@ -245,7 +248,7 @@ export default async function CommandCenterPage() {
                 href={
                   pulse.latestQuarterlyReviewId
                     ? `/app/pulse/quarterly-reviews/${pulse.latestQuarterlyReviewId}`
-                    : '/app/pulse'
+                    : workflowRoutes.pulseQuarterlyReview()
                 }
               >
                 Quarterly Review
@@ -295,10 +298,10 @@ export default async function CommandCenterPage() {
               <Link href="/app/ai-governance">AI Governance Dashboard</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/app/ai-governance/use-cases">AI Use Cases</Link>
+              <Link href={workflowRoutes.aiUseCaseCreate()}>AI Use Cases</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/app/ai-governance/vendors">Vendor Intake</Link>
+              <Link href={workflowRoutes.aiVendorIntakeCreate()}>Vendor Intake</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
               <Link href="/app/ai-governance/reviews">AI Review Queue</Link>
@@ -344,10 +347,10 @@ export default async function CommandCenterPage() {
           />
           <div className="flex flex-wrap gap-2 md:col-span-2 xl:col-span-5">
             <Button asChild size="sm" variant="outline">
-              <Link href="/app/response-ops">Response Ops Dashboard</Link>
+              <Link href={workflowRoutes.responseIncidentTriage()}>Response Ops Dashboard</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/app/runbooks">Runbooks</Link>
+              <Link href={workflowRoutes.runbookLauncher()}>Runbooks</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
               <Link href="/app/findings">Findings Workbench</Link>
@@ -399,7 +402,7 @@ export default async function CommandCenterPage() {
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <Card>
           <CardHeader>
-            <CardTitle>7-Day Mission Queue</CardTitle>
+            <CardTitle>7-Day Weekly Execution Queue</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {missionQueue.map((mission) => (

@@ -71,7 +71,7 @@ describe('weekly brief rendering', () => {
     const html = renderWeeklyBriefHtml(brief);
 
     expect(brief.executiveSummary.length).toBeGreaterThan(20);
-    expect(markdown).toContain('VantageAI Weekly Brief');
+    expect(markdown).toContain('VantageCISO Weekly Brief');
     expect(markdown).toContain('Day 1 [P0] Close critical blockers');
     expect(html).toContain('<html');
     expect(html).toContain('Executive Summary');

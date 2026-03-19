@@ -194,7 +194,7 @@ export function TrustInboxDetailPanel({
 
     const fileName = await downloadResponseBlob(
       response,
-      `vantageai-trust-packet-${packetId}.${format === 'markdown' ? 'md' : format}`
+      `vantageciso-trust-packet-${packetId}.${format === 'markdown' ? 'md' : format}`
     );
     setMessage(`Trust packet exported as ${fileName}.`);
     router.refresh();

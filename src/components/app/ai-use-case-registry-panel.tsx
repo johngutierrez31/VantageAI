@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 type ReviewerOption = {
   id: string;
@@ -104,11 +105,13 @@ function formatLabel(value: string) {
 }
 
 export function AIUseCaseRegistryPanel({
+  activeWorkflow,
   useCases,
   reviewers,
   vendorOptions,
   policyOptions
 }: {
+  activeWorkflow: 'create' | 'policy-mapping' | null;
   useCases: UseCaseRow[];
   reviewers: ReviewerOption[];
   vendorOptions: VendorOption[];
@@ -226,7 +229,26 @@ export function AIUseCaseRegistryPanel({
         ]}
       />
 
-      <Card>
+      {activeWorkflow ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">
+              {activeWorkflow === 'policy-mapping' ? 'Map AI Policies and Data Classes' : 'Register AI Use Case'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {activeWorkflow === 'policy-mapping'
+                ? 'Use this workflow to capture the AI use case, assign data classes, and surface the policy conditions or blockers that drive approval.'
+                : 'Create the governed use-case record first so review queue, Pulse hooks, and vendor linkage all land on the same durable object.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Card
+        id="ai-use-case-form"
+        className={cn(activeWorkflow ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+      >
         <CardHeader>
           <CardTitle>Register AI Use Case</CardTitle>
         </CardHeader>
@@ -348,7 +370,7 @@ export function AIUseCaseRegistryPanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="ai-use-case-registry">
         <CardHeader>
           <CardTitle>Registry Filters</CardTitle>
         </CardHeader>

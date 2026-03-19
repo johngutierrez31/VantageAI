@@ -64,15 +64,15 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
         | null;
 
       if (!response.ok) {
-        setError(payload?.error ?? 'Failed to create mission tasks');
+        setError(payload?.error ?? 'Failed to create the task pack.');
         return;
       }
 
       setMessage(
-        `Created ${payload?.createdCount ?? 0} mission tasks${(payload?.skippedCount ?? 0) > 0 ? ` (${payload?.skippedCount} skipped)` : ''}.`
+        `Created ${payload?.createdCount ?? 0} priority task${(payload?.createdCount ?? 0) === 1 ? '' : 's'}${(payload?.skippedCount ?? 0) > 0 ? ` (${payload?.skippedCount} skipped)` : ''}.`
       );
     } catch {
-      setError('Failed to create mission tasks due to a network or server issue.');
+      setError('Failed to create the task pack due to a network or server issue.');
     } finally {
       setBusy(false);
     }
@@ -93,9 +93,9 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
       }
 
       if (format === 'markdown') {
-        downloadFile('vantageai-weekly-brief.md', 'text/markdown; charset=utf-8', text);
+        downloadFile('vantageciso-weekly-brief.md', 'text/markdown; charset=utf-8', text);
       } else {
-        downloadFile('vantageai-weekly-brief.html', 'text/html; charset=utf-8', text);
+        downloadFile('vantageciso-weekly-brief.html', 'text/html; charset=utf-8', text);
       }
 
       setMessage(`Exported weekly brief as ${format.toUpperCase()}.`);
@@ -113,11 +113,11 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
         </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Turn the mission queue into owned work and export a leadership-ready weekly summary.
+          Turn the weekly execution queue into owned work and export a leadership-ready weekly summary.
         </p>
         <div className="rounded-md border border-border p-3">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-medium">Create Mission Tasks</p>
+            <p className="text-sm font-medium">Create Task Pack</p>
             <Button variant="outline" size="sm" type="button" onClick={toggleAll}>
               {allSelected ? 'Clear all' : 'Select all'}
             </Button>
@@ -143,7 +143,7 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
             onChange={(event) => setAssignee(event.target.value)}
           />
           <Button className="mt-3" onClick={seedMissionTasks} disabled={busy || selectedIds.length === 0} type="button">
-            {busy ? 'Creating...' : 'Create mission task pack'}
+            {busy ? 'Creating...' : 'Create task pack'}
           </Button>
         </div>
 

@@ -51,7 +51,7 @@ export function PageHeader({
   helpKey,
   children
 }: Props) {
-  const showDropCap = (description?.length ?? 0) > 90;
+  const showDropCap = false;
   const contextualHelp = helpKey ? getContextualHelp(helpKey) : null;
 
   return (

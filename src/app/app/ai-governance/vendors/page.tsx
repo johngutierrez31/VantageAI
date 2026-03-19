@@ -18,7 +18,11 @@ function pickAiRelevantPolicies(
     .slice(0, 12);
 }
 
-export default async function AIVendorsPage() {
+export default async function AIVendorsPage({
+  searchParams
+}: {
+  searchParams?: { workflow?: string };
+}) {
   const session = await getPageSessionContext();
   const [vendorReviews, reviewers, policyCatalog] = await Promise.all([
     prisma.aIVendorReview.findMany({
@@ -32,6 +36,7 @@ export default async function AIVendorsPage() {
 
   return (
     <AIVendorReviewPanel
+      activeWorkflow={searchParams?.workflow === 'create' ? 'create' : null}
       vendorReviews={vendorReviews.map((review) => ({
         ...review,
         reviewDueAt: review.reviewDueAt?.toISOString() ?? null

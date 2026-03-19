@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/app/page-header';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 const roadmapStatuses = ['DRAFT', 'NEEDS_REVIEW', 'APPROVED', 'ARCHIVED'] as const;
 const itemStatuses = ['PLANNED', 'IN_PROGRESS', 'BLOCKED', 'DONE'] as const;
@@ -43,7 +45,15 @@ async function apiRequest(url: string, options?: RequestInit) {
   return text ? JSON.parse(text) : null;
 }
 
-export function PulseRoadmapPanel({ roadmaps, reviewers }: { roadmaps: Roadmap[]; reviewers: ReviewerOption[] }) {
+export function PulseRoadmapPanel({
+  activeRoadmapId,
+  roadmaps,
+  reviewers
+}: {
+  activeRoadmapId: string | null;
+  roadmaps: Roadmap[];
+  reviewers: ReviewerOption[];
+}) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [busyRoadmapId, setBusyRoadmapId] = useState<string | null>(null);
@@ -126,12 +136,21 @@ export function PulseRoadmapPanel({ roadmaps, reviewers }: { roadmaps: Roadmap[]
           return (
             <DataTable
               key={roadmap.id}
+              wrapperClassName={cn(
+                activeRoadmapId === roadmap.id ? 'border-primary/50 bg-primary/5 shadow-sm' : null
+              )}
+              wrapperId={`roadmap-${roadmap.id}`}
               title={roadmap.name}
               description={`Reporting period ${roadmap.reportingPeriod}`}
               actions={
-                <Button onClick={() => saveRoadmap(roadmap)} disabled={busyRoadmapId === roadmap.id}>
-                  {busyRoadmapId === roadmap.id ? 'Saving...' : 'Save Roadmap'}
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button asChild variant="outline">
+                    <Link href={`/app/pulse?workflow=roadmap#pulse-roadmap-workflow`}>Open Generation Workflow</Link>
+                  </Button>
+                  <Button onClick={() => saveRoadmap(roadmap)} disabled={busyRoadmapId === roadmap.id}>
+                    {busyRoadmapId === roadmap.id ? 'Saving...' : 'Save Roadmap'}
+                  </Button>
+                </div>
               }
             >
               <div className="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)]">

@@ -4,7 +4,13 @@ import { prisma } from '@/lib/db/prisma';
 import { QuestionnaireDetailPanel } from '@/components/app/questionnaire-detail-panel';
 import { listTenantReviewers } from '@/lib/trust/reviewers';
 
-export default async function QuestionnaireDetailPage({ params }: { params: { id: string } }) {
+export default async function QuestionnaireDetailPage({
+  params,
+  searchParams
+}: {
+  params: { id: string };
+  searchParams?: { workflow?: string };
+}) {
   const session = await getPageSessionContext();
   const [upload, templates, reviewers] = await Promise.all([
     prisma.questionnaireUpload.findFirst({
@@ -72,6 +78,11 @@ export default async function QuestionnaireDetailPage({ params }: { params: { id
 
   return (
     <QuestionnaireDetailPanel
+      activeWorkflow={
+        searchParams?.workflow === 'review' || searchParams?.workflow === 'evidence-map'
+          ? searchParams.workflow
+          : null
+      }
       questionnaireId={upload.id}
       filename={upload.filename}
       organizationName={upload.organizationName}

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/app/page-header';
 import { StatusPill } from '@/components/app/status-pill';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ function toDateTimeLocal(value?: string | null) {
 }
 
 export function QuestionnaireDetailPanel({
+  activeWorkflow,
   questionnaireId,
   filename,
   organizationName,
@@ -66,6 +68,7 @@ export function QuestionnaireDetailPanel({
   templates,
   reviewers
 }: {
+  activeWorkflow: 'review' | 'evidence-map' | null;
   questionnaireId: string;
   filename: string;
   organizationName?: string | null;
@@ -201,7 +204,7 @@ export function QuestionnaireDetailPanel({
     }
 
     setMessage('Evidence map generated and saved.');
-    router.refresh();
+    router.push(`/app/trust/evidence-maps/${payload.id}`);
   }
 
   async function reviewItem(itemId: string, decision: 'APPROVED' | 'REJECTED') {
@@ -252,6 +255,22 @@ export function QuestionnaireDetailPanel({
         <StatusPill status={status} />
       </PageHeader>
 
+      {activeWorkflow ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">
+              {activeWorkflow === 'review' ? 'Review Questionnaire Answers' : 'Build Evidence Map'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {activeWorkflow === 'review'
+                ? 'Review low-confidence and high-stakes rows here, then promote approved language into the answer library for reuse.'
+                : 'Generate or refresh the linked evidence map from these rows so packet assembly uses the strongest approved support.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <CardHeader>
@@ -295,7 +314,10 @@ export function QuestionnaireDetailPanel({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          id="questionnaire-guided-actions"
+          className={cn(activeWorkflow === 'evidence-map' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+        >
           <CardHeader>
             <CardTitle>Guided Actions</CardTitle>
           </CardHeader>
@@ -344,6 +366,11 @@ export function QuestionnaireDetailPanel({
                   <Link href={`/app/trust/evidence-maps/${evidenceMap.id}`}>Open Evidence Map</Link>
                 </Button>
               ) : null}
+              {trustInboxItem ? (
+                <Button asChild variant="secondary">
+                  <Link href={`/app/trust/inbox/${trustInboxItem.id}`}>Open Linked Trust Inbox</Link>
+                </Button>
+              ) : null}
             </div>
             <p className="text-xs text-muted-foreground">
               Only approved answers are included in export. Weak or missing support creates follow-up tasks and TrustOps findings automatically.
@@ -353,7 +380,10 @@ export function QuestionnaireDetailPanel({
         </Card>
       </div>
 
-      <Card>
+      <Card
+        id="questionnaire-review-queue"
+        className={cn(activeWorkflow === 'review' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+      >
         <CardHeader>
           <CardTitle>Questionnaire Review Queue</CardTitle>
         </CardHeader>

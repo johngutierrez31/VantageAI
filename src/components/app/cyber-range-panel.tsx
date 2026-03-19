@@ -93,7 +93,7 @@ function openPrintWindow(htmlContent: string) {
 
 export function CyberRangePanel() {
   const [rangeName, setRangeName] = useState('Quarterly Security Defense Range');
-  const [organizationName, setOrganizationName] = useState('VantageCISO');
+  const [organizationName, setOrganizationName] = useState('Astera Cloud Security');
   const [primaryUseCase, setPrimaryUseCase] = useState(
     'Run red-vs-blue incident response exercises to improve detection and containment speed.'
   );
@@ -310,7 +310,9 @@ export function CyberRangePanel() {
         </CardHeader>
         <CardContent className="space-y-4">
           {!plan ? (
-            <p className="text-sm text-muted-foreground">Generate a plan to see architecture, phases, and runbook outputs.</p>
+            <p className="text-sm text-muted-foreground">
+              Cyber Range is for turning an exercise idea into a buildable environment plan. Start with one realistic scenario and you will get a durable architecture, phased rollout, and exportable runbook-ready plan.
+            </p>
           ) : (
             <>
               <div className="grid gap-3 md:grid-cols-3">

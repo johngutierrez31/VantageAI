@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/app/status-pill';
 import { PageHeader } from '@/components/app/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 
 type DashboardMetrics = {
   totalUseCases: number;
@@ -54,11 +55,11 @@ export function AIGovernanceDashboardPanel({
         title="AI Governance"
         helpKey="aiGovernance"
         description="AI Governance is the governed AI adoption layer: register use cases, review vendors, map policies and data classes, and carry high-risk AI decisions into findings and Pulse."
-        primaryAction={{ label: 'Register AI Use Case', href: '/app/ai-governance/use-cases' }}
+        primaryAction={{ label: 'Register AI Use Case', href: workflowRoutes.aiUseCaseCreate() }}
         secondaryActions={[
           { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
-          { label: 'Vendor Intake', href: '/app/ai-governance/vendors', variant: 'outline' },
-          { label: 'Review Queue', href: '/app/ai-governance/reviews', variant: 'outline' },
+          { label: 'Vendor Intake', href: workflowRoutes.aiVendorIntakeCreate(), variant: 'outline' },
+          { label: 'Review Queue', href: workflowRoutes.aiReviewQueue(), variant: 'outline' },
           { label: 'Pulse Risks', href: '/app/pulse/risks', variant: 'outline' }
         ]}
       >
@@ -72,10 +73,10 @@ export function AIGovernanceDashboardPanel({
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Current Decision Story</p>
             <p className="mt-3 text-lg font-semibold">
-              High-value AI adoption can move forward, but only with explicit conditions and defensible review notes.
+              Productive AI can move forward here, but only when the team can show exactly what is approved, what is blocked, and why.
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              The sample tenant shows a customer-facing AI workflow under conditional approval because retention, logging, and buyer-safe controls still need visible follow-up.
+              The sample tenant shows one TrustOps copilot under conditional approval and one customer-revenue workflow held in review until vendor, data-class, and buyer-safe controls are defensible.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
@@ -134,22 +135,22 @@ export function AIGovernanceDashboardPanel({
             [
               'Register AI Use Case',
               'Create a durable use-case record with data classes, policy mapping, risk tier, and review gating.',
-              '/app/ai-governance/use-cases'
+              workflowRoutes.aiUseCaseCreate()
             ],
             [
               'Start AI Vendor Intake',
               'Review an AI vendor/product for retention, training behavior, logging, and approval conditions.',
-              '/app/ai-governance/vendors'
+              workflowRoutes.aiVendorIntakeCreate()
             ],
             [
               'Review AI Queue',
               'Assign reviewers, set due dates, and control overdue AI approval work.',
-              '/app/ai-governance/reviews'
+              workflowRoutes.aiReviewQueue()
             ],
             [
               'Map Policies and Data Classes',
               'See matched policy templates, unmet requirements, prohibited conditions, and approval blockers.',
-              '/app/ai-governance/use-cases'
+              workflowRoutes.aiUseCaseCreate('policy-mapping')
             ],
             [
               'Track AI-Driven Pulse Risk',

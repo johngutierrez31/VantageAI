@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 type ReviewerOption = {
   id: string;
@@ -70,10 +71,12 @@ function formatLabel(value: string) {
 }
 
 export function AIVendorReviewPanel({
+  activeWorkflow,
   vendorReviews,
   reviewers,
   policyOptions
 }: {
+  activeWorkflow: 'create' | null;
   vendorReviews: VendorReviewRow[];
   reviewers: ReviewerOption[];
   policyOptions: PolicyOption[];
@@ -187,7 +190,22 @@ export function AIVendorReviewPanel({
         ]}
       />
 
-      <Card>
+      {activeWorkflow ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">Start AI Vendor Intake</p>
+            <p className="text-sm text-muted-foreground">
+              Capture deployment type, data classes, retention posture, DPA state, and reviewer assignment in one intake so downstream conditions and Pulse hooks stay attached to the vendor decision record.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Card
+        id="ai-vendor-intake-form"
+        className={cn(activeWorkflow ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+      >
         <CardHeader>
           <CardTitle>Start Vendor Intake</CardTitle>
         </CardHeader>
@@ -318,7 +336,7 @@ export function AIVendorReviewPanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="ai-vendor-reviews">
         <CardHeader>
           <CardTitle>Vendor Intake Filters</CardTitle>
         </CardHeader>

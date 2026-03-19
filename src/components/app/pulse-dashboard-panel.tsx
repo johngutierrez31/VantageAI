@@ -9,6 +9,8 @@ import { StatusPill } from '@/components/app/status-pill';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
+import { cn } from '@/lib/utils';
 
 type SnapshotSummary = {
   id: string;
@@ -72,6 +74,8 @@ type PulseMetrics = {
   recentAfterActionReports: number;
 };
 
+type PulseWorkflow = 'scorecard' | 'roadmap' | 'board-brief' | 'quarterly-review' | null;
+
 async function apiRequest(url: string, options?: RequestInit) {
   const response = await fetch(url, options);
   const text = await response.text();
@@ -82,6 +86,7 @@ async function apiRequest(url: string, options?: RequestInit) {
 }
 
 export function PulseDashboardPanel({
+  activeWorkflow,
   metrics,
   snapshots,
   roadmaps,
@@ -89,6 +94,7 @@ export function PulseDashboardPanel({
   quarterlyReviews,
   risks
 }: {
+  activeWorkflow: PulseWorkflow;
   metrics: PulseMetrics;
   snapshots: SnapshotSummary[];
   roadmaps: RoadmapSummary[];
@@ -105,25 +111,56 @@ export function PulseDashboardPanel({
   const latestRoadmap = roadmaps[0] ?? null;
   const latestBoardBrief = boardBriefs[0] ?? null;
   const latestQuarterlyReview = quarterlyReviews[0] ?? null;
+  const workflowNarrative =
+    activeWorkflow === 'scorecard'
+      ? {
+          title: 'Generate Executive Scorecard',
+          description:
+            'Create a durable Pulse snapshot from live findings, trust backlog, AI review pressure, and incident carry-over. Publishing the snapshot establishes the source record for roadmap, board brief, and quarterly review work.'
+        }
+      : activeWorkflow === 'roadmap'
+        ? {
+            title: 'Generate 30/60/90 Roadmap',
+            description:
+              'Build the remediation plan from the latest approved posture snapshot so roadmap items inherit current score pressure, ownership, and due dates.'
+          }
+        : activeWorkflow === 'board-brief'
+          ? {
+              title: 'Draft Board Brief',
+              description:
+                'Draft a board-ready artifact from the latest snapshot and roadmap so leadership commentary stays tied to the same measured source package.'
+            }
+          : activeWorkflow === 'quarterly-review'
+            ? {
+                title: 'Prepare Quarterly Review',
+                description:
+                  'Assemble the quarterly leadership review from the latest snapshot, roadmap, and board brief so the review package is a distinct durable record rather than a dashboard state.'
+              }
+            : null;
 
   const workflowCards = useMemo(
     () => [
       {
         id: 'snapshot',
+        workflow: 'scorecard' as const,
+        sectionId: 'pulse-scorecard-workflow',
         title: 'Generate Executive Scorecard',
         description: 'Produces a persisted Pulse snapshot with explainable category scores, measured inputs, and review state.',
         buttonLabel: 'Generate Scorecard',
         onClick: async () => {
-          await apiRequest('/api/pulse/snapshots', {
+          const created = await apiRequest('/api/pulse/snapshots', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ periodType })
           });
+          return { redirectHref: `/app/pulse/snapshots/${created.id}` };
         },
         disabled: false
       },
       {
         id: 'risks',
+        workflow: null,
+        sectionId: 'pulse-risk-workflow',
         title: 'Build Risk Register',
         description: 'Creates or refreshes tenant-scoped risks from findings, evidence gaps, assessment gaps, and overdue remediation work.',
         buttonLabel: 'Sync Risks',
@@ -138,42 +175,50 @@ export function PulseDashboardPanel({
       },
       {
         id: 'roadmap',
+        workflow: 'roadmap' as const,
+        sectionId: 'pulse-roadmap-workflow',
         title: 'Generate 30/60/90 Roadmap',
         description: 'Produces a persisted executive roadmap from current risk pressure and weak scorecard categories.',
         buttonLabel: 'Generate Roadmap',
         onClick: async () => {
           if (!latestSnapshot) return;
-          await apiRequest('/api/pulse/roadmaps', {
+          const created = await apiRequest('/api/pulse/roadmaps', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ snapshotId: latestSnapshot.id })
           });
+          return { redirectHref: workflowRoutes.pulseRoadmapRecord(created.id) };
         },
         disabled: !latestSnapshot
       },
       {
         id: 'brief',
+        workflow: 'board-brief' as const,
+        sectionId: 'pulse-board-brief-workflow',
         title: 'Draft Board Brief',
         description: 'Produces a persisted executive brief using the latest scorecard, top risks, overdue actions, and roadmap summary.',
         buttonLabel: 'Draft Brief',
         onClick: async () => {
           if (!latestSnapshot || !latestRoadmap) return;
-          await apiRequest('/api/pulse/board-briefs', {
+          const created = await apiRequest('/api/pulse/board-briefs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ snapshotId: latestSnapshot.id, roadmapId: latestRoadmap.id })
           });
+          return { redirectHref: `/app/pulse/board-briefs/${created.id}` };
         },
         disabled: !latestSnapshot || !latestRoadmap
       },
       {
         id: 'quarterly-review',
+        workflow: 'quarterly-review' as const,
+        sectionId: 'pulse-quarterly-review-workflow',
         title: 'Prepare Quarterly Review',
         description: 'Creates the recurring leadership review record with linked snapshot, roadmap, board brief, and top risks.',
         buttonLabel: 'Prepare Review',
         onClick: async () => {
           if (!latestSnapshot || !latestRoadmap || !latestBoardBrief) return;
-          await apiRequest('/api/pulse/quarterly-reviews', {
+          const created = await apiRequest('/api/pulse/quarterly-reviews', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -182,6 +227,7 @@ export function PulseDashboardPanel({
               boardBriefId: latestBoardBrief.id
             })
           });
+          return { redirectHref: `/app/pulse/quarterly-reviews/${created.id}` };
         },
         disabled: !latestSnapshot || !latestRoadmap || !latestBoardBrief
       }
@@ -189,11 +235,18 @@ export function PulseDashboardPanel({
     [latestBoardBrief, latestRoadmap, latestSnapshot, periodType]
   );
 
-  async function runAction(actionId: string, callback: () => Promise<void>) {
+  async function runAction(
+    actionId: string,
+    callback: () => Promise<{ redirectHref?: string } | void>
+  ) {
     setBusyAction(actionId);
     setError(null);
     try {
-      await callback();
+      const result = await callback();
+      if (result?.redirectHref) {
+        router.push(result.redirectHref);
+        return;
+      }
       router.refresh();
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : String(nextError));
@@ -228,6 +281,16 @@ export function PulseDashboardPanel({
           </div>
         </CardContent>
       </Card>
+
+      {workflowNarrative ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">{workflowNarrative.title}</p>
+            <p className="text-sm text-muted-foreground">{workflowNarrative.description}</p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
@@ -348,7 +411,16 @@ export function PulseDashboardPanel({
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {workflowCards.map((workflow) => (
-            <div key={workflow.id} className="rounded-md border border-border p-3">
+            <div
+              key={workflow.id}
+              id={workflow.sectionId}
+              className={cn(
+                'rounded-md border border-border p-3',
+                workflow.workflow !== null && workflow.workflow === activeWorkflow
+                  ? 'border-primary/50 bg-primary/5 shadow-sm'
+                  : null
+              )}
+            >
               <p className="text-sm font-semibold">{workflow.title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{workflow.description}</p>
               <Button
@@ -360,6 +432,26 @@ export function PulseDashboardPanel({
                 {busyAction === workflow.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {workflow.buttonLabel}
               </Button>
+              {workflow.id === 'snapshot' && latestSnapshot ? (
+                <Button asChild size="sm" variant="ghost" className="mt-2">
+                  <Link href={`/app/pulse/snapshots/${latestSnapshot.id}`}>Open latest snapshot</Link>
+                </Button>
+              ) : null}
+              {workflow.id === 'brief' && latestBoardBrief ? (
+                <Button asChild size="sm" variant="ghost" className="mt-2">
+                  <Link href={`/app/pulse/board-briefs/${latestBoardBrief.id}`}>Open latest board brief</Link>
+                </Button>
+              ) : null}
+              {workflow.id === 'roadmap' && latestRoadmap ? (
+                <Button asChild size="sm" variant="ghost" className="mt-2">
+                  <Link href={workflowRoutes.pulseRoadmapRecord(latestRoadmap.id)}>Open latest roadmap</Link>
+                </Button>
+              ) : null}
+              {workflow.id === 'quarterly-review' && latestQuarterlyReview ? (
+                <Button asChild size="sm" variant="ghost" className="mt-2">
+                  <Link href={`/app/pulse/quarterly-reviews/${latestQuarterlyReview.id}`}>Open latest quarterly review</Link>
+                </Button>
+              ) : null}
             </div>
           ))}
         </CardContent>

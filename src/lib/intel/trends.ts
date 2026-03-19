@@ -1,3 +1,5 @@
+import { workflowRoutes } from '@/lib/product/workflow-routes';
+
 export type TrendSeverity = 'critical' | 'high' | 'medium';
 
 export type TrendMetric = {
@@ -334,7 +336,7 @@ const capabilities: SoloCisoCapability[] = [
     title: 'First-Hour Incident Readiness',
     outcome: 'Contain high-confidence incidents quickly without decision paralysis.',
     cadence: 'weekly',
-    linkedRoute: '/app/security-analyst',
+    linkedRoute: workflowRoutes.responseTabletop(),
     mappedTrendIds: ['breakout-speed', 'ransomware-extortion-economics'],
     actions: [
       'Rehearse account compromise and ransomware first-hour steps.',
@@ -347,7 +349,7 @@ const capabilities: SoloCisoCapability[] = [
     title: 'Evidence and Trust Packet Freshness',
     outcome: 'Keep customer and audit responses current with minimal manual scramble.',
     cadence: 'weekly',
-    linkedRoute: '/app/trust/inbox',
+    linkedRoute: workflowRoutes.trustPacketAssembly(),
     mappedTrendIds: ['third-party-concentration'],
     actions: [
       'Refresh stale evidence linked to critical controls.',
@@ -360,7 +362,7 @@ const capabilities: SoloCisoCapability[] = [
     title: 'Policy and Control Governance',
     outcome: 'Sustain compliance readiness while adapting to evolving attack patterns.',
     cadence: 'monthly',
-    linkedRoute: '/app/policies',
+    linkedRoute: workflowRoutes.policiesGenerator(),
     mappedTrendIds: ['third-party-concentration', 'identity-velocity'],
     actions: [
       'Regenerate high-priority policies with updated owner and review metadata.',
@@ -407,4 +409,3 @@ export function getTopTrendActions(limit = 10) {
 
   return actions.slice(0, Math.max(1, limit));
 }
-

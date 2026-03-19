@@ -22,7 +22,7 @@ export function SessionNav({ isAuthenticated, activeTenantName, role, membership
   if (!isAuthenticated) {
     return (
       <nav className="card" style={{ display: 'flex', gap: 16, justifyContent: 'space-between' }}>
-        <div>VantageAI</div>
+        <div>VantageCISO</div>
         <Link href="/login">Sign in</Link>
       </nav>
     );

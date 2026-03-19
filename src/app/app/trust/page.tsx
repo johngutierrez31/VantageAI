@@ -2,9 +2,14 @@ import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { EmptyState } from '@/components/app/empty-state';
 import { TrustPacketPanel } from '@/components/app/trust-packet-panel';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
-export default async function TrustPacketPage() {
+export default async function TrustPacketPage({
+  searchParams
+}: {
+  searchParams?: { workflow?: string; packetId?: string };
+}) {
   const session = await getPageSessionContext();
   const [workspace, docs, inbox, evidenceOptions, packets, evidenceMaps] = await Promise.all([
     getTenantWorkspaceContext(session.tenantId),
@@ -73,7 +78,7 @@ export default async function TrustPacketPage() {
           title="Start your first TrustOps workflow"
           description="TrustOps turns live buyer diligence into durable records. Begin with a questionnaire or trust inbox item, then build evidence-backed answers, an evidence map, and a buyer-safe packet."
           actionLabel="Open Questionnaires"
-          actionHref="/app/questionnaires"
+          actionHref={workflowRoutes.questionnairesIntake()}
           eyebrow="TrustOps"
           supportingPoints={[
             'What it is for: buyer diligence intake, review, and packaging.',
@@ -84,6 +89,8 @@ export default async function TrustPacketPage() {
       ) : null}
 
       <TrustPacketPanel
+        activeWorkflow={searchParams?.workflow === 'packet-assembly' ? 'packet-assembly' : null}
+        selectedPacketId={searchParams?.packetId ?? null}
         docs={docs.map((doc) => ({
           id: doc.id,
           category: doc.category,

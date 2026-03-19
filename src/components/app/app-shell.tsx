@@ -97,7 +97,6 @@ type Props = {
   trialStatus: TrialStatus;
   trialEndsAt: string | null;
   trialDaysRemaining: number | null;
-  initialFunMode: boolean;
   children: ReactNode;
 };
 
@@ -123,10 +122,10 @@ const navItems: NavItem[] = [
 
 const tourStops = [
   {
-    href: '/app/command-center',
-    label: 'Command Center',
-    note: 'Start with the cross-module story: buyer pressure, posture, governed AI, and live response work.',
-    artifact: 'Operational summary'
+    href: '/app/tools',
+    label: 'Demo Story',
+    note: 'Start with the guided workflow map so the commercial story is clear before you drill into records.',
+    artifact: 'Guided entry'
   },
   {
     href: '/app/trust/inbox',
@@ -271,7 +270,7 @@ function GuidedTourCard({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             {demoMode ? <Badge variant="warning">Demo Workspace</Badge> : null}
-            <Badge variant="muted">Guided Tour</Badge>
+            <Badge variant="muted">Demo Story</Badge>
           </div>
           <CardTitle className="mt-3">See the product story in under five minutes</CardTitle>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
@@ -302,7 +301,7 @@ function GuidedTourCard({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm">
-            <Link href="/app/command-center">Start Tour</Link>
+            <Link href="/app/tools">Start Demo Story</Link>
           </Button>
           <Button asChild size="sm" variant="outline">
             <Link href="/app/pulse">See Sample Deliverables</Link>
@@ -413,14 +412,15 @@ export function AppShell({
     }
   }
 
+  const planBadgeLabel = demoMode ? 'Demo Access' : formatPlanLabel(currentPlan);
   const workspaceSummary = demoMode
-    ? 'Synthetic identities and example data only. Safe for walkthroughs, screenshots, and buyer-facing demos.'
+    ? 'Synthetic identities and example data only. Premium workflows and export paths stay enabled so the evaluation story stays complete.'
     : workspaceMode === 'TRIAL'
       ? `Blank full-access trial workspace${trialDaysRemaining !== null ? ` with ${trialDaysRemaining} day${trialDaysRemaining === 1 ? '' : 's'} remaining` : ''}.`
       : 'Tenant-scoped security operations workspace for trust, posture, AI risk, and incident workflows.';
 
   const mobileWorkspaceSummary = demoMode
-    ? 'Example data only. Built for walkthroughs and safe screenshots.'
+    ? 'Example data only, with premium workflows and exports enabled for evaluation.'
     : workspaceMode === 'TRIAL'
       ? `Full-access trial workspace${trialDaysRemaining !== null ? ` with ${trialDaysRemaining} day${trialDaysRemaining === 1 ? '' : 's'} remaining` : ''}.`
       : 'Tenant-scoped workspace with live role-based access.';
@@ -440,7 +440,7 @@ export function AppShell({
                 ) : (
                   <Badge variant="muted">{formatWorkspaceModeLabel(workspaceMode)} Workspace</Badge>
                 )}
-                <Badge variant="muted">{formatPlanLabel(currentPlan)}</Badge>
+                <Badge variant="muted">{planBadgeLabel}</Badge>
               </div>
               <p className="mt-3 font-display text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
                 {demoMode ? 'Sample Tenant' : workspaceMode === 'TRIAL' ? 'Trial Workspace' : 'Active Tenant'}
@@ -485,7 +485,7 @@ export function AppShell({
                 {demoMode ? (
                   <>
                     <Button size="sm" variant="outline" type="button" onClick={reopenTour}>
-                      Guided Tour
+                      Demo Story
                     </Button>
                     <Button asChild size="sm" variant="ghost">
                       <a href={SALES_SITE_URL} target="_blank" rel="noreferrer">
@@ -571,9 +571,11 @@ export function AppShell({
               </div>
 
               <div className="flex items-center gap-2 self-stretch lg:self-auto">
-                <Button type="button" size="sm" variant="outline" className="flex-1 px-3 sm:flex-none" onClick={reopenTour}>
-                  Guided Tour
-                </Button>
+                {demoMode ? (
+                  <Button type="button" size="sm" variant="outline" className="flex-1 px-3 sm:flex-none" onClick={reopenTour}>
+                    Demo Story
+                  </Button>
+                ) : null}
                 <div className="relative">
                   <Button
                     variant="ghost"
@@ -630,7 +632,9 @@ export function AppShell({
                       <CardContent className="space-y-2 p-3">
                         <p className="text-sm font-medium">{userLabel}</p>
                         <p className="text-xs text-muted-foreground">{tenantName}</p>
-                        <p className="text-xs text-muted-foreground">Plan: {formatPlanLabel(currentPlan)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {demoMode ? 'Access: Demo-unlocked evaluation workspace' : `Plan: ${formatPlanLabel(currentPlan)}`}
+                        </p>
                         <p className="text-xs text-muted-foreground">{workspaceSummary}</p>
                         {workspaceMode === 'TRIAL' && trialEndsAt ? (
                           <p className="text-xs text-muted-foreground">Trial ends {new Date(trialEndsAt).toLocaleDateString()}.</p>
@@ -678,7 +682,7 @@ export function AppShell({
                       ) : (
                         <Badge variant="muted">{formatWorkspaceModeLabel(workspaceMode)} Workspace</Badge>
                       )}
-                      <Badge variant="muted">{formatPlanLabel(currentPlan)}</Badge>
+                      <Badge variant="muted">{planBadgeLabel}</Badge>
                     </div>
                     <div className="mt-2 flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -706,7 +710,7 @@ export function AppShell({
                     ) : null}
                     {demoMode ? (
                       <Button type="button" size="sm" className="w-full" variant="outline" onClick={reopenTour}>
-                        Open Guided Tour
+                        Open Demo Story
                       </Button>
                     ) : null}
                   </div>

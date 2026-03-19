@@ -1,3 +1,5 @@
+import { workflowRoutes } from '@/lib/product/workflow-routes';
+
 type DemoRouteRecord = {
   label: string;
   href: string;
@@ -101,7 +103,7 @@ function trustInboxRecord(records: DemoPathRecords): DemoRouteRecord {
 
   return {
     label: 'Open TrustOps',
-    href: '/app/trust',
+    href: workflowRoutes.trustPacketAssembly(),
     note: 'Start from the TrustOps workspace when the seeded diligence package is unavailable.'
   };
 }
@@ -120,7 +122,7 @@ function questionnaireRecord(records: DemoPathRecords): DemoRouteRecord {
 
   return {
     label: 'Open Questionnaires',
-    href: '/app/questionnaires',
+    href: workflowRoutes.questionnairesReviewEntry(),
     note: 'Use the questionnaire list if a seeded detail record is unavailable.'
   };
 }
@@ -137,7 +139,7 @@ function evidenceMapRecord(records: DemoPathRecords): DemoRouteRecord {
 
   return {
     label: 'Open Evidence Maps',
-    href: '/app/trust',
+    href: workflowRoutes.questionnairesEvidenceMapEntry(),
     note: 'Use the TrustOps workspace if a seeded evidence map is unavailable.'
   };
 }
@@ -153,8 +155,8 @@ function boardBriefRecord(records: DemoPathRecords): DemoRouteRecord {
   }
 
   return {
-    label: 'Open Pulse',
-    href: '/app/pulse',
+    label: 'Draft Board Brief',
+    href: workflowRoutes.pulseBoardBrief(),
     note: 'Use the Pulse dashboard if a seeded board brief is unavailable.'
   };
 }
@@ -170,8 +172,8 @@ function quarterlyReviewRecord(records: DemoPathRecords): DemoRouteRecord {
   }
 
   return {
-    label: 'Open Quarterly Review',
-    href: '/app/pulse',
+    label: 'Prepare Quarterly Review',
+    href: workflowRoutes.pulseQuarterlyReview(),
     note: 'Use the Pulse dashboard when a finalized review record is unavailable.'
   };
 }
@@ -187,8 +189,8 @@ function aiUseCaseRecord(records: DemoPathRecords): DemoRouteRecord {
   }
 
   return {
-    label: 'Open AI Governance',
-    href: '/app/ai-governance',
+    label: 'Register AI Use Case',
+    href: workflowRoutes.aiUseCaseCreate(),
     note: 'Use the AI Governance dashboard if a seeded use-case record is unavailable.'
   };
 }
@@ -204,8 +206,8 @@ function aiVendorReviewRecord(records: DemoPathRecords): DemoRouteRecord {
   }
 
   return {
-    label: 'Open AI Vendor Intake',
-    href: '/app/ai-governance/vendors',
+    label: 'Start AI Vendor Intake',
+    href: workflowRoutes.aiVendorIntakeCreate(),
     note: 'Use the vendor queue if a seeded intake record is unavailable.'
   };
 }
@@ -221,8 +223,8 @@ function activeIncidentRecord(records: DemoPathRecords): DemoRouteRecord {
   }
 
   return {
-    label: 'Open Response Ops',
-    href: '/app/response-ops',
+    label: 'Start Incident Triage',
+    href: workflowRoutes.responseIncidentTriage(),
     note: 'Use the Response Ops dashboard if a seeded active incident is unavailable.'
   };
 }
@@ -238,8 +240,8 @@ function afterActionRecord(records: DemoPathRecords): DemoRouteRecord {
   }
 
   return {
-    label: 'Open After-Action Workflow',
-    href: '/app/response-ops',
+    label: 'Draft After-Action Workflow',
+    href: workflowRoutes.responseAfterAction(),
     note: 'Use the Response Ops dashboard if a seeded after-action report is unavailable.'
   };
 }
@@ -249,14 +251,14 @@ function tabletopRecord(records: DemoPathRecords): DemoRouteRecord {
     return {
       label: records.tabletop.title,
       href: `/app/response-ops/tabletops/${records.tabletop.id}`,
-      note: 'Show the next tabletop and how readiness work becomes tasks, findings, and Pulse carry-over.',
+      note: 'Show the tabletop record and how readiness work becomes tasks, findings, and Pulse carry-over.',
       status: records.tabletop.status
     };
   }
 
   return {
-    label: 'Open Tabletops',
-    href: '/app/response-ops',
+    label: 'Prepare Tabletop',
+    href: workflowRoutes.responseTabletop(),
     note: 'Use the Response Ops dashboard if a seeded tabletop is unavailable.'
   };
 }
@@ -311,7 +313,7 @@ export function buildDemoPathViewModel(records: DemoPathRecords): DemoPathViewMo
 
 export async function getTenantDemoPathViewModel(tenantId: string): Promise<DemoPathViewModel> {
   const { prisma } = await import('@/lib/db/prisma');
-  const [trustInbox, questionnaire, evidenceMap, boardBrief, quarterlyReview, aiUseCase, aiVendorReview, activeIncident, afterActionIncident, tabletop] =
+  const [trustInbox, questionnaire, evidenceMap, boardBrief, quarterlyReview, preferredAiUseCase, fallbackAiUseCase, aiVendorReview, activeIncident, afterActionIncident, tabletop] =
     await Promise.all([
       prisma.trustInboxItem.findFirst({
         where: { tenantId },
@@ -337,6 +339,14 @@ export async function getTenantDemoPathViewModel(tenantId: string): Promise<Demo
         where: { tenantId },
         orderBy: [{ reviewDate: 'desc' }, { createdAt: 'desc' }],
         select: { id: true, reviewPeriod: true, status: true }
+      }),
+      prisma.aIUseCase.findFirst({
+        where: {
+          tenantId,
+          status: { in: ['APPROVED', 'APPROVED_WITH_CONDITIONS'] }
+        },
+        orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+        select: { id: true, name: true, status: true }
       }),
       prisma.aIUseCase.findFirst({
         where: { tenantId },
@@ -388,7 +398,7 @@ export async function getTenantDemoPathViewModel(tenantId: string): Promise<Demo
     evidenceMap,
     boardBrief,
     quarterlyReview,
-    aiUseCase,
+    aiUseCase: preferredAiUseCase ?? fallbackAiUseCase,
     aiVendorReview,
     activeIncident,
     afterActionIncident: afterActionIncident

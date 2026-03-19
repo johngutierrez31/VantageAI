@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
+import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/app/page-header';
 import { StatusPill } from '@/components/app/status-pill';
 import { Button } from '@/components/ui/button';
@@ -90,12 +92,16 @@ function slugify(value: string) {
 }
 
 export function TrustRoomPanel({
+  activeWorkflow,
+  selectedPacketId,
   baseUrl,
   packets,
   owners,
   rooms,
   requests
 }: {
+  activeWorkflow: 'publish' | 'access-requests' | 'engagement' | null;
+  selectedPacketId: string | null;
   baseUrl: string;
   packets: PacketOption[];
   owners: OwnerOption[];
@@ -103,10 +109,12 @@ export function TrustRoomPanel({
   requests: RequestSummary[];
 }) {
   const router = useRouter();
-  const [selectedPacketId, setSelectedPacketId] = useState(packets[0]?.id ?? '');
+  const [selectedPacketValue, setSelectedPacketValue] = useState(
+    selectedPacketId && packets.some((packet) => packet.id === selectedPacketId) ? selectedPacketId : packets[0]?.id ?? ''
+  );
   const selectedPacket = useMemo(
-    () => packets.find((packet) => packet.id === selectedPacketId) ?? packets[0],
-    [packets, selectedPacketId]
+    () => packets.find((packet) => packet.id === selectedPacketValue) ?? packets[0],
+    [packets, selectedPacketValue]
   );
 
   const [roomName, setRoomName] = useState('');
@@ -120,19 +128,26 @@ export function TrustRoomPanel({
   const [selectedSections, setSelectedSections] = useState<string[]>([]);
   const [busy, setBusy] = useState<'publish' | 'request' | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [requestState, setRequestState] = useState<Record<string, { status: string; assignedOwnerUserId: string; internalNotes: string }>>(
-    () =>
-      Object.fromEntries(
-        requests.map((request) => [
-          request.id,
-          {
-            status: request.status,
-            assignedOwnerUserId: request.assignedOwnerUserId ?? '',
-            internalNotes: request.internalNotes ?? ''
-          }
-        ])
-      )
+  const [requestState, setRequestState] = useState<
+    Record<string, { status: string; assignedOwnerUserId: string; internalNotes: string }>
+  >(() =>
+    Object.fromEntries(
+      requests.map((request) => [
+        request.id,
+        {
+          status: request.status,
+          assignedOwnerUserId: request.assignedOwnerUserId ?? '',
+          internalNotes: request.internalNotes ?? ''
+        }
+      ])
+    )
   );
+
+  useEffect(() => {
+    if (selectedPacketId && packets.some((packet) => packet.id === selectedPacketId)) {
+      setSelectedPacketValue(selectedPacketId);
+    }
+  }, [packets, selectedPacketId]);
 
   useEffect(() => {
     if (!selectedPacket) return;
@@ -178,6 +193,7 @@ export function TrustRoomPanel({
     }
 
     setMessage(payload.shareUrl ? `Trust room published. Share URL: ${payload.shareUrl}` : 'Trust room published.');
+    router.push(workflowRoutes.trustRoomPublish(selectedPacket.id));
     router.refresh();
   }
 
@@ -224,11 +240,7 @@ export function TrustRoomPanel({
       return;
     }
 
-    setMessage(
-      payload.grantUrl
-        ? `Access request updated. Grant URL: ${payload.grantUrl}`
-        : 'Access request updated.'
-    );
+    setMessage(payload.grantUrl ? `Access request updated. Grant URL: ${payload.grantUrl}` : 'Access request updated.');
     router.refresh();
   }
 
@@ -245,13 +257,38 @@ export function TrustRoomPanel({
         ]}
       />
 
+      {activeWorkflow ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">
+              {activeWorkflow === 'publish'
+                ? 'Publish Trust Room'
+                : activeWorkflow === 'access-requests'
+                  ? 'Review Access Requests'
+                  : 'Summarize Buyer Engagement'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {activeWorkflow === 'publish'
+                ? 'Start from an approved trust packet and publish a buyer-safe room with explicit sharing controls.'
+                : activeWorkflow === 'access-requests'
+                  ? 'Work the access-request queue with assignment, approval, denial, and grant-link issuance.'
+                  : 'Review room views, downloads, and top sections so the packet and room stay curated around what buyers actually consume.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
+        <Card
+          id="publish-trust-room"
+          className={cn(activeWorkflow === 'publish' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+        >
           <CardHeader>
             <CardTitle>Publish Trust Room</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Select value={selectedPacketId} onChange={(event) => setSelectedPacketId(event.target.value)}>
+            <Select value={selectedPacketValue} onChange={(event) => setSelectedPacketValue(event.target.value)}>
               {packets.map((packet) => (
                 <option key={packet.id} value={packet.id}>
                   {packet.name} | {packet.organizationName} | {packet.shareMode.replace(/_/g, ' ')}
@@ -313,6 +350,9 @@ export function TrustRoomPanel({
               <p className="text-sm text-muted-foreground">
                 Turn an approved trust packet into a buyer-facing room with link protection or request gating.
               </p>
+              <Button asChild size="sm" variant="outline" className="mt-3">
+                <Link href={workflowRoutes.trustRoomPublish(selectedPacketValue || packets[0]?.id || null)}>Open Workflow</Link>
+              </Button>
             </div>
             <div className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">Prepare Buyer Packet</p>
@@ -320,7 +360,7 @@ export function TrustRoomPanel({
                 Start from TrustOps packet assembly, then publish only the approved external-safe sections.
               </p>
               <Button asChild size="sm" variant="outline" className="mt-3">
-                <Link href="/app/trust">Open Trust Packets</Link>
+                <Link href={workflowRoutes.trustPacketAssembly(selectedPacketValue || packets[0]?.id || null)}>Open Workflow</Link>
               </Button>
             </div>
             <div className="rounded-md border border-border p-3">
@@ -328,18 +368,27 @@ export function TrustRoomPanel({
               <p className="text-sm text-muted-foreground">
                 Assign an internal owner, approve or deny buyer requests, and issue grant links when review is complete.
               </p>
+              <Button asChild size="sm" variant="outline" className="mt-3">
+                <Link href={workflowRoutes.trustRoomAccessRequests()}>Open Workflow</Link>
+              </Button>
             </div>
             <div className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">Summarize Buyer Engagement</p>
               <p className="text-sm text-muted-foreground">
                 Review room views, downloads, request counts, and the sections buyers spent time opening.
               </p>
+              <Button asChild size="sm" variant="outline" className="mt-3">
+                <Link href={workflowRoutes.trustRoomEngagement()}>Open Workflow</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card
+        id="trust-room-engagement"
+        className={cn(activeWorkflow === 'engagement' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+      >
         <CardHeader>
           <CardTitle>Published Trust Rooms</CardTitle>
         </CardHeader>
@@ -426,7 +475,10 @@ export function TrustRoomPanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card
+        id="trust-room-requests"
+        className={cn(activeWorkflow === 'access-requests' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+      >
         <CardHeader>
           <CardTitle>Access Requests</CardTitle>
         </CardHeader>

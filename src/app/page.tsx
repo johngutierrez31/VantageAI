@@ -14,8 +14,8 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="default">VantageAI Workspace</Badge>
-              {demoMode ? <Badge variant="warning">Demo Sandbox</Badge> : <Badge variant="muted">Authenticated App</Badge>}
+              <Badge variant="default">VantageCISO Workspace</Badge>
+              {demoMode ? <Badge variant="warning">Guided Demo</Badge> : <Badge variant="muted">Secure Workspace</Badge>}
             </div>
             <div className="space-y-4">
               <p className="font-display text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -25,13 +25,13 @@ export default function Home() {
                 Turn buyer diligence, AI risk, and executive reporting into one credible workspace.
               </h1>
               <p className="max-w-3xl text-lg text-muted-foreground">
-                VantageAI helps lean security teams move from intake to evidence, governance decisions, board-safe summaries, and owned follow-up without exposing internal scaffolding.
+                VantageCISO helps lean security teams move from intake to evidence, governance decisions, board-safe summaries, and owned follow-up in one operator-ready workspace.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <Link href={demoMode ? '/app/command-center' : '/login'}>
-                  {demoMode ? 'Open Demo Workspace' : 'Start 14-Day Trial'} <ArrowRight className="ml-2 h-4 w-4" />
+                <Link href={demoMode ? '/app/tools' : '/login'}>
+                  {demoMode ? 'Start Demo Story' : 'Start 14-Day Trial'} <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
@@ -67,13 +67,13 @@ export default function Home() {
 
           <Card className="border-primary/30 bg-card/95">
             <CardHeader>
-              <CardTitle>What a strong workspace shows immediately</CardTitle>
+              <CardTitle>What a polished demo shows immediately</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
                 {
-                  title: 'Command Center',
-                  description: 'Cross-module priorities, trust pressure, AI issues, and current actions.',
+                  title: 'Tools Hub',
+                  description: 'A guided starting point with the shortest path into the demo story and each flagship workflow.',
                   icon: <ShieldCheck className="h-5 w-5" />
                 },
                 {
@@ -102,7 +102,7 @@ export default function Home() {
               ))}
               {demoMode ? (
                 <div className="rounded-md border border-warning/40 bg-warning/10 p-4 text-sm text-muted-foreground">
-                  This environment is a demo sandbox with synthetic identities and example records only.
+                  This guided demo uses synthetic identities and example records only.
                 </div>
               ) : (
                 <div className="rounded-md border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground">

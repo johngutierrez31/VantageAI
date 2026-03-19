@@ -11,7 +11,11 @@ function parseManifest(value: unknown) {
   return Array.isArray(manifest.sections) ? manifest : null;
 }
 
-export default async function TrustRoomsPage() {
+export default async function TrustRoomsPage({
+  searchParams
+}: {
+  searchParams?: { workflow?: string; packetId?: string };
+}) {
   const session = await getPageSessionContext();
   const [packets, rooms, memberships, requests] = await Promise.all([
     prisma.trustPacket.findMany({
@@ -116,6 +120,14 @@ export default async function TrustRoomsPage() {
 
   return (
     <TrustRoomPanel
+      activeWorkflow={
+        searchParams?.workflow === 'publish' ||
+        searchParams?.workflow === 'access-requests' ||
+        searchParams?.workflow === 'engagement'
+          ? searchParams.workflow
+          : null
+      }
+      selectedPacketId={searchParams?.packetId ?? null}
       baseUrl={authBaseUrl}
       packets={packets.map((packet) => {
         const manifest = parseManifest(packet.packageManifestJson);

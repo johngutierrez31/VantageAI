@@ -92,13 +92,13 @@ describe('demo path view model', () => {
 
     expect(viewModel.threeMinutePath.map((step) => step.href)).toEqual([
       '/app/command-center',
-      '/app/trust',
-      '/app/pulse',
-      '/app/ai-governance',
-      '/app/response-ops'
+      '/app/trust?workflow=packet-assembly#trust-packet-assembly',
+      '/app/pulse?workflow=board-brief#pulse-board-brief-workflow',
+      '/app/ai-governance/use-cases?workflow=create#ai-use-case-form',
+      '/app/response-ops?workflow=incident-triage#incident-triage-workflow'
     ]);
     expect(viewModel.tenMinutePath[2]).toMatchObject({
-      href: '/app/questionnaires'
+      href: '/app/questionnaires?workflow=review#recent-questionnaire-uploads'
     });
   });
 });

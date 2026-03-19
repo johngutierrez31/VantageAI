@@ -3,7 +3,11 @@ import { prisma } from '@/lib/db/prisma';
 import { QuestionnaireUploadsPanel } from '@/components/app/questionnaire-uploads-panel';
 import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
-export default async function QuestionnairesPage() {
+export default async function QuestionnairesPage({
+  searchParams
+}: {
+  searchParams?: { workflow?: string };
+}) {
   const session = await getPageSessionContext();
   const [workspace, uploads] = await Promise.all([
     getTenantWorkspaceContext(session.tenantId),
@@ -34,6 +38,13 @@ export default async function QuestionnairesPage() {
 
   return (
     <QuestionnaireUploadsPanel
+      activeWorkflow={
+        searchParams?.workflow === 'intake' ||
+        searchParams?.workflow === 'review' ||
+        searchParams?.workflow === 'evidence-map'
+          ? searchParams.workflow
+          : null
+      }
       isTrial={workspace.isTrial}
       uploads={uploads.map((upload) => ({
         id: upload.id,

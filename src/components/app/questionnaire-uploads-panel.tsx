@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { FileSpreadsheet, FileText, LayoutTemplate } from 'lucide-react';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
+import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/app/page-header';
 import { EmptyState } from '@/components/app/empty-state';
 import { StatusPill } from '@/components/app/status-pill';
@@ -34,9 +36,11 @@ type UploadRow = {
 };
 
 export function QuestionnaireUploadsPanel({
+  activeWorkflow,
   uploads,
   isTrial = false
 }: {
+  activeWorkflow: 'intake' | 'review' | 'evidence-map' | null;
   uploads: UploadRow[];
   isTrial?: boolean;
 }) {
@@ -85,7 +89,7 @@ export function QuestionnaireUploadsPanel({
     setFile(null);
     setOrganizationName('');
     setInlineContent('');
-    router.refresh();
+    router.push(workflowRoutes.questionnaireReview(payload.id));
   }
 
   return (
@@ -95,6 +99,28 @@ export function QuestionnaireUploadsPanel({
         helpKey="questionnaires"
         description="Bring buyer questionnaires into a reviewable workflow, map them to controls, generate cited drafts, and export only approved answers."
       />
+
+      {activeWorkflow ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">
+              {activeWorkflow === 'intake'
+                ? 'Start Questionnaire Intake'
+                : activeWorkflow === 'review'
+                  ? 'Review Questionnaire Detail'
+                  : 'Build Evidence Map'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {activeWorkflow === 'intake'
+                ? 'Create the durable questionnaire record first so normalization, draft answers, trust links, and reviewer assignment all share one source object.'
+                : activeWorkflow === 'review'
+                  ? 'Choose a questionnaire below to continue row-level review, approval, and answer-library promotion.'
+                  : 'Choose a questionnaire below to open or build the linked evidence map from the same imported rows.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
         <CardContent className="grid gap-4 p-5 md:grid-cols-3">
@@ -159,7 +185,14 @@ export function QuestionnaireUploadsPanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card
+        id="recent-questionnaire-uploads"
+        className={cn(
+          activeWorkflow === 'review' || activeWorkflow === 'evidence-map'
+            ? 'border-primary/50 bg-primary/5 shadow-sm'
+            : null
+        )}
+      >
         <CardHeader>
           <CardTitle>Recent Uploads</CardTitle>
         </CardHeader>
@@ -210,7 +243,18 @@ export function QuestionnaireUploadsPanel({
                     {upload.evidenceMap ? <StatusPill status={upload.evidenceMap.status} /> : null}
                     {upload.trustInboxItem ? <StatusPill status={upload.trustInboxItem.status} /> : null}
                     <Button asChild size="sm" variant="outline">
-                      <Link href={`/app/questionnaires/${upload.id}`}>Open</Link>
+                      <Link href={workflowRoutes.questionnaireReview(upload.id)}>Review Questionnaire</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                      <Link
+                        href={
+                          upload.evidenceMap
+                            ? `/app/trust/evidence-maps/${upload.evidenceMap.id}`
+                            : workflowRoutes.questionnaireEvidenceMap(upload.id)
+                        }
+                      >
+                        {upload.evidenceMap ? 'Open Evidence Map' : 'Build Evidence Map'}
+                      </Link>
                     </Button>
                     <Button asChild size="sm" variant="outline">
                       <Link href={`/app/trust/inbox${upload.trustInboxItem ? `/${upload.trustInboxItem.id}` : ''}`}>

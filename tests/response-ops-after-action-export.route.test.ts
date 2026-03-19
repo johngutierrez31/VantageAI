@@ -132,7 +132,7 @@ describe('response ops after-action export route', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/html');
     expect(response.headers.get('content-disposition')).toContain(
-      'vantageai-after-action-after-action-report-validation-incident.html'
+      'vantageciso-after-action-after-action-report-validation-incident.html'
     );
     await expect(response.text()).resolves.toContain('After Action Report');
     expect(afterActionUpdate).toHaveBeenCalledWith({

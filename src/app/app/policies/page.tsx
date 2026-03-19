@@ -1,4 +1,5 @@
 import { getPageSessionContext } from '@/lib/auth/page-session';
+import { getTenantEntitlements } from '@/lib/billing/entitlements';
 import { getPolicyCatalog } from '@/lib/policy-generator/library';
 import { PolicyGeneratorPanel } from '@/components/app/policy-generator-panel';
 import { EmptyState } from '@/components/app/empty-state';
@@ -6,8 +7,9 @@ import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export default async function PoliciesPage() {
   const session = await getPageSessionContext();
-  const [workspace, catalog] = await Promise.all([
+  const [workspace, entitlements, catalog] = await Promise.all([
     getTenantWorkspaceContext(session.tenantId),
+    getTenantEntitlements(session.tenantId),
     getPolicyCatalog()
   ]);
 
@@ -29,6 +31,8 @@ export default async function PoliciesPage() {
       ) : null}
 
       <PolicyGeneratorPanel
+        canExportPdf={entitlements.limits.canExportPdf}
+        isDemo={workspace.isDemo}
         templates={catalog.policies}
         categories={catalog.categories}
         frameworks={catalog.frameworks}

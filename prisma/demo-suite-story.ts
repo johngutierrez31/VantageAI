@@ -182,7 +182,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       templateId: requireValue(securityTemplate?.id, 'Missing security template id.'),
       templateVersionId: securityVersionId,
       name: 'Q1 executive operating readiness review',
-      customerName: 'Astera Manufacturing',
+      customerName: 'Astera Cloud Security',
       status: AssessmentStatus.IN_PROGRESS,
       createdBy: DEMO_USER_ID,
       createdAt: addDays(now, -7)
@@ -492,7 +492,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     reviewerRequired: false,
     organizationName: 'Northbridge Payments',
     approvedContactName: 'Jordan Lee',
-    approvedContactEmail: 'jordan.lee@astera-demo.example',
+    approvedContactEmail: 'trust@astera.example',
     approvedRows,
     evidenceMapStatus: EvidenceMapStatus.NEEDS_REVIEW,
     evidenceMapItems: [
@@ -524,7 +524,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       assignedReviewerUserId: DEMO_USERS[1].id,
       reviewDueAt: tomorrow,
       approvedContactName: 'Jordan Lee',
-      approvedContactEmail: 'jordan.lee@astera-demo.example',
+      approvedContactEmail: 'trust@astera.example',
       lastExportedAt: twoDaysAgo,
       exportCount: 1,
       createdBy: DEMO_USER_ID,
@@ -701,17 +701,21 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       matchedPolicyIds: ['policy-ai-usage-standard'],
       requiredConditions: [AIPolicyRequirement.APPROVED_VENDOR_ONLY, AIPolicyRequirement.LOGGING_REQUIRED, AIPolicyRequirement.RETENTION_MUST_BE_KNOWN],
       unmetRequirements: [AIPolicyRequirement.RETENTION_MUST_BE_KNOWN],
-      approvalBlockers: [AIPolicyRequirement.RETENTION_MUST_BE_KNOWN],
+      approvalBlockers: [],
       decisionConditions: ['Confirm retention terms before unrestricted expansion.'],
       riskNotes: 'Vendor retention terms are still under review.',
       primaryRisks: ['Retention terms are not yet clear.', 'External model-provider dependency remains material.'],
       requiredControls: ['Centralize usage logging', 'Restrict input classes until retention is known'],
       ownerUserId: DEMO_USERS[2].id,
       assignedReviewerUserId: DEMO_USERS[1].id,
-      reviewDueAt: tomorrow,
-      reviewerNotes: 'Legal follow-up is still open before final approval.',
+      reviewDueAt: twoDaysAgo,
+      reviewerNotes: 'Approved with conditions for TrustOps use while retention terms and logging evidence stay under tracked follow-up.',
       riskTier: AIRiskTier.HIGH,
-      status: AIGovernanceStatus.NEEDS_REVIEW,
+      status: AIGovernanceStatus.APPROVED_WITH_CONDITIONS,
+      reviewedBy: DEMO_USERS[1].id,
+      approvedBy: DEMO_USER_ID,
+      reviewedAt: twoDaysAgo,
+      approvedAt: twoDaysAgo,
       evidenceArtifactIds: [aiEvidence.id],
       linkedFindingIds: [DEMO_IDS.aiFinding],
       linkedRiskIds: [DEMO_IDS.riskAi],
@@ -757,7 +761,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       requiredControls: ['Answer review queue', 'Tenant-scoped evidence only', 'Audit logging on every generation'],
       evidenceArtifactIds: [aiEvidence.id],
       assignedReviewerUserId: DEMO_USERS[1].id,
-      reviewDueAt: nextWeek,
+      reviewDueAt: twoDaysAgo,
       reviewerNotes: 'Conditionally approved for TrustOps only while vendor diligence completes.',
       reviewedBy: DEMO_USERS[1].id,
       approvedBy: DEMO_USER_ID,
@@ -768,6 +772,72 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       linkedTaskIds: [DEMO_IDS.aiTask],
       createdBy: DEMO_USER_ID,
       createdAt: threeDaysAgo
+    }
+  });
+
+  await prisma.aIUseCase.create({
+    data: {
+      id: DEMO_IDS.aiUseCaseReview,
+      tenantId,
+      name: 'Customer renewal call summary assistant',
+      description: 'Proposed workflow to summarize renewal calls and draft follow-up notes for revenue teams.',
+      businessOwner: 'Leah Soto',
+      department: 'Revenue Operations',
+      useCaseType: AIUseCaseType.CUSTOMER_FACING,
+      workflowType: AIWorkflowType.CONTENT_GENERATION,
+      vendorName: 'NotePilot AI',
+      modelFamily: 'gpt-4.1-mini',
+      deploymentContext: AIDeploymentContext.SAAS,
+      dataClasses: [AIDataClass.INTERNAL, AIDataClass.CUSTOMER_CONTENT, AIDataClass.PII],
+      allowedDataClasses: [AIDataClass.PUBLIC, AIDataClass.INTERNAL],
+      restrictedDataClasses: [AIDataClass.CUSTOMER_CONTENT, AIDataClass.PII],
+      prohibitedDataClasses: [AIDataClass.SECRETS, AIDataClass.PHI, AIDataClass.PCI],
+      customerDataInvolved: AIYesNoUnknown.YES,
+      regulatedDataInvolved: AIYesNoUnknown.YES,
+      secretsInvolved: AIYesNoUnknown.NO,
+      externalToolAccess: AIYesNoUnknown.YES,
+      internetAccess: AIYesNoUnknown.YES,
+      humanReviewRequired: true,
+      riskTier: AIRiskTier.HIGH,
+      status: AIGovernanceStatus.NEEDS_REVIEW,
+      linkedPolicyIds: ['policy-ai-usage-standard'],
+      matchedPolicyIds: ['policy-ai-usage-standard'],
+      requiredConditions: [
+        AIPolicyRequirement.HUMAN_REVIEW_REQUIRED,
+        AIPolicyRequirement.APPROVED_VENDOR_ONLY,
+        AIPolicyRequirement.LOGGING_REQUIRED,
+        AIPolicyRequirement.NO_REGULATED_DATA,
+        AIPolicyRequirement.RETENTION_MUST_BE_KNOWN
+      ],
+      unmetRequirements: [
+        AIPolicyRequirement.APPROVED_VENDOR_ONLY,
+        AIPolicyRequirement.NO_REGULATED_DATA,
+        AIPolicyRequirement.RETENTION_MUST_BE_KNOWN
+      ],
+      approvalBlockers: [
+        AIPolicyRequirement.APPROVED_VENDOR_ONLY,
+        AIPolicyRequirement.NO_REGULATED_DATA,
+        AIPolicyRequirement.RETENTION_MUST_BE_KNOWN
+      ],
+      decisionConditions: [
+        'Remain blocked until an approved vendor intake exists.',
+        'Redact transcript PII before any external processing.',
+        'Require human review before notes can be shared with customers.'
+      ],
+      primaryRisks: [
+        'Customer call transcripts could be processed by an unapproved vendor.',
+        'AI-generated renewal language could overstate product or security commitments.'
+      ],
+      requiredControls: ['Approved vendor intake', 'Transcript minimization and redaction', 'Human review before distribution'],
+      evidenceArtifactIds: [aiEvidence.id],
+      assignedReviewerUserId: DEMO_USERS[1].id,
+      reviewDueAt: oneDayAgo,
+      reviewerNotes: 'Hold for governance review until vendor intake, retention terms, and customer-data boundaries are approved.',
+      linkedFindingIds: [DEMO_IDS.aiFindingReview],
+      linkedRiskIds: [DEMO_IDS.riskAiReview],
+      linkedTaskIds: [DEMO_IDS.aiTaskReview],
+      createdBy: DEMO_USER_ID,
+      createdAt: twoDaysAgo
     }
   });
 
@@ -788,6 +858,22 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     }
   });
 
+  await prisma.task.create({
+    data: {
+      id: DEMO_IDS.aiTaskReview,
+      tenantId,
+      aiUseCaseId: DEMO_IDS.aiUseCaseReview,
+      title: 'Complete vendor intake and customer-data review for call summaries',
+      description: 'Route the renewal-call summary workflow through approved vendor intake, transcript minimization, and human-review guardrails before any pilot.',
+      assignee: DEMO_USERS[1].name,
+      dueDate: nextWeek,
+      status: TaskStatus.TODO,
+      priority: TaskPriority.HIGH,
+      createdBy: DEMO_USER_ID,
+      createdAt: oneDayAgo
+    }
+  });
+
   await prisma.finding.create({
     data: {
       id: DEMO_IDS.aiFinding,
@@ -803,6 +889,23 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       aiVendorReviewId: DEMO_IDS.aiVendorReview,
       createdBy: DEMO_USER_ID,
       createdAt: twoDaysAgo
+    }
+  });
+
+  await prisma.finding.create({
+    data: {
+      id: DEMO_IDS.aiFindingReview,
+      tenantId,
+      sourceType: FindingSourceType.AI_GOVERNANCE_HIGH_RISK,
+      status: FindingStatus.OPEN,
+      priority: TaskPriority.HIGH,
+      title: 'Customer call summary workflow lacks approved vendor and PII controls',
+      description: 'The proposed renewal-call summary assistant is review-gated because customer transcript handling, vendor approval, and buyer-safe output controls are not yet in place.',
+      ownerUserId: DEMO_USERS[1].id,
+      taskId: DEMO_IDS.aiTaskReview,
+      aiUseCaseId: DEMO_IDS.aiUseCaseReview,
+      createdBy: DEMO_USER_ID,
+      createdAt: oneDayAgo
     }
   });
 
@@ -985,18 +1088,24 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       tenantId,
       title: 'Q2 ransomware leadership tabletop',
       scenarioType: IncidentType.RANSOMWARE,
-      status: 'DRAFT',
-      exerciseDate: twoWeeksOut,
+      status: 'COMPLETED',
+      exerciseDate: oneDayAgo,
       participantNames: DEMO_USERS.map((user) => user.name),
       participantRoles: ['Executive sponsor', 'Trust lead', 'Incident commander'],
       scenarioSummary: 'Exercise a first-hour ransomware and buyer-communications scenario across the suite.',
       exerciseObjectives: ['Confirm first-hour ownership.', 'Validate buyer and executive communications.', 'Identify roadmap work after the exercise.'],
       expectedDecisions: ['Whether to isolate a shared SaaS dependency immediately.', 'When to brief leadership and update trust materials.'],
-      exerciseNotes: 'Seeded as the next major recurring exercise for demo walkthroughs.',
-      followUpActions: ['Validate backup restoration talking points before the exercise.'],
+      exerciseNotes: 'Leadership completed the exercise and routed follow-up into Pulse instead of leaving it as a slide-deck takeaway.',
+      decisionsMade: ['Pre-approve a buyer-impact update path for ransomware scenarios.', 'Stage one leadership continuity brief before the next quarterly review.'],
+      gapsIdentified: ['Buyer-impact communications are not pre-staged for ransomware scenarios.', 'Leadership continuity talking points need a durable approval owner.'],
+      followUpActions: ['Publish the ransomware buyer-impact briefing pack and carry the gap into Pulse.'],
+      linkedFindingIds: [DEMO_IDS.tabletopFinding],
+      linkedRiskIds: [DEMO_IDS.riskTabletop],
       linkedTaskIds: [DEMO_IDS.tabletopTask],
+      completedBy: DEMO_USERS[1].id,
+      completedAt: oneDayAgo,
       createdBy: DEMO_USER_ID,
-      createdAt: now
+      createdAt: twoDaysAgo
     }
   });
 
@@ -1005,14 +1114,31 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       id: DEMO_IDS.tabletopTask,
       tenantId,
       tabletopExerciseId: DEMO_IDS.tabletop,
-      title: 'Prepare executive tabletop briefing pack',
-      description: 'Stage the ransomware scenario brief, participant roles, and expected decisions.',
+      title: 'Publish ransomware buyer-impact briefing pack',
+      description: 'Convert tabletop decisions into a reusable leadership and buyer-impact communications pack before the next quarterly review.',
       assignee: DEMO_USERS[1].name,
       dueDate: nextWeek,
       status: TaskStatus.TODO,
-      priority: TaskPriority.MEDIUM,
+      priority: TaskPriority.HIGH,
       createdBy: DEMO_USER_ID,
-      createdAt: now
+      createdAt: oneDayAgo
+    }
+  });
+
+  await prisma.finding.create({
+    data: {
+      id: DEMO_IDS.tabletopFinding,
+      tenantId,
+      sourceType: FindingSourceType.RESPONSE_OPS_TABLETOP,
+      status: FindingStatus.OPEN,
+      priority: TaskPriority.MEDIUM,
+      title: 'Ransomware buyer-impact communications pack is not yet staged',
+      description: 'The leadership tabletop confirmed that ransomware communications would still be too manual for a buyer-impacting outage.',
+      ownerUserId: DEMO_USERS[1].id,
+      taskId: DEMO_IDS.tabletopTask,
+      tabletopExerciseId: DEMO_IDS.tabletop,
+      createdBy: DEMO_USER_ID,
+      createdAt: oneDayAgo
     }
   });
 
@@ -1020,7 +1146,9 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
     data: [
       { id: DEMO_IDS.riskTrust, tenantId, title: 'Buyer-facing data residency commitments are not yet standardized', normalizedRiskStatement: 'buyer-facing data residency commitments remain unapproved', description: 'TrustOps cannot safely approve customer-specific residency claims until product and legal validation is complete.', businessImpactSummary: 'Procurement cycles may stall if buyer-safe language is not resolved quickly.', sourceType: RiskRegisterSourceType.TRUSTOPS_EVIDENCE_GAP, sourceModule: PulseSourceModule.TRUSTOPS, sourceKey: DEMO_IDS.riskTrust, sourceReference: DEMO_IDS.questionnaireUpload, severity: RiskLevel.HIGH, likelihood: RiskLevel.MEDIUM, impact: RiskLevel.HIGH, status: RiskRegisterStatus.OPEN, ownerUserId: DEMO_USERS[1].id, targetDueAt: twoWeeksOut, linkedFindingIds: [DEMO_IDS.trustFinding], linkedTaskIds: [DEMO_IDS.trustTask], linkedQuestionnaireIds: [DEMO_IDS.questionnaireUpload], linkedEvidenceMapIds: [DEMO_IDS.evidenceMap], linkedTrustPacketIds: [DEMO_IDS.trustPacket], createdBy: DEMO_USER_ID, createdAt: twoDaysAgo },
       { id: DEMO_IDS.riskAi, tenantId, title: 'AI copilot expansion is gated by vendor retention diligence', normalizedRiskStatement: 'ai copilot expansion is gated by vendor retention diligence', description: 'The TrustOps copilot is conditionally approved, but vendor retention uncertainty still blocks broader rollout.', businessImpactSummary: 'AI Governance adoption is slowed until vendor diligence closes.', sourceType: RiskRegisterSourceType.AI_USE_CASE, sourceModule: PulseSourceModule.AI_GOVERNANCE, sourceKey: DEMO_IDS.riskAi, sourceReference: DEMO_IDS.aiUseCase, severity: RiskLevel.HIGH, likelihood: RiskLevel.HIGH, impact: RiskLevel.HIGH, status: RiskRegisterStatus.IN_REVIEW, ownerUserId: DEMO_USERS[2].id, targetDueAt: threeWeeksOut, linkedControlIds: [aiTieringQuestion.control.id], linkedFindingIds: [DEMO_IDS.aiFinding], linkedTaskIds: [DEMO_IDS.aiTask], linkedAiUseCaseIds: [DEMO_IDS.aiUseCase], linkedAiVendorReviewIds: [DEMO_IDS.aiVendorReview], createdBy: DEMO_USER_ID, createdAt: twoDaysAgo },
-      { id: DEMO_IDS.riskIncident, tenantId, title: 'Vendor-linked incident still affects trust and executive reporting', normalizedRiskStatement: 'vendor-linked incident still affects trust and executive reporting', description: 'The active vendor-linked incident is not fully contained from a trust and reporting perspective.', businessImpactSummary: 'Incident carry-over continues to affect buyer trust messaging and executive updates.', sourceType: RiskRegisterSourceType.INCIDENT, sourceModule: PulseSourceModule.RESPONSE_OPS, sourceKey: DEMO_IDS.riskIncident, sourceReference: DEMO_IDS.activeIncident, severity: RiskLevel.CRITICAL, likelihood: RiskLevel.MEDIUM, impact: RiskLevel.HIGH, status: RiskRegisterStatus.MITIGATING, ownerUserId: DEMO_USERS[2].id, targetDueAt: nextWeek, linkedFindingIds: [DEMO_IDS.activeIncidentFinding, DEMO_IDS.afterActionFinding], linkedTaskIds: [DEMO_IDS.activeIncidentTaskTriage, DEMO_IDS.activeIncidentTaskContainment, DEMO_IDS.activeIncidentTaskCommunications, DEMO_IDS.postIncidentTask], linkedIncidentIds: [DEMO_IDS.activeIncident, DEMO_IDS.resolvedIncident], createdBy: DEMO_USER_ID, createdAt: oneDayAgo }
+      { id: DEMO_IDS.riskAiReview, tenantId, title: 'Customer call transcript summarization is not approved for external AI use', normalizedRiskStatement: 'customer call transcript summarization lacks approved ai controls', description: 'The proposed renewal-call summary assistant would handle customer transcripts and PII without an approved vendor intake or restricted-data workflow.', businessImpactSummary: 'An ungoverned rollout would create customer trust, procurement, and data-handling exposure.', sourceType: RiskRegisterSourceType.AI_USE_CASE, sourceModule: PulseSourceModule.AI_GOVERNANCE, sourceKey: DEMO_IDS.riskAiReview, sourceReference: DEMO_IDS.aiUseCaseReview, severity: RiskLevel.HIGH, likelihood: RiskLevel.MEDIUM, impact: RiskLevel.HIGH, status: RiskRegisterStatus.OPEN, ownerUserId: DEMO_USERS[1].id, targetDueAt: nextWeek, linkedFindingIds: [DEMO_IDS.aiFindingReview], linkedTaskIds: [DEMO_IDS.aiTaskReview], linkedAiUseCaseIds: [DEMO_IDS.aiUseCaseReview], createdBy: DEMO_USER_ID, createdAt: oneDayAgo },
+      { id: DEMO_IDS.riskIncident, tenantId, title: 'Vendor-linked incident still affects trust and executive reporting', normalizedRiskStatement: 'vendor-linked incident still affects trust and executive reporting', description: 'The active vendor-linked incident is not fully contained from a trust and reporting perspective.', businessImpactSummary: 'Incident carry-over continues to affect buyer trust messaging and executive updates.', sourceType: RiskRegisterSourceType.INCIDENT, sourceModule: PulseSourceModule.RESPONSE_OPS, sourceKey: DEMO_IDS.riskIncident, sourceReference: DEMO_IDS.activeIncident, severity: RiskLevel.CRITICAL, likelihood: RiskLevel.MEDIUM, impact: RiskLevel.HIGH, status: RiskRegisterStatus.MITIGATING, ownerUserId: DEMO_USERS[2].id, targetDueAt: nextWeek, linkedFindingIds: [DEMO_IDS.activeIncidentFinding, DEMO_IDS.afterActionFinding], linkedTaskIds: [DEMO_IDS.activeIncidentTaskTriage, DEMO_IDS.activeIncidentTaskContainment, DEMO_IDS.activeIncidentTaskCommunications, DEMO_IDS.postIncidentTask], linkedIncidentIds: [DEMO_IDS.activeIncident, DEMO_IDS.resolvedIncident], createdBy: DEMO_USER_ID, createdAt: oneDayAgo },
+      { id: DEMO_IDS.riskTabletop, tenantId, title: 'Ransomware buyer-impact communications are still too manual', normalizedRiskStatement: 'ransomware buyer impact communications remain too manual', description: 'The completed leadership tabletop showed that customer and buyer-impact communications would still rely on ad hoc drafting during a ransomware event.', businessImpactSummary: 'Leadership confidence and buyer trust would degrade if outage communications are improvised.', sourceType: RiskRegisterSourceType.TABLETOP, sourceModule: PulseSourceModule.RESPONSE_OPS, sourceKey: DEMO_IDS.riskTabletop, sourceReference: DEMO_IDS.tabletop, severity: RiskLevel.MEDIUM, likelihood: RiskLevel.MEDIUM, impact: RiskLevel.HIGH, status: RiskRegisterStatus.OPEN, ownerUserId: DEMO_USERS[1].id, targetDueAt: nextWeek, linkedFindingIds: [DEMO_IDS.tabletopFinding], linkedTaskIds: [DEMO_IDS.tabletopTask], linkedTabletopIds: [DEMO_IDS.tabletop], createdBy: DEMO_USER_ID, createdAt: oneDayAgo }
     ]
   });
   await prisma.pulseSnapshot.create({
@@ -1039,16 +1167,16 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       remediationSignalScore: 71,
       trustSignalScore: 76,
       readinessSignalScore: 73,
-      openFindingsCount: 5,
+      openFindingsCount: 6,
       overdueFindingsCount: 1,
       overdueTasksCount: 2,
       openEvidenceGapCount: 1,
-      trustReviewBacklogCount: 2,
+      trustReviewBacklogCount: 3,
       answerReuseCount: 29,
       trustPacketsExportedCount: 1,
       assessedControlCount: 4,
-      summaryText: 'TrustOps is live, Pulse is publishing, AI Governance is conditional, and one vendor-linked incident remains the main carry-over risk.',
-      measuredInputsJson: { assessmentSignals: { assessmentsInProgress: 1, assessedControls: 4 }, trustSignals: { backlog: 1, overdueReviews: 2, openEvidenceGaps: 1, answerReuseCount: 29 }, aiSignals: { openReviews: 1, conditionalApprovals: 1, highRiskItems: 2 }, responseSignals: { activeIncidents: 1, overdueIncidentActions: 1, postIncidentActions: 1 } },
+      summaryText: 'TrustOps is producing buyer-ready outputs, one customer-data AI workflow remains review-gated, and incident plus tabletop follow-up are now feeding the executive roadmap.',
+      measuredInputsJson: { assessmentSignals: { assessmentsInProgress: 1, assessedControls: 4 }, trustSignals: { backlog: 1, overdueReviews: 2, openEvidenceGaps: 1, answerReuseCount: 29 }, aiSignals: { openReviews: 1, conditionalApprovals: 2, highRiskItems: 3 }, responseSignals: { activeIncidents: 1, overdueIncidentActions: 1, postIncidentActions: 1, tabletopFollowUps: 1 } },
       createdBy: DEMO_USER_ID,
       reviewedBy: DEMO_USERS[1].id,
       approvedBy: DEMO_USER_ID,
@@ -1062,10 +1190,10 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
   await prisma.pulseCategoryScore.createMany({
     data: [
       { id: DEMO_IDS.pulseCategoryAssessment, tenantId, snapshotId: DEMO_IDS.pulseSnapshot, categoryKey: 'assessment-signal', label: 'Assessment Signal', score: 78, delta: 4, weight: 1, measuredValue: 4, benchmarkValue: 4, summaryText: 'Assessment coverage is strong and one review remains in motion.', createdAt: oneDayAgo },
-      { id: DEMO_IDS.pulseCategoryFindings, tenantId, snapshotId: DEMO_IDS.pulseSnapshot, categoryKey: 'findings', label: 'Findings Pressure', score: 68, delta: 3, weight: 1, measuredValue: 5, benchmarkValue: 2, summaryText: 'Open trust, AI, and incident findings still require closeout.', createdAt: oneDayAgo },
+      { id: DEMO_IDS.pulseCategoryFindings, tenantId, snapshotId: DEMO_IDS.pulseSnapshot, categoryKey: 'findings', label: 'Findings Pressure', score: 68, delta: 3, weight: 1, measuredValue: 6, benchmarkValue: 2, summaryText: 'Open trust, AI, incident, and tabletop findings still require closeout.', createdAt: oneDayAgo },
       { id: DEMO_IDS.pulseCategoryRemediation, tenantId, snapshotId: DEMO_IDS.pulseSnapshot, categoryKey: 'remediation', label: 'Remediation Execution', score: 71, delta: 5, weight: 1, measuredValue: 4, benchmarkValue: 3, summaryText: 'One trust item and one incident action are still overdue.', createdAt: oneDayAgo },
       { id: DEMO_IDS.pulseCategoryTrust, tenantId, snapshotId: DEMO_IDS.pulseSnapshot, categoryKey: 'trustops', label: 'TrustOps Readiness', score: 76, delta: 7, weight: 1, measuredValue: 3, benchmarkValue: 4, summaryText: 'Trust packet export and answer reuse are strong, with one buyer commitment still under review.', createdAt: oneDayAgo },
-      { id: DEMO_IDS.pulseCategoryReadiness, tenantId, snapshotId: DEMO_IDS.pulseSnapshot, categoryKey: 'readiness', label: 'Operational Readiness', score: 73, delta: 2, weight: 1, measuredValue: 2, benchmarkValue: 4, summaryText: 'Response Ops is live and an executive tabletop is scheduled.', createdAt: oneDayAgo }
+      { id: DEMO_IDS.pulseCategoryReadiness, tenantId, snapshotId: DEMO_IDS.pulseSnapshot, categoryKey: 'readiness', label: 'Operational Readiness', score: 73, delta: 2, weight: 1, measuredValue: 3, benchmarkValue: 4, summaryText: 'Response Ops is live, with a completed tabletop now feeding roadmap follow-up.', createdAt: oneDayAgo }
     ]
   });
 
@@ -1090,8 +1218,8 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
   await prisma.roadmapItem.createMany({
     data: [
       { id: DEMO_IDS.roadmap30, tenantId, roadmapId: DEMO_IDS.roadmap, title: 'Resolve buyer-safe data residency language', horizon: RoadmapHorizon.DAYS_30, ownerUserId: DEMO_USERS[1].id, dueAt: addHours(now, -12), status: RoadmapItemStatus.IN_PROGRESS, rationale: 'Close the top TrustOps evidence gap affecting procurement responses.', expectedImpact: 'Reduce buyer review friction and unblock trust packet reuse.', linkedRiskIds: [DEMO_IDS.riskTrust], linkedFindingIds: [DEMO_IDS.trustFinding], linkedTaskIds: [DEMO_IDS.trustTask], createdAt: oneDayAgo },
-      { id: DEMO_IDS.roadmap60, tenantId, roadmapId: DEMO_IDS.roadmap, title: 'Complete AI vendor retention and logging validation', horizon: RoadmapHorizon.DAYS_60, ownerUserId: DEMO_USERS[2].id, dueAt: threeWeeksOut, status: RoadmapItemStatus.PLANNED, rationale: 'Move the AI copilot from conditional approval toward durable operating status.', expectedImpact: 'Improve AI Governance attach value and reduce executive concern around expansion.', linkedRiskIds: [DEMO_IDS.riskAi], linkedFindingIds: [DEMO_IDS.aiFinding], linkedTaskIds: [DEMO_IDS.aiTask], linkedControlIds: [aiTieringQuestion.control.id], createdAt: oneDayAgo },
-      { id: DEMO_IDS.roadmap90, tenantId, roadmapId: DEMO_IDS.roadmap, title: 'Operationalize incident communications and tabletop cadence', horizon: RoadmapHorizon.DAYS_90, ownerUserId: DEMO_USERS[2].id, dueAt: tenWeeksOut, status: RoadmapItemStatus.PLANNED, rationale: 'Convert incident lessons and tabletop planning into repeatable workflows.', expectedImpact: 'Strengthen premium Response Ops positioning and quarterly review quality.', linkedRiskIds: [DEMO_IDS.riskIncident], linkedFindingIds: [DEMO_IDS.activeIncidentFinding, DEMO_IDS.afterActionFinding], linkedTaskIds: [DEMO_IDS.postIncidentTask, DEMO_IDS.tabletopTask], createdAt: oneDayAgo }
+      { id: DEMO_IDS.roadmap60, tenantId, roadmapId: DEMO_IDS.roadmap, title: 'Complete AI vendor retention review and customer-data guardrails', horizon: RoadmapHorizon.DAYS_60, ownerUserId: DEMO_USERS[2].id, dueAt: threeWeeksOut, status: RoadmapItemStatus.PLANNED, rationale: 'Move the approved TrustOps copilot forward while keeping the customer-call summary workflow blocked until controls exist.', expectedImpact: 'Differentiate approved internal AI from unapproved customer-data expansion and reduce executive concern around rollout.', linkedRiskIds: [DEMO_IDS.riskAi, DEMO_IDS.riskAiReview], linkedFindingIds: [DEMO_IDS.aiFinding, DEMO_IDS.aiFindingReview], linkedTaskIds: [DEMO_IDS.aiTask, DEMO_IDS.aiTaskReview], linkedControlIds: [aiTieringQuestion.control.id], createdAt: oneDayAgo },
+      { id: DEMO_IDS.roadmap90, tenantId, roadmapId: DEMO_IDS.roadmap, title: 'Operationalize incident communications and tabletop follow-up', horizon: RoadmapHorizon.DAYS_90, ownerUserId: DEMO_USERS[2].id, dueAt: tenWeeksOut, status: RoadmapItemStatus.PLANNED, rationale: 'Convert incident lessons and the completed ransomware tabletop into repeatable workflows.', expectedImpact: 'Strengthen premium Response Ops positioning and quarterly review quality.', linkedRiskIds: [DEMO_IDS.riskIncident, DEMO_IDS.riskTabletop], linkedFindingIds: [DEMO_IDS.activeIncidentFinding, DEMO_IDS.afterActionFinding, DEMO_IDS.tabletopFinding], linkedTaskIds: [DEMO_IDS.postIncidentTask, DEMO_IDS.tabletopTask], createdAt: oneDayAgo }
     ]
   });
 
@@ -1104,14 +1232,14 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       title: 'Q1 board brief - cyber posture and buyer readiness',
       reportingPeriod: DEMO_REPORTING_PERIOD,
       status: BoardBriefStatus.APPROVED,
-      overallPostureSummary: 'Core posture is stronger than last quarter, but buyer commitment discipline, AI vendor diligence, and a live vendor-linked incident still need visible ownership.',
-      topRiskIds: [DEMO_IDS.riskTrust, DEMO_IDS.riskAi, DEMO_IDS.riskIncident],
-      notableImprovements: ['Approved answer reuse is reducing questionnaire turnaround.', 'Pulse now provides a live executive scorecard.', 'Response Ops after-action and tabletop workflows are in place.'],
-      overdueActions: ['Resolve the overdue trust review for buyer data residency language.'],
-      leadershipDecisionsNeeded: ['Confirm interim language limits for customer-specific residency commitments.', 'Decide whether the AI copilot can expand before vendor retention diligence closes.', 'Review tolerance for vendor-linked incident carry-over into next quarter.'],
+      overallPostureSummary: 'Core posture is stronger than last quarter, but buyer commitment discipline, one customer-data AI workflow still held in review, a live vendor-linked incident, and tabletop communications follow-up all need visible ownership.',
+      topRiskIds: [DEMO_IDS.riskTrust, DEMO_IDS.riskAi, DEMO_IDS.riskAiReview, DEMO_IDS.riskIncident],
+      notableImprovements: ['Approved answer reuse is reducing questionnaire turnaround.', 'AI Governance now separates conditional approvals from blocked customer-data workflows.', 'Response Ops after-action and tabletop follow-up are now feeding Pulse.'],
+      overdueActions: ['Resolve the overdue trust review for buyer data residency language.', 'Clear the overdue AI review for customer call summaries.'],
+      leadershipDecisionsNeeded: ['Confirm interim language limits for customer-specific residency commitments.', 'Decide whether the TrustOps copilot can expand before vendor retention diligence closes.', 'Keep the customer call summary assistant blocked until vendor intake and transcript controls are approved.', 'Review tolerance for vendor-linked incident carry-over into next quarter.'],
       roadmap30Days: ['Resolve buyer-safe data residency language and clear the overdue trust task.'],
-      roadmap60Days: ['Close AI vendor retention review and validate logging conditions.'],
-      roadmap90Days: ['Operationalize incident communications and run the ransomware executive tabletop.'],
+      roadmap60Days: ['Close vendor retention follow-up and decide whether the blocked customer-call summary workflow remains out of scope.'],
+      roadmap90Days: ['Publish the ransomware buyer-impact briefing pack and operationalize recurring tabletop follow-up.'],
       reviewerNotes: 'Ready for executive review and board pack assembly.',
       createdBy: DEMO_USER_ID,
       reviewedBy: DEMO_USERS[1].id,
@@ -1134,10 +1262,10 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       reviewPeriod: DEMO_REPORTING_PERIOD,
       reviewDate: now,
       attendeeNames: DEMO_USERS.map((user) => user.name),
-      notes: 'Quarterly review focused on procurement pressure, AI governance expansion, and incident carry-over.',
-      decisionsMade: ['Keep buyer-facing residency commitments review-gated until legal confirms language.', 'Maintain conditional approval on the questionnaire copilot until vendor retention is documented.', 'Carry the vendor-linked incident into Pulse and executive review until containment closes.'],
-      followUpActions: ['Close the overdue trust task within the next week.', 'Finish AI vendor retention review within the next 21 days.', 'Run the ransomware tabletop before the next board update.'],
-      topRiskIds: [DEMO_IDS.riskTrust, DEMO_IDS.riskAi, DEMO_IDS.riskIncident],
+      notes: 'Quarterly review focused on procurement pressure, review-gated AI expansion, and turning response lessons into durable executive follow-up.',
+      decisionsMade: ['Keep buyer-facing residency commitments review-gated until legal confirms language.', 'Maintain conditional approval on the TrustOps copilot until vendor retention is documented.', 'Keep the customer call summary assistant blocked until vendor intake and transcript redaction controls are approved.', 'Carry the vendor-linked incident into Pulse and executive review until containment closes.'],
+      followUpActions: ['Close the overdue trust task within the next week.', 'Finish AI vendor retention review within the next 21 days.', 'Resolve the customer call summary governance review within the next 14 days.', 'Publish the ransomware buyer-impact briefing pack before the next executive update.'],
+      topRiskIds: [DEMO_IDS.riskTrust, DEMO_IDS.riskAi, DEMO_IDS.riskAiReview, DEMO_IDS.riskIncident],
       status: QuarterlyReviewStatus.FINALIZED,
       createdBy: DEMO_USER_ID,
       finalizedBy: DEMO_USER_ID,
@@ -1183,7 +1311,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
           jiraBaseUrl: 'https://vantage-demo.atlassian.net',
           jiraProjectKey: 'SEC',
           jiraIssueType: 'Task',
-          jiraEmail: 'jira@astera-demo.example',
+          jiraEmail: 'jira@astera.example',
           statusMappings: [
             { source: 'OPEN', target: 'to-do' },
             { source: 'IN_PROGRESS', target: 'in-progress' },
@@ -1211,7 +1339,7 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
           confluenceBaseUrl: 'https://vantage-demo.atlassian.net',
           confluenceSpaceKey: 'SEC',
           confluenceParentPageId: '100100',
-          confluenceEmail: 'docs@astera-demo.example'
+          confluenceEmail: 'docs@astera.example'
         } satisfies Prisma.InputJsonObject,
         secretCiphertext: encryptConnectorSecret(JSON.stringify({ confluenceApiToken: 'confluence-demo-token' })),
         lastHealthStatus: ConnectorActivityStatus.SUCCEEDED,
@@ -1426,8 +1554,11 @@ export async function seedDemoSuiteStory(prisma: PrismaClient, tenantId: string)
       { tenantId, actorUserId: DEMO_USER_ID, entityType: 'adoption_import', entityId: DEMO_IDS.adoptionImportAnswers, action: 'adoption_import_completed', metadata: { target: AdoptionImportTarget.APPROVED_ANSWERS, source: AdoptionImportSource.CONNECTOR_EXPORT, createdCount: 2 }, createdAt: twoDaysAgo },
       { tenantId, actorUserId: DEMO_USER_ID, entityType: 'adoption_import', entityId: DEMO_IDS.adoptionImportRisk, action: 'adoption_import_completed', metadata: { target: AdoptionImportTarget.RISKS, source: AdoptionImportSource.CSV, createdCount: 1 }, createdAt: oneDayAgo },
       { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'board_brief', entityId: DEMO_IDS.boardBrief, action: 'board_brief_exported', metadata: { format: 'html' }, createdAt: oneDayAgo },
+      { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'ai_vendor_review', entityId: DEMO_IDS.aiVendorReview, action: 'decision_updated', metadata: { status: AIGovernanceStatus.APPROVED_WITH_CONDITIONS, linkedRiskId: DEMO_IDS.riskAi }, createdAt: twoDaysAgo },
       { tenantId, actorUserId: DEMO_USER_ID, entityType: 'ai_use_case', entityId: DEMO_IDS.aiUseCase, action: 'decision_updated', metadata: { status: AIGovernanceStatus.APPROVED_WITH_CONDITIONS, linkedRiskId: DEMO_IDS.riskAi }, createdAt: twoDaysAgo },
+      { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'ai_use_case', entityId: DEMO_IDS.aiUseCaseReview, action: 'decision_updated', metadata: { status: AIGovernanceStatus.NEEDS_REVIEW, linkedRiskId: DEMO_IDS.riskAiReview }, createdAt: oneDayAgo },
       { tenantId, actorUserId: DEMO_USERS[2].id, entityType: 'incident', entityId: DEMO_IDS.activeIncident, action: 'incident_created', metadata: { incidentType: IncidentType.THIRD_PARTY_BREACH, severity: IncidentSeverity.HIGH }, createdAt: oneDayAgo },
+      { tenantId, actorUserId: DEMO_USERS[1].id, entityType: 'tabletop_exercise', entityId: DEMO_IDS.tabletop, action: 'tabletop_completed', metadata: { linkedRiskId: DEMO_IDS.riskTabletop, linkedFindingId: DEMO_IDS.tabletopFinding }, createdAt: oneDayAgo },
       { tenantId, actorUserId: DEMO_USER_ID, entityType: 'after_action_report', entityId: DEMO_IDS.afterAction, action: 'after_action_exported', metadata: { format: 'html' }, createdAt: oneDayAgo }
     ]
   });

@@ -5,12 +5,14 @@ type DataTableProps = {
   title?: string;
   description?: string;
   actions?: ReactNode;
+  wrapperClassName?: string;
+  wrapperId?: string;
   children: ReactNode;
 };
 
-export function DataTable({ title, description, actions, children }: DataTableProps) {
+export function DataTable({ title, description, actions, wrapperClassName, wrapperId, children }: DataTableProps) {
   return (
-    <Card>
+    <Card id={wrapperId} className={wrapperClassName}>
       {(title || description || actions) ? (
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
           <div>

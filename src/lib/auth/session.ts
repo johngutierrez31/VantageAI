@@ -33,7 +33,7 @@ export class SessionContextError extends Error {
 
 async function buildDemoSessionContext(): Promise<SessionContext> {
   const configuredEmail = getDemoUserEmail();
-  const fallbackEmail = 'alex.mercer@astera-demo.example';
+  const fallbackEmail = 'morgan.hale@astera.example';
   const candidateEmails = Array.from(new Set([configuredEmail, fallbackEmail].filter(Boolean)));
   const preferredTenantSlug = getDemoTenantSlug();
 

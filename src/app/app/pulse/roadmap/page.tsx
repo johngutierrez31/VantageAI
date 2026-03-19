@@ -3,7 +3,11 @@ import { listRoadmaps } from '@/lib/pulse/roadmap';
 import { listTenantReviewers } from '@/lib/trust/reviewers';
 import { PulseRoadmapPanel } from '@/components/app/pulse-roadmap-panel';
 
-export default async function PulseRoadmapPage() {
+export default async function PulseRoadmapPage({
+  searchParams
+}: {
+  searchParams?: { roadmapId?: string };
+}) {
   const session = await getPageSessionContext();
   const [roadmaps, reviewers] = await Promise.all([
     listRoadmaps(session.tenantId),
@@ -12,6 +16,7 @@ export default async function PulseRoadmapPage() {
 
   return (
     <PulseRoadmapPanel
+      activeRoadmapId={searchParams?.roadmapId ?? null}
       roadmaps={roadmaps.map((roadmap) => ({
         ...roadmap,
         reviewerNotes: roadmap.reviewerNotes ?? null,

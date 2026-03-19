@@ -3,10 +3,15 @@ import { EmptyState } from '@/components/app/empty-state';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { getResponseOpsSummary } from '@/lib/response-ops/summary';
 import { listIncidentScenarioSummaries } from '@/lib/response-ops/templates';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
 import { listTenantReviewers } from '@/lib/trust/reviewers';
 import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
-export default async function ResponseOpsPage() {
+export default async function ResponseOpsPage({
+  searchParams
+}: {
+  searchParams?: { workflow?: string; runbookId?: string };
+}) {
   const session = await getPageSessionContext();
   const [workspace, summary, reviewers] = await Promise.all([
     getTenantWorkspaceContext(session.tenantId),
@@ -21,7 +26,7 @@ export default async function ResponseOpsPage() {
           title="Start your first incident workflow"
           description="Response Ops is for first-hour incident execution and follow-up. Start an incident or tabletop so decisions, tasks, and post-incident learning stay durable inside the workspace."
           actionLabel="Open Guided Response Ops Workflows"
-          actionHref="/app/response-ops#guided-response-ops-workflows"
+          actionHref={workflowRoutes.responseIncidentTriage()}
           eyebrow="Response Ops"
           supportingPoints={[
             'What it is for: incident triage, runbooks, after-action, and tabletop follow-up.',
@@ -32,6 +37,16 @@ export default async function ResponseOpsPage() {
       ) : null}
 
       <ResponseOpsDashboardPanel
+        activeWorkflow={
+          searchParams?.workflow === 'incident-triage' ||
+          searchParams?.workflow === 'runbook-pack' ||
+          searchParams?.workflow === 'timeline' ||
+          searchParams?.workflow === 'after-action' ||
+          searchParams?.workflow === 'tabletop'
+            ? searchParams.workflow
+            : null
+        }
+        initialRunbookId={searchParams?.runbookId ?? null}
         metrics={summary.metrics}
         incidents={summary.incidents.map((incident) => ({
           id: incident.id,

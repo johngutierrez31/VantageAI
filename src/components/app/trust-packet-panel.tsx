@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { downloadResponseBlob } from '@/lib/browser/download';
+import { workflowRoutes } from '@/lib/product/workflow-routes';
+import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/app/page-header';
 import { StatusPill } from '@/components/app/status-pill';
 import { Button } from '@/components/ui/button';
@@ -57,12 +59,16 @@ type PacketSummary = {
 };
 
 export function TrustPacketPanel({
+  activeWorkflow,
+  selectedPacketId,
   docs,
   inbox,
   evidenceOptions,
   evidenceMaps,
   packets
 }: {
+  activeWorkflow: 'packet-assembly' | null;
+  selectedPacketId: string | null;
   docs: TrustDocRow[];
   inbox: InboxSummary[];
   evidenceOptions: EvidenceOption[];
@@ -77,9 +83,19 @@ export function TrustPacketPanel({
   const [packetInboxId, setPacketInboxId] = useState(inbox[0]?.id ?? '');
   const [packetShareMode, setPacketShareMode] = useState<'INTERNAL_REVIEW' | 'EXTERNAL_SHARE'>('INTERNAL_REVIEW');
   const [packetContactName, setPacketContactName] = useState('Jordan Lee');
-  const [packetContactEmail, setPacketContactEmail] = useState('jordan.lee@astera-demo.example');
+  const [packetContactEmail, setPacketContactEmail] = useState('trust@astera.example');
   const [busy, setBusy] = useState<'doc' | 'packet' | 'export' | 'review' | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const selectedPacket = useMemo(
+    () => packets.find((packet) => packet.id === selectedPacketId) ?? null,
+    [packets, selectedPacketId]
+  );
+
+  useEffect(() => {
+    if (!selectedPacket) return;
+    setPacketName(selectedPacket.name);
+    setPacketShareMode(selectedPacket.shareMode as 'INTERNAL_REVIEW' | 'EXTERNAL_SHARE');
+  }, [selectedPacket]);
 
   async function registerTrustDoc() {
     setBusy('doc');
@@ -131,7 +147,7 @@ export function TrustPacketPanel({
     }
 
     setMessage('Trust packet assembled and saved.');
-    router.refresh();
+    router.push(workflowRoutes.trustPacketAssembly(payload.id ?? null));
   }
 
   async function downloadPacket(packetId: string, format: 'html' | 'markdown' | 'json') {
@@ -148,7 +164,7 @@ export function TrustPacketPanel({
 
     const fileName = await downloadResponseBlob(
       response,
-      `vantageai-trust-packet-${packetId}.${format === 'markdown' ? 'md' : format}`
+      `vantageciso-trust-packet-${packetId}.${format === 'markdown' ? 'md' : format}`
     );
     setMessage(`Trust packet exported as ${fileName}.`);
     router.refresh();
@@ -195,6 +211,23 @@ export function TrustPacketPanel({
         </p>
       </PageHeader>
 
+      {activeWorkflow === 'packet-assembly' ? (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="space-y-2 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
+            <p className="text-lg font-semibold">Assemble Trust Packet</p>
+            <p className="text-sm text-muted-foreground">
+              Build the buyer-safe packet from approved questionnaire answers, evidence maps, and registered trust docs. Only approved artifacts belong in the shared package.
+            </p>
+            {selectedPacket ? (
+              <p className="text-sm text-muted-foreground">
+                Focused packet: <span className="font-medium text-foreground">{selectedPacket.name}</span>
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
         <CardContent className="grid gap-3 p-5 md:grid-cols-3">
           {[
@@ -221,7 +254,7 @@ export function TrustPacketPanel({
                 Generate evidence-backed drafts with citations, confidence, and review routing.
               </p>
               <Button asChild size="sm" variant="outline" className="mt-3">
-                <Link href="/app/questionnaires">Open Questionnaires</Link>
+                <Link href={workflowRoutes.questionnairesReviewEntry()}>Open Workflow</Link>
               </Button>
             </div>
             <div className="rounded-md border border-border p-3">
@@ -230,8 +263,14 @@ export function TrustPacketPanel({
                 Collapse duplicate buyer questions and link them to the smallest sufficient support set.
               </p>
               <Button asChild size="sm" variant="outline" className="mt-3">
-                <Link href={evidenceMaps[0] ? `/app/trust/evidence-maps/${evidenceMaps[0].id}` : '/app/questionnaires'}>
-                  Open Evidence Maps
+                <Link
+                  href={
+                    evidenceMaps[0]
+                      ? `/app/trust/evidence-maps/${evidenceMaps[0].id}`
+                      : workflowRoutes.questionnairesEvidenceMapEntry()
+                  }
+                >
+                  Open Workflow
                 </Link>
               </Button>
             </div>
@@ -241,7 +280,7 @@ export function TrustPacketPanel({
                 Turn an approved external-share packet into a buyer-facing trust room with link protection or request gating.
               </p>
               <Button asChild size="sm" variant="outline" className="mt-3">
-                <Link href="/app/trust/rooms">Open Trust Rooms</Link>
+                <Link href={workflowRoutes.trustRoomPublish(selectedPacketId ?? packets[0]?.id ?? null)}>Open Workflow</Link>
               </Button>
             </div>
             <div className="rounded-md border border-border p-3">
@@ -250,13 +289,16 @@ export function TrustPacketPanel({
                 Assign reviewers, set due dates, and manage questionnaire, evidence-map, and packet SLAs.
               </p>
               <Button asChild size="sm" variant="outline" className="mt-3">
-                <Link href="/app/trust/reviews">Open Review Queue</Link>
+                <Link href="/app/trust/reviews">Open Workflow</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          id="trust-packet-assembly"
+          className={cn(activeWorkflow === 'packet-assembly' ? 'border-primary/50 bg-primary/5 shadow-sm' : null)}
+        >
           <CardHeader>
             <CardTitle>Assemble Buyer Trust Packet</CardTitle>
           </CardHeader>
@@ -367,12 +409,18 @@ export function TrustPacketPanel({
         <CardHeader>
           <CardTitle>Saved Trust Packets</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent id="saved-trust-packets" className="space-y-2">
           {packets.length === 0 ? (
             <p className="text-sm text-muted-foreground">Build the first buyer diligence packet to show external-safe materials, share mode, and reviewer state here.</p>
           ) : (
             packets.map((packet) => (
-              <div key={packet.id} className="rounded-md border border-border p-3">
+              <div
+                key={packet.id}
+                className={cn(
+                  'rounded-md border border-border p-3',
+                  selectedPacketId === packet.id ? 'border-primary/50 bg-primary/5 shadow-sm' : null
+                )}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-semibold">{packet.name}</p>
@@ -391,13 +439,16 @@ export function TrustPacketPanel({
                 ) : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="secondary">
-                    <Link href="/app/trust/rooms">Publish Trust Room</Link>
+                    <Link href={workflowRoutes.trustRoomPublish(packet.id)}>Publish Trust Room</Link>
                   </Button>
                   {packet.shareMode === 'EXTERNAL_SHARE' && !['READY_TO_SHARE', 'SHARED'].includes(packet.status) ? (
                     <Button onClick={() => markPacketReady(packet.id)} size="sm" disabled={busy !== null}>
                       {busy === 'review' ? 'Saving...' : 'Mark Ready to Share'}
                     </Button>
                   ) : null}
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={workflowRoutes.trustPacketAssembly(packet.id)}>Open Packet Workflow</Link>
+                  </Button>
                   <Button onClick={() => downloadPacket(packet.id, 'html')} size="sm" variant="outline" disabled={busy === 'export'}>
                     Export HTML
                   </Button>

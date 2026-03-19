@@ -9,7 +9,7 @@ describe('export file names', () => {
 
   it('builds suite-prefixed export base names', () => {
     expect(buildSuiteExportBaseName('after-action', 'After Action Report', 'Validation incident')).toBe(
-      'vantageai-after-action-after-action-report-validation-incident'
+      'vantageciso-after-action-after-action-report-validation-incident'
     );
   });
 });
