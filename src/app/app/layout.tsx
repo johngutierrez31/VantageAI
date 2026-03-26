@@ -325,6 +325,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       : [])
   ];
 
+  const canAccessSettings = session.role === 'ADMIN' || session.role === 'OWNER';
+  const filteredSearchItems = searchItems.filter((item) => {
+    const isSettingsSearchItem = item.id.startsWith('settings-');
+    if (workspace.isDemo && isSettingsSearchItem) return false;
+    if (!canAccessSettings && isSettingsSearchItem) return false;
+    return true;
+  });
+
   return (
     <AppShell
       tenantName={session.tenantName}
@@ -333,7 +341,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       role={session.role}
       demoMode={workspace.isDemo}
       userLabel={activeUser?.name ?? activeUser?.email ?? session.userId}
-      searchItems={searchItems}
+      searchItems={filteredSearchItems}
       notifications={notifications}
       currentPlan={entitlements.plan}
       workspaceMode={workspace.workspaceMode}

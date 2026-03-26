@@ -2,9 +2,22 @@ import { PageHeader } from '@/components/app/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
+import { redirect } from 'next/navigation';
 
 export default async function SettingsMembersPage() {
   const session = await getPageSessionContext();
+  const workspace = await getTenantWorkspaceContext(session.tenantId);
+  const canManageMembers = session.role === 'ADMIN' || session.role === 'OWNER';
+
+  if (workspace.isDemo) {
+    redirect('/app/tools?mode=demo');
+  }
+
+  if (!canManageMembers) {
+    redirect('/app/command-center');
+  }
+
   const members = await prisma.membership.findMany({
     where: { tenantId: session.tenantId, status: 'ACTIVE' },
     include: {

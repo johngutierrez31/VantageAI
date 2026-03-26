@@ -1,4 +1,4 @@
-import { MembershipStatus, TenantRole } from '@prisma/client';
+import { MembershipStatus, TenantRole, WorkspaceMode } from '@prisma/client';
 import { cookies } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
@@ -13,11 +13,14 @@ export type SessionContext = {
   tenantSlug: string;
   tenantName: string;
   role: TenantRole;
+  workspaceMode: WorkspaceMode;
+  isDemoWorkspace: boolean;
   memberships: Array<{
     tenantId: string;
     tenantSlug: string;
     tenantName: string;
     role: TenantRole;
+    workspaceMode: WorkspaceMode;
   }>;
 };
 
@@ -82,11 +85,14 @@ async function buildDemoSessionContext(): Promise<SessionContext> {
     tenantSlug: activeMembership.tenant.slug,
     tenantName: activeMembership.tenant.name,
     role: activeMembership.role,
+    workspaceMode: 'DEMO',
+    isDemoWorkspace: true,
     memberships: user.memberships.map((membership) => ({
       tenantId: membership.tenantId,
       tenantSlug: membership.tenant.slug,
       tenantName: membership.tenant.name,
-      role: membership.role
+      role: membership.role,
+      workspaceMode: 'DEMO'
     }))
   };
 }
@@ -116,12 +122,23 @@ export async function getSessionContext(): Promise<SessionContext> {
     throw new SessionContextError('Forbidden: no active tenant membership', 403);
   }
 
+  let workspaceMode = activeMembership.workspaceMode ?? session.user.activeTenantWorkspaceMode ?? null;
+  if (!workspaceMode) {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: activeMembership.tenantId },
+      select: { workspaceMode: true }
+    });
+    workspaceMode = tenant?.workspaceMode ?? 'PAID';
+  }
+
   return {
     userId: session.user.id,
     tenantId: activeMembership.tenantId,
     tenantSlug: activeMembership.tenantSlug,
     tenantName: activeMembership.tenantName,
     role: activeMembership.role,
+    workspaceMode,
+    isDemoWorkspace: workspaceMode === 'DEMO',
     memberships
   };
 }

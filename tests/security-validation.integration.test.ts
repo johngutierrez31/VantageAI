@@ -10,6 +10,8 @@ describe('security and validation guardrails', () => {
       tenantId: 'tenant_demo',
       tenantSlug: 'demo-tenant',
       tenantName: 'Demo Tenant',
+      workspaceMode: 'PAID' as const,
+      isDemoWorkspace: false,
       role: 'VIEWER' as const,
       memberships: []
     };
@@ -67,4 +69,3 @@ describe('security and validation guardrails', () => {
     expect(parsed.includeNpcTraffic).toBe(true);
   });
 });
-

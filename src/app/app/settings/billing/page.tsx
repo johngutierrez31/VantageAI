@@ -3,10 +3,20 @@ import { BillingPanel } from '@/components/billing-panel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
+import { redirect } from 'next/navigation';
 
 export default async function SettingsBillingPage() {
   const session = await getPageSessionContext();
   const workspace = await getTenantWorkspaceContext(session.tenantId);
+  const canManageBilling = session.role === 'ADMIN' || session.role === 'OWNER';
+
+  if (workspace.isDemo) {
+    redirect('/app/tools?mode=demo');
+  }
+
+  if (!canManageBilling) {
+    redirect('/app/command-center');
+  }
 
   return (
     <div className="space-y-6">

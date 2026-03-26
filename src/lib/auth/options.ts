@@ -1,5 +1,5 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { MembershipStatus, TenantRole } from '@prisma/client';
+import { MembershipStatus, TenantRole, WorkspaceMode } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import type { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
@@ -99,7 +99,7 @@ export const authOptions: NextAuthOptions = {
 
       const memberships = await prisma.membership.findMany({
         where: { userId: token.sub, status: MembershipStatus.ACTIVE },
-        include: { tenant: { select: { id: true, slug: true, name: true } } },
+        include: { tenant: { select: { id: true, slug: true, name: true, workspaceMode: true } } },
         orderBy: { createdAt: 'asc' }
       });
 
@@ -107,7 +107,8 @@ export const authOptions: NextAuthOptions = {
         tenantId: membership.tenantId,
         tenantSlug: membership.tenant.slug,
         tenantName: membership.tenant.name,
-        role: membership.role
+        role: membership.role,
+        workspaceMode: membership.tenant.workspaceMode
       }));
 
       token.memberships = claim;
@@ -125,6 +126,7 @@ export const authOptions: NextAuthOptions = {
       token.role = activeMembership?.role;
       token.activeTenantSlug = activeMembership?.tenantSlug;
       token.activeTenantName = activeMembership?.tenantName;
+      token.activeTenantWorkspaceMode = activeMembership?.workspaceMode;
 
       return token;
     },
@@ -139,6 +141,7 @@ export const authOptions: NextAuthOptions = {
           activeTenantId: null,
           activeTenantSlug: null,
           activeTenantName: null,
+          activeTenantWorkspaceMode: null,
           memberships: []
         };
       }
@@ -148,11 +151,13 @@ export const authOptions: NextAuthOptions = {
       session.user.activeTenantId = (token.activeTenantId as string | undefined) ?? null;
       session.user.activeTenantSlug = (token.activeTenantSlug as string | undefined) ?? null;
       session.user.activeTenantName = (token.activeTenantName as string | undefined) ?? null;
+      session.user.activeTenantWorkspaceMode = (token.activeTenantWorkspaceMode as WorkspaceMode | undefined) ?? null;
       session.user.memberships = (token.memberships as Array<{
         tenantId: string;
         tenantSlug: string;
         tenantName: string;
         role: TenantRole;
+        workspaceMode: WorkspaceMode;
       }> | undefined) ?? [];
       return session;
     }

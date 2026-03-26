@@ -2,9 +2,22 @@ import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { listConnectorConfigs, sanitizeConnectorConfig } from '@/lib/integrations/connectors';
 import { ConnectorSettingsPanel } from '@/components/app/connector-settings-panel';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
+import { redirect } from 'next/navigation';
 
 export default async function SettingsConnectorsPage() {
   const session = await getPageSessionContext();
+  const workspace = await getTenantWorkspaceContext(session.tenantId);
+  const canManageConnectors = session.role === 'ADMIN' || session.role === 'OWNER';
+
+  if (workspace.isDemo) {
+    redirect('/app/tools?mode=demo');
+  }
+
+  if (!canManageConnectors) {
+    redirect('/app/command-center');
+  }
+
   const [connectors, findings, risks, tasks, roadmapItems, trustPackets, boardBriefs, afterActions, quarterlyReviews] =
     await Promise.all([
       listConnectorConfigs(session.tenantId),

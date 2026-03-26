@@ -153,8 +153,6 @@ const tourStops = [
   }
 ] as const;
 
-const mobileQuickNavItems = navItems.slice(0, 6);
-
 function formatRouteLabel(pathname: string) {
   const navMatch = navItems.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
   if (navMatch) return navMatch.label;
@@ -413,6 +411,14 @@ export function AppShell({
   }
 
   const planBadgeLabel = demoMode ? 'Demo Access' : formatPlanLabel(currentPlan);
+  const canAccessSettings = role === 'ADMIN' || role === 'OWNER';
+  const visibleNavItems = navItems.filter((item) => {
+    const isSettingsItem = item.href.startsWith('/app/settings');
+    if (demoMode && isSettingsItem) return false;
+    if (!canAccessSettings && isSettingsItem) return false;
+    return true;
+  });
+  const mobileQuickNavItems = visibleNavItems.slice(0, 6);
   const workspaceSummary = demoMode
     ? 'Synthetic identities and example data only. Premium workflows and export paths stay enabled so the evaluation story stays complete.'
     : workspaceMode === 'TRIAL'
@@ -508,7 +514,7 @@ export function AppShell({
           </div>
 
           <nav className="space-y-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
@@ -752,7 +758,7 @@ export function AppShell({
                     All Modules
                   </p>
                   <nav className="grid gap-2">
-                    {navItems.map((item) => {
+                    {visibleNavItems.map((item) => {
                       const Icon = item.icon;
                       const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                       return (
@@ -782,6 +788,16 @@ export function AppShell({
           <div aria-hidden="true" className="ornate-divider mx-4 md:mx-6 lg:mx-8" />
 
           <main className="flex-1 space-y-4 px-3 py-4 sm:px-4 sm:py-5 md:px-6 lg:px-8">
+            {demoMode ? (
+              <Card className="border-warning/40 bg-warning/10">
+                <CardContent className="p-4 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">Demo Workspace (Read-only)</p>
+                  <p className="mt-1">
+                    This environment contains fictional, sanitized sample data for product evaluation. Create, edit, and admin actions are disabled.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
             {demoMode && showTour ? <GuidedTourCard demoMode={demoMode} onClose={dismissTour} /> : null}
             {children}
           </main>
