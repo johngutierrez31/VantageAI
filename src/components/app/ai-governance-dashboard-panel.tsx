@@ -41,10 +41,12 @@ type RiskRow = {
 };
 
 export function AIGovernanceDashboardPanel({
+  readOnly,
   metrics,
   recentDecisions,
   topRisks
 }: {
+  readOnly: boolean;
   metrics: DashboardMetrics;
   recentDecisions: DecisionRow[];
   topRisks: RiskRow[];
@@ -55,10 +57,17 @@ export function AIGovernanceDashboardPanel({
         title="AI Governance"
         helpKey="aiGovernance"
         description="AI Governance is the governed AI adoption layer: register use cases, review vendors, map policies and data classes, and carry high-risk AI decisions into findings and Pulse."
-        primaryAction={{ label: 'Register AI Use Case', href: workflowRoutes.aiUseCaseCreate() }}
+        primaryAction={{
+          label: readOnly ? 'View AI Use Cases' : 'Register AI Use Case',
+          href: readOnly ? '/app/ai-governance/use-cases' : workflowRoutes.aiUseCaseCreate()
+        }}
         secondaryActions={[
           { label: 'Adoption Mode', href: '/app/adoption', variant: 'outline' },
-          { label: 'Vendor Intake', href: workflowRoutes.aiVendorIntakeCreate(), variant: 'outline' },
+          {
+            label: readOnly ? 'Vendors' : 'Vendor Intake',
+            href: readOnly ? '/app/ai-governance/vendors' : workflowRoutes.aiVendorIntakeCreate(),
+            variant: 'outline'
+          },
           { label: 'Review Queue', href: workflowRoutes.aiReviewQueue(), variant: 'outline' },
           { label: 'Pulse Risks', href: '/app/pulse/risks', variant: 'outline' }
         ]}
@@ -66,6 +75,11 @@ export function AIGovernanceDashboardPanel({
         <p className="text-xs text-muted-foreground">
           Start here: review the proposed AI workflow, confirm the vendor and policy fit, then carry the remaining conditions into findings and Pulse.
         </p>
+        {readOnly ? (
+          <p className="text-xs text-warning">
+            Demo workspace is read-only. New AI use cases and vendor intake submissions are disabled.
+          </p>
+        ) : null}
       </PageHeader>
 
       <Card className="border-primary/30 bg-gradient-to-r from-card via-card to-muted/20">
@@ -166,9 +180,15 @@ export function AIGovernanceDashboardPanel({
             <div key={title} className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">{title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-              <Button asChild size="sm" variant="outline" className="mt-3">
-                <Link href={href}>Open Workflow</Link>
-              </Button>
+              {readOnly && (title === 'Register AI Use Case' || title === 'Start AI Vendor Intake') ? (
+                <Button size="sm" variant="outline" className="mt-3" disabled>
+                  Read-only in demo
+                </Button>
+              ) : (
+                <Button asChild size="sm" variant="outline" className="mt-3">
+                  <Link href={href}>Open Workflow</Link>
+                </Button>
+              )}
             </div>
           ))}
         </CardContent>

@@ -175,6 +175,10 @@ export default async function ToolsHubPage() {
   const visibleSupportingTools = workspace.isTrial
     ? supportingTools.filter((tool) => !['adoption', 'connectors'].includes(tool.id))
     : supportingTools;
+  const demoRestrictedToolIds = new Set(['connectors']);
+  const visibleSupportingToolsForWorkspace = workspace.isDemo
+    ? visibleSupportingTools.filter((tool) => !demoRestrictedToolIds.has(tool.id))
+    : visibleSupportingTools;
   const visibleWorkflowCards = workspace.isTrial
     ? workflowCards.filter((workflow) => !['Integration Pack Flow', 'Adoption Mode Flow'].includes(workflow.title))
     : workflowCards;
@@ -191,6 +195,16 @@ export default async function ToolsHubPage() {
           ].includes(title)
       )
     : guidedSkills;
+  const demoRestrictedGuidedSkills = new Set([
+    'Configure Connectors',
+    'Send to Slack',
+    'Sync to Jira',
+    'Publish to Docs',
+    'Review Connector Health'
+  ]);
+  const visibleGuidedSkillsForWorkspace = workspace.isDemo
+    ? visibleGuidedSkills.filter(([title]) => !demoRestrictedGuidedSkills.has(title))
+    : visibleGuidedSkills;
 
   return (
     <div className="space-y-6">
@@ -213,8 +227,12 @@ export default async function ToolsHubPage() {
           { label: 'AI Governance', href: '/app/ai-governance', variant: 'outline' },
           { label: 'Response Ops', href: '/app/response-ops', variant: 'outline' },
           { label: 'TrustOps', href: '/app/trust', variant: 'outline' },
-          ...(!workspace.isTrial ? [{ label: 'Connectors', href: '/app/settings/connectors', variant: 'outline' as const }] : []),
-          ...(!workspace.isTrial ? [{ label: 'Billing & Packaging', href: '/app/settings/billing', variant: 'outline' as const }] : [])
+          ...(!workspace.isTrial && !workspace.isDemo
+            ? [{ label: 'Connectors', href: '/app/settings/connectors', variant: 'outline' as const }]
+            : []),
+          ...(!workspace.isTrial && !workspace.isDemo
+            ? [{ label: 'Billing & Packaging', href: '/app/settings/billing', variant: 'outline' as const }]
+            : [])
         ]}
       >
         <p className="text-xs text-muted-foreground">
@@ -307,7 +325,7 @@ export default async function ToolsHubPage() {
                   <Button asChild size="sm">
                     <Link href={module.startHref}>{module.startLabel}</Link>
                   </Button>
-                  {!commercialState.included ? (
+                  {!commercialState.included && !workspace.isDemo ? (
                     <Button asChild size="sm" variant="outline">
                       <Link href="/app/settings/billing">{commercialState.upgradeCtaLabel}</Link>
                     </Button>
@@ -320,7 +338,7 @@ export default async function ToolsHubPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {visibleSupportingTools.map((tool) => (
+        {visibleSupportingToolsForWorkspace.map((tool) => (
           <Card key={tool.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -361,7 +379,7 @@ export default async function ToolsHubPage() {
           <CardTitle>Guided Workflows</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {visibleGuidedSkills.map(([title, description, href]) => (
+          {visibleGuidedSkillsForWorkspace.map(([title, description, href]) => (
             <div key={title} className="rounded-md border border-border p-3">
               <p className="text-sm font-semibold">{title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{description}</p>

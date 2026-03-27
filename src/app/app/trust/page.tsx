@@ -89,6 +89,7 @@ export default async function TrustPacketPage({
       ) : null}
 
       <TrustPacketPanel
+        readOnly={workspace.isDemo}
         activeWorkflow={searchParams?.workflow === 'packet-assembly' ? 'packet-assembly' : null}
         selectedPacketId={searchParams?.packetId ?? null}
         docs={docs.map((doc) => ({

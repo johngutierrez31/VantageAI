@@ -86,6 +86,7 @@ async function apiRequest(url: string, options?: RequestInit) {
 }
 
 export function PulseDashboardPanel({
+  readOnly,
   activeWorkflow,
   metrics,
   snapshots,
@@ -94,6 +95,7 @@ export function PulseDashboardPanel({
   quarterlyReviews,
   risks
 }: {
+  readOnly: boolean;
   activeWorkflow: PulseWorkflow;
   metrics: PulseMetrics;
   snapshots: SnapshotSummary[];
@@ -155,7 +157,7 @@ export function PulseDashboardPanel({
           });
           return { redirectHref: `/app/pulse/snapshots/${created.id}` };
         },
-        disabled: false
+        disabled: readOnly
       },
       {
         id: 'risks',
@@ -171,7 +173,7 @@ export function PulseDashboardPanel({
             body: JSON.stringify({ mode: 'sync' })
           });
         },
-        disabled: false
+        disabled: readOnly
       },
       {
         id: 'roadmap',
@@ -189,7 +191,7 @@ export function PulseDashboardPanel({
           });
           return { redirectHref: workflowRoutes.pulseRoadmapRecord(created.id) };
         },
-        disabled: !latestSnapshot
+        disabled: readOnly || !latestSnapshot
       },
       {
         id: 'brief',
@@ -207,7 +209,7 @@ export function PulseDashboardPanel({
           });
           return { redirectHref: `/app/pulse/board-briefs/${created.id}` };
         },
-        disabled: !latestSnapshot || !latestRoadmap
+        disabled: readOnly || !latestSnapshot || !latestRoadmap
       },
       {
         id: 'quarterly-review',
@@ -229,10 +231,10 @@ export function PulseDashboardPanel({
           });
           return { redirectHref: `/app/pulse/quarterly-reviews/${created.id}` };
         },
-        disabled: !latestSnapshot || !latestRoadmap || !latestBoardBrief
+        disabled: readOnly || !latestSnapshot || !latestRoadmap || !latestBoardBrief
       }
     ],
-    [latestBoardBrief, latestRoadmap, latestSnapshot, periodType]
+    [latestBoardBrief, latestRoadmap, latestSnapshot, periodType, readOnly]
   );
 
   async function runAction(
@@ -288,6 +290,13 @@ export function PulseDashboardPanel({
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Workflow Mode</p>
             <p className="text-lg font-semibold">{workflowNarrative.title}</p>
             <p className="text-sm text-muted-foreground">{workflowNarrative.description}</p>
+          </CardContent>
+        </Card>
+      ) : null}
+      {readOnly ? (
+        <Card className="border-warning/40 bg-warning/10">
+          <CardContent className="p-4 text-sm text-muted-foreground">
+            Pulse generation workflows are read-only in this demo workspace. Open existing snapshots, roadmap items, and executive artifacts to review outputs.
           </CardContent>
         </Card>
       ) : null}
@@ -430,7 +439,7 @@ export function PulseDashboardPanel({
                 disabled={workflow.disabled || busyAction !== null}
               >
                 {busyAction === workflow.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {workflow.buttonLabel}
+                {readOnly ? 'Read-only in demo' : workflow.buttonLabel}
               </Button>
               {workflow.id === 'snapshot' && latestSnapshot ? (
                 <Button asChild size="sm" variant="ghost" className="mt-2">

@@ -59,6 +59,7 @@ type PacketSummary = {
 };
 
 export function TrustPacketPanel({
+  readOnly,
   activeWorkflow,
   selectedPacketId,
   docs,
@@ -67,6 +68,7 @@ export function TrustPacketPanel({
   evidenceMaps,
   packets
 }: {
+  readOnly: boolean;
   activeWorkflow: 'packet-assembly' | null;
   selectedPacketId: string | null;
   docs: TrustDocRow[];
@@ -98,6 +100,7 @@ export function TrustPacketPanel({
   }, [selectedPacket]);
 
   async function registerTrustDoc() {
+    if (readOnly) return;
     setBusy('doc');
     setMessage(null);
     const response = await fetch('/api/trust/docs', {
@@ -126,6 +129,7 @@ export function TrustPacketPanel({
   }
 
   async function assemblePacket() {
+    if (readOnly) return;
     setBusy('packet');
     setMessage(null);
     const response = await fetch('/api/trust/packets', {
@@ -171,6 +175,7 @@ export function TrustPacketPanel({
   }
 
   async function markPacketReady(packetId: string) {
+    if (readOnly) return;
     setBusy('review');
     setMessage(null);
     const response = await fetch(`/api/trust/packets/${packetId}`, {
@@ -209,6 +214,11 @@ export function TrustPacketPanel({
         <p className="text-xs text-muted-foreground">
           Start here: import or open the questionnaire, validate support in the evidence map, promote reusable approved answers, then assemble the buyer-safe packet or trust room.
         </p>
+        {readOnly ? (
+          <p className="text-xs text-warning">
+            Demo workspace is read-only. Packet assembly and trust material registration are disabled in this view.
+          </p>
+        ) : null}
       </PageHeader>
 
       {activeWorkflow === 'packet-assembly' ? (
@@ -321,8 +331,8 @@ export function TrustPacketPanel({
             </Select>
             <Input value={packetContactName} onChange={(event) => setPacketContactName(event.target.value)} placeholder="Approved contact name" />
             <Input value={packetContactEmail} onChange={(event) => setPacketContactEmail(event.target.value)} placeholder="Approved contact email" />
-            <Button onClick={assemblePacket} disabled={busy !== null || !packetName.trim()}>
-              {busy === 'packet' ? 'Assembling...' : 'Assemble Packet'}
+            <Button onClick={assemblePacket} disabled={readOnly || busy !== null || !packetName.trim()}>
+              {readOnly ? 'Read-only in demo' : busy === 'packet' ? 'Assembling...' : 'Assemble Packet'}
             </Button>
             <p className="text-xs text-muted-foreground">
               External-share exports require a reviewed packet state. Internal-review packets can be packaged immediately.
@@ -347,8 +357,8 @@ export function TrustPacketPanel({
             ))}
           </Select>
           <Input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="tags (comma separated)" />
-          <Button onClick={registerTrustDoc} disabled={busy !== null || !evidenceId}>
-            {busy === 'doc' ? 'Saving...' : 'Register'}
+          <Button onClick={registerTrustDoc} disabled={readOnly || busy !== null || !evidenceId}>
+            {readOnly ? 'Read-only in demo' : busy === 'doc' ? 'Saving...' : 'Register'}
           </Button>
         </CardContent>
       </Card>
@@ -442,8 +452,8 @@ export function TrustPacketPanel({
                     <Link href={workflowRoutes.trustRoomPublish(packet.id)}>Publish Trust Room</Link>
                   </Button>
                   {packet.shareMode === 'EXTERNAL_SHARE' && !['READY_TO_SHARE', 'SHARED'].includes(packet.status) ? (
-                    <Button onClick={() => markPacketReady(packet.id)} size="sm" disabled={busy !== null}>
-                      {busy === 'review' ? 'Saving...' : 'Mark Ready to Share'}
+                    <Button onClick={() => markPacketReady(packet.id)} size="sm" disabled={readOnly || busy !== null}>
+                      {readOnly ? 'Read-only in demo' : busy === 'review' ? 'Saving...' : 'Mark Ready to Share'}
                     </Button>
                   ) : null}
                   <Button asChild size="sm" variant="outline">

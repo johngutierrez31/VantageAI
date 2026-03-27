@@ -123,6 +123,7 @@ export default async function PulsePage({
       ) : null}
 
       <PulseDashboardPanel
+        readOnly={workspace.isDemo}
         activeWorkflow={
           searchParams?.workflow === 'scorecard' ||
           searchParams?.workflow === 'roadmap' ||

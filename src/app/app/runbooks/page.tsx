@@ -3,6 +3,7 @@ import { RunbooksPanel } from '@/components/app/runbooks-panel';
 import { getPageSessionContext } from '@/lib/auth/page-session';
 import { prisma } from '@/lib/db/prisma';
 import { getSecurityRunbooks } from '@/lib/intel/runbooks';
+import { getTenantWorkspaceContext } from '@/lib/workspace-mode';
 
 export default async function RunbooksPage({
   searchParams
@@ -11,17 +12,20 @@ export default async function RunbooksPage({
 }) {
   const session = await getPageSessionContext();
   const runbooks = getSecurityRunbooks();
-  const incidents = await prisma.incident.findMany({
-    where: { tenantId: session.tenantId },
-    orderBy: [{ status: 'asc' }, { severity: 'desc' }, { updatedAt: 'desc' }],
-    take: 20,
-    select: {
-      id: true,
-      title: true,
-      status: true,
-      severity: true
-    }
-  });
+  const [workspace, incidents] = await Promise.all([
+    getTenantWorkspaceContext(session.tenantId),
+    prisma.incident.findMany({
+      where: { tenantId: session.tenantId },
+      orderBy: [{ status: 'asc' }, { severity: 'desc' }, { updatedAt: 'desc' }],
+      take: 20,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        severity: true
+      }
+    })
+  ]);
 
   return (
     <div className="space-y-6">
@@ -36,6 +40,7 @@ export default async function RunbooksPage({
         ]}
       />
       <RunbooksPanel
+        readOnly={workspace.isDemo}
         activeWorkflow={searchParams?.workflow ?? null}
         initialIncidentId={searchParams?.incidentId ?? null}
         incidents={incidents}

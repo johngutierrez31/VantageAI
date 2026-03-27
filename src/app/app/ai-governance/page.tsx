@@ -46,6 +46,7 @@ export default async function AIGovernancePage() {
       ) : null}
 
       <AIGovernanceDashboardPanel
+        readOnly={workspace.isDemo}
         metrics={{
           totalUseCases: summary.totalUseCases,
           totalVendorReviews: summary.totalVendorReviews,

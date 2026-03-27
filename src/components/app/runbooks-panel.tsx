@@ -52,11 +52,13 @@ function buildIncidentDraft(runbook: SecurityRunbook, assignee: string) {
 }
 
 export function RunbooksPanel({
+  readOnly,
   activeWorkflow,
   initialIncidentId,
   incidents,
   runbooks
 }: {
+  readOnly: boolean;
   activeWorkflow: string | null;
   initialIncidentId: string | null;
   incidents: IncidentOption[];
@@ -77,6 +79,7 @@ export function RunbooksPanel({
   );
 
   async function launchRunbook(runbook: SecurityRunbook) {
+    if (readOnly) return;
     setBusyId(runbook.id);
     setMessage(null);
     setError(null);
@@ -156,6 +159,9 @@ export function RunbooksPanel({
               ? `Selected anchor: ${selectedIncident.title}. Launching a runbook from this page will add a new incident-linked pack to that record.`
               : 'Selected anchor: create a new incident draft. Launching a runbook from this page will open the new incident and attach the first task pack automatically.'}
           </div>
+          {readOnly ? (
+            <p className="text-xs text-warning">Demo workspace is read-only. Launching new runbook task packs is disabled.</p>
+          ) : null}
           {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
           {error ? <p className="text-sm text-danger">{error}</p> : null}
         </CardContent>
@@ -185,8 +191,8 @@ export function RunbooksPanel({
               ))}
             </ul>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => launchRunbook(runbook)} disabled={busyId === runbook.id} type="button">
-                {busyId === runbook.id ? 'Launching...' : 'Launch task pack'}
+              <Button onClick={() => launchRunbook(runbook)} disabled={readOnly || busyId === runbook.id} type="button">
+                {readOnly ? 'Read-only in demo' : busyId === runbook.id ? 'Launching...' : 'Launch task pack'}
               </Button>
               <Button asChild variant="outline">
                 <Link

@@ -110,6 +110,7 @@ function scenarioTypeForRunbook(runbookId: string | null | undefined): ScenarioO
 }
 
 export function ResponseOpsDashboardPanel({
+  readOnly,
   activeWorkflow,
   initialRunbookId,
   metrics,
@@ -119,6 +120,7 @@ export function ResponseOpsDashboardPanel({
   reviewers,
   scenarios
 }: {
+  readOnly: boolean;
   activeWorkflow: ResponseOpsWorkflow;
   initialRunbookId: string | null;
   metrics: Metrics;
@@ -237,6 +239,11 @@ export function ResponseOpsDashboardPanel({
         <p className="text-xs text-muted-foreground">
           Start here: open or import the incident, capture the first decision trail, launch the runbook pack, then use after-action and tabletop follow-up to feed Pulse.
         </p>
+        {readOnly ? (
+          <p className="text-xs text-warning">
+            Demo workspace is read-only. New incident triage and tabletop creation are disabled.
+          </p>
+        ) : null}
       </PageHeader>
 
       {workflowNarrative ? (
@@ -444,10 +451,10 @@ export function ResponseOpsDashboardPanel({
                   router.push(`/app/response-ops/incidents/${created.incident.id}`);
                 })
               }
-              disabled={busyAction !== null}
+              disabled={readOnly || busyAction !== null}
             >
               {busyAction === 'create-incident' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Start Incident Triage
+              {readOnly ? 'Read-only in demo' : 'Start Incident Triage'}
             </Button>
           </CardContent>
         </Card>
@@ -510,10 +517,10 @@ export function ResponseOpsDashboardPanel({
                   router.push(`/app/response-ops/tabletops/${created.id}`);
                 })
               }
-              disabled={busyAction !== null}
+              disabled={readOnly || busyAction !== null}
             >
               {busyAction === 'create-tabletop' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Prepare Tabletop Exercise
+              {readOnly ? 'Read-only in demo' : 'Prepare Tabletop Exercise'}
             </Button>
           </CardContent>
         </Card>

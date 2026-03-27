@@ -37,6 +37,7 @@ export default async function ResponseOpsPage({
       ) : null}
 
       <ResponseOpsDashboardPanel
+        readOnly={workspace.isDemo}
         activeWorkflow={
           searchParams?.workflow === 'incident-triage' ||
           searchParams?.workflow === 'runbook-pack' ||
