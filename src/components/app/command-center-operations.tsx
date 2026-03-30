@@ -136,12 +136,14 @@ export function CommandCenterOperations({ missions }: { missions: MissionPlanIte
               </label>
             ))}
           </div>
-          <Input
-            className="mt-3"
-            placeholder="Optional assignee for all created tasks"
-            value={assignee}
-            onChange={(event) => setAssignee(event.target.value)}
-          />
+          <label className="mt-3 block">
+            <span className="sr-only">Assignee for all created tasks (optional)</span>
+            <Input
+              placeholder="Optional assignee for all created tasks"
+              value={assignee}
+              onChange={(event) => setAssignee(event.target.value)}
+            />
+          </label>
           <Button className="mt-3" onClick={seedMissionTasks} disabled={busy || selectedIds.length === 0} type="button">
             {busy ? 'Creating...' : 'Create mission task pack'}
           </Button>

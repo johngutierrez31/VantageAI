@@ -23,8 +23,9 @@ const displayFont = Cinzel({
 });
 
 export const metadata = {
-  title: 'VantageCISO',
-  description: 'Assessment and AI readiness SaaS MVP'
+  title: 'VantageCISO — AI-Powered Security Command Center for CISOs',
+  description:
+    'VantageCISO is an AI-powered security operations platform for CISOs and security teams — combining a live command center, AI governance, TrustOps, threat intelligence, and incident response in one suite.'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
