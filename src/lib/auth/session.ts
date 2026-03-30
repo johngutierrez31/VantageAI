@@ -1,5 +1,6 @@
 import { MembershipStatus, TenantRole } from '@prisma/client';
 import { cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { prisma } from '@/lib/db/prisma';
@@ -28,6 +29,15 @@ export class SessionContextError extends Error {
     super(message);
     this.name = 'SessionContextError';
     this.statusCode = statusCode;
+  }
+}
+
+function getRequestHost() {
+  try {
+    const requestHeaders = headers();
+    return requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host');
+  } catch {
+    return null;
   }
 }
 
@@ -86,9 +96,10 @@ async function buildDemoSessionContext(): Promise<SessionContext> {
 
 export async function getSessionContext(): Promise<SessionContext> {
   const session = await getServerSession(authOptions);
+  const demoModeEnabled = isDemoModeEnabled({ requestHost: getRequestHost() });
 
   if (!session?.user?.id) {
-    if (isDemoModeEnabled()) {
+    if (demoModeEnabled) {
       return buildDemoSessionContext();
     }
 

@@ -1,7 +1,6 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
-
-const demoModeEnabled = process.env.DEMO_MODE === 'true';
+import { isDemoModeEnabled } from '@/lib/auth/demo';
 
 function isPublicApiRoute(pathname: string) {
   return pathname.startsWith('/api/auth') || pathname === '/api/stripe/webhook';
@@ -11,6 +10,7 @@ export default withAuth(
   function middleware(req) {
     const pathname = req.nextUrl.pathname;
     const token = req.nextauth.token;
+    const demoModeEnabled = isDemoModeEnabled({ requestHost: req.nextUrl.hostname });
 
     if (isPublicApiRoute(pathname)) {
       return NextResponse.next();
@@ -46,6 +46,7 @@ export default withAuth(
     callbacks: {
       authorized: ({ req, token }) => {
         const pathname = req.nextUrl.pathname;
+        const demoModeEnabled = isDemoModeEnabled({ requestHost: req.nextUrl.hostname });
 
         if (isPublicApiRoute(pathname) || pathname === '/login') {
           return true;
