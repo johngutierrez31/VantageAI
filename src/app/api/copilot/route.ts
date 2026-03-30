@@ -6,7 +6,7 @@ import { copilotRequestSchema, type CopilotMode } from '@/lib/validation/copilot
 import { writeAuditLog } from '@/lib/audit';
 import { buildSafetySystemPrompt, redactSecrets } from '@/lib/ai/safety';
 import { searchEvidenceChunks } from '@/lib/evidence/search';
-import { requireAIAccess, requireCopilotQuota } from '@/lib/billing/entitlements';
+import { requireCopilotQuota } from '@/lib/billing/entitlements';
 import { workflowRoutes } from '@/lib/product/workflow-routes';
 
 type CopilotMessage = {
@@ -412,7 +412,6 @@ function buildToolRecommendations(message: string, mode: CopilotMode): Recommend
 export async function POST(request: Request) {
   try {
     const session = await getSessionContext();
-    await requireAIAccess(session.tenantId);
 
     const payload = copilotRequestSchema.parse(await request.json());
     const mode = payload.mode ?? 'general';

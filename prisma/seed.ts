@@ -1,14 +1,20 @@
 import { PrismaClient } from '@prisma/client';
-import { seedDemoWorkspace } from './demo-seed';
 
 const prisma = new PrismaClient();
 
-seedDemoWorkspace(prisma)
-  .then((result) => {
-    console.log(
-      `[seed] seeded deterministic demo workspace: tenant=${result.tenantSlug} user=${result.userEmail}`
-    );
-  })
+async function seedBaseline() {
+  const tenantCount = await prisma.tenant.count();
+  const templateCount = await prisma.template.count();
+
+  console.log(
+    `[seed] baseline seed complete (safe mode): tenants=${tenantCount} templates=${templateCount}`
+  );
+  console.log(
+    '[seed] no demo data inserted. Use `npm run prisma:seed:demo` or `npm run demo:reset` for demo workspace data.'
+  );
+}
+
+seedBaseline()
   .catch((error) => {
     console.error('[seed] failed');
     console.error(error);

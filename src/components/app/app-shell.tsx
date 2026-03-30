@@ -645,6 +645,9 @@ export function AppShell({
                         {workspaceMode === 'TRIAL' && trialEndsAt ? (
                           <p className="text-xs text-muted-foreground">Trial ends {new Date(trialEndsAt).toLocaleDateString()}.</p>
                         ) : null}
+                        <Button asChild variant="outline" size="sm" className="w-full">
+                          <Link href="/app/account">Open My Workspace</Link>
+                        </Button>
                         {!demoMode ? (
                           <Button
                             variant="outline"

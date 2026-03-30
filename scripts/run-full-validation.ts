@@ -164,20 +164,20 @@ async function terminateProcessTree(child: ChildProcess) {
   }
 }
 
-async function startServer(baseUrl: string) {
+async function startServer(baseUrl: string, envOverrides: Record<string, string> = {}) {
   await ensureOutputDir();
   const stdoutStream = createWriteStream(serverStdoutPath, { flags: 'w' });
   const stderrStream = createWriteStream(serverStderrPath, { flags: 'w' });
   const parsed = new URL(baseUrl);
   const port = parsed.port || '3000';
-  const envOverrides = { BASE_URL: baseUrl };
+  const serverEnvOverrides = { BASE_URL: baseUrl, ...envOverrides };
   const serverArgs =
     serverScript === 'start'
       ? ['run', 'start', '--', '--hostname', '127.0.0.1', '--port', port]
       : ['run', 'dev', '--', '--hostname', '127.0.0.1', '--port', port];
 
   log(`starting ${serverScript} server`);
-  const child = spawnNpm(serverArgs, ['ignore', 'pipe', 'pipe'], envOverrides);
+  const child = spawnNpm(serverArgs, ['ignore', 'pipe', 'pipe'], serverEnvOverrides);
 
   child.stdout?.pipe(stdoutStream);
   child.stderr?.pipe(stderrStream);
@@ -195,11 +195,15 @@ async function main() {
   let primaryError: unknown = null;
   const baseUrl = await resolveBaseUrl();
   const envOverrides = { BASE_URL: baseUrl };
+  const demoValidationEnv = {
+    DEMO_MODE: process.env.DEMO_MODE ?? 'true',
+    DEMO_BYPASS_ENABLED: process.env.DEMO_BYPASS_ENABLED ?? 'true'
+  };
 
   try {
-    await runNpmScript(['run', 'demo:reset'], 'demo reset');
-    server = await startServer(baseUrl);
-    await runNpmScript(['run', 'test:local-full'], 'local full validation', envOverrides);
+    await runNpmScript(['run', 'demo:reset'], 'demo reset', demoValidationEnv);
+    server = await startServer(baseUrl, demoValidationEnv);
+    await runNpmScript(['run', 'test:local-full'], 'local full validation', { ...envOverrides, ...demoValidationEnv });
     log('completed successfully');
   } catch (error) {
     primaryError = error;
@@ -211,7 +215,7 @@ async function main() {
     }
 
     try {
-      await runNpmScript(['run', 'demo:reset'], 'demo reset cleanup');
+      await runNpmScript(['run', 'demo:reset'], 'demo reset cleanup', demoValidationEnv);
     } catch (error) {
       if (!primaryError) {
         primaryError = error;

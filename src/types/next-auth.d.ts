@@ -1,4 +1,4 @@
-import { TenantRole, WorkspaceMode } from '@prisma/client';
+import { PlanTier, TenantRole, WorkspaceMode } from '@prisma/client';
 import { DefaultSession } from 'next-auth';
 
 declare module 'next-auth' {
@@ -10,12 +10,14 @@ declare module 'next-auth' {
       activeTenantSlug: string | null;
       activeTenantName: string | null;
       activeTenantWorkspaceMode: WorkspaceMode | null;
+      activeTenantPlan: PlanTier | null;
       memberships: Array<{
         tenantId: string;
         tenantSlug: string;
         tenantName: string;
         role: TenantRole;
         workspaceMode: WorkspaceMode;
+        plan: PlanTier;
       }>;
     };
     activeTenantId?: string | null;
@@ -33,12 +35,14 @@ declare module 'next-auth/jwt' {
     activeTenantSlug?: string;
     activeTenantName?: string;
     activeTenantWorkspaceMode?: WorkspaceMode;
+    activeTenantPlan?: PlanTier;
     memberships?: Array<{
       tenantId: string;
       tenantSlug: string;
       tenantName: string;
       role: TenantRole;
       workspaceMode: WorkspaceMode;
+      plan: PlanTier;
     }>;
   }
 }

@@ -127,6 +127,25 @@ async function runChecks() {
   printResult('GET /api/templates', Boolean(templatesOk), `status=${templates.status}`);
   if (!templatesOk) failures.push('GET /api/templates');
 
+  const templatesPost = await fetchWithTimeout(
+    `${baseUrl}/api/templates`,
+    {
+      method: 'POST',
+      redirect: 'manual',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Runtime Smoke Unauthorized Probe' })
+    }
+  );
+  const templatesPostText = await templatesPost.text();
+  const templatesPostJson = parseJsonSafe(templatesPostText);
+  const templatesPostOk =
+    templatesPost.status === 401 &&
+    templatesPostJson &&
+    typeof templatesPostJson === 'object' &&
+    templatesPostJson.error === 'Unauthorized';
+  printResult('POST /api/templates auth-gate', Boolean(templatesPostOk), `status=${templatesPost.status}`);
+  if (!templatesPostOk) failures.push('POST /api/templates auth-gate');
+
   const assessments = await fetchWithTimeout(`${baseUrl}/api/assessments`, { redirect: 'manual' });
   const assessmentsText = await assessments.text();
   const assessmentsJson = parseJsonSafe(assessmentsText);

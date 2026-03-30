@@ -17,7 +17,6 @@ type Entitlements = {
     maxTemplates: number;
     maxAssessmentsPerMonth: number;
     maxEvidenceItems: number;
-    canUseAI: boolean;
     canExportPdf: boolean;
   };
 };
@@ -109,8 +108,7 @@ export function BillingPanel() {
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">
-          AI: {entitlements?.limits?.canUseAI ? 'Enabled' : 'Disabled'} | PDF Export:{' '}
-          {entitlements?.limits?.canExportPdf ? 'Enabled' : 'Disabled'}
+          Copilot and AI workflows are available across all plans. Packaging tiers here control module access and scale limits.
         </p>
       )}
       {entitlements ? (

@@ -1,8 +1,12 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { MembershipStatus, TenantRole, WorkspaceMode } from '@prisma/client';
+import { MembershipStatus, PlanTier, TenantRole, TrialStatus, WorkspaceMode } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import type { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { isBillingActive } from '@/lib/billing/limits';
+import { verifyPassword } from '@/lib/auth/password';
+import { credentialsLoginSchema } from '@/lib/validation/auth';
 
 const emailFrom = process.env.AUTH_EMAIL_FROM;
 
@@ -56,14 +60,77 @@ function hasActiveMembership(role: TenantRole | null | undefined): role is Tenan
   return role === 'OWNER' || role === 'ADMIN' || role === 'MEMBER' || role === 'VIEWER';
 }
 
+function resolveTenantPlan(args: {
+  workspaceMode: WorkspaceMode;
+  trialStatus: TrialStatus;
+  trialEndsAt: Date | null;
+  subscriptionPlan?: PlanTier | null;
+  subscriptionStatus?: string | null;
+}) {
+  if (args.workspaceMode === 'DEMO') return 'ENTERPRISE';
+
+  const now = Date.now();
+  const trialActive =
+    args.workspaceMode === 'TRIAL' &&
+    args.trialStatus === 'ACTIVE' &&
+    Boolean(args.trialEndsAt && args.trialEndsAt.getTime() >= now);
+
+  if (trialActive) return 'ENTERPRISE';
+
+  const subscriptionPlan = args.subscriptionPlan ?? 'FREE';
+  const subscriptionStatus = args.subscriptionStatus ?? null;
+
+  if (!subscriptionStatus || !isBillingActive(subscriptionStatus)) return 'FREE';
+  if (args.workspaceMode === 'TRIAL' && args.trialEndsAt && args.trialEndsAt.getTime() < now && subscriptionStatus === 'trialing') {
+    return 'FREE';
+  }
+
+  return subscriptionPlan;
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/login'
   },
   providers: [
+    CredentialsProvider({
+      name: 'Email and Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
+      },
+      async authorize(credentials) {
+        const parsed = credentialsLoginSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email: parsed.data.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            credential: { select: { passwordHash: true } },
+            memberships: {
+              where: { status: MembershipStatus.ACTIVE },
+              select: { role: true }
+            }
+          }
+        });
+
+        if (!user?.credential?.passwordHash) return null;
+        if (!verifyPassword(parsed.data.password, user.credential.passwordHash)) return null;
+        if (!user.memberships.some((membership) => hasActiveMembership(membership.role))) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name
+        };
+      }
+    }),
     EmailProvider({
       from: emailFrom,
       maxAge: 24 * 60 * 60,
@@ -99,16 +166,57 @@ export const authOptions: NextAuthOptions = {
 
       const memberships = await prisma.membership.findMany({
         where: { userId: token.sub, status: MembershipStatus.ACTIVE },
-        include: { tenant: { select: { id: true, slug: true, name: true, workspaceMode: true } } },
+        include: {
+          tenant: {
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              workspaceMode: true,
+              trialStatus: true,
+              trialEndsAt: true
+            }
+          }
+        },
         orderBy: { createdAt: 'asc' }
       });
+
+      const tenantIds = memberships.map((membership) => membership.tenantId);
+      const subscriptions = tenantIds.length
+        ? await prisma.subscription.findMany({
+            where: { tenantId: { in: tenantIds } },
+            orderBy: [{ tenantId: 'asc' }, { updatedAt: 'desc' }],
+            select: {
+              tenantId: true,
+              plan: true,
+              status: true
+            }
+          })
+        : [];
+
+      const latestSubscriptionByTenant = new Map<string, { plan: PlanTier; status: string }>();
+      for (const subscription of subscriptions) {
+        if (!latestSubscriptionByTenant.has(subscription.tenantId)) {
+          latestSubscriptionByTenant.set(subscription.tenantId, {
+            plan: subscription.plan,
+            status: subscription.status
+          });
+        }
+      }
 
       const claim = memberships.map((membership) => ({
         tenantId: membership.tenantId,
         tenantSlug: membership.tenant.slug,
         tenantName: membership.tenant.name,
         role: membership.role,
-        workspaceMode: membership.tenant.workspaceMode
+        workspaceMode: membership.tenant.workspaceMode,
+        plan: resolveTenantPlan({
+          workspaceMode: membership.tenant.workspaceMode,
+          trialStatus: membership.tenant.trialStatus,
+          trialEndsAt: membership.tenant.trialEndsAt,
+          subscriptionPlan: latestSubscriptionByTenant.get(membership.tenantId)?.plan,
+          subscriptionStatus: latestSubscriptionByTenant.get(membership.tenantId)?.status
+        })
       }));
 
       token.memberships = claim;
@@ -127,6 +235,7 @@ export const authOptions: NextAuthOptions = {
       token.activeTenantSlug = activeMembership?.tenantSlug;
       token.activeTenantName = activeMembership?.tenantName;
       token.activeTenantWorkspaceMode = activeMembership?.workspaceMode;
+      token.activeTenantPlan = activeMembership?.plan;
 
       return token;
     },
@@ -142,6 +251,7 @@ export const authOptions: NextAuthOptions = {
           activeTenantSlug: null,
           activeTenantName: null,
           activeTenantWorkspaceMode: null,
+          activeTenantPlan: null,
           memberships: []
         };
       }
@@ -152,12 +262,14 @@ export const authOptions: NextAuthOptions = {
       session.user.activeTenantSlug = (token.activeTenantSlug as string | undefined) ?? null;
       session.user.activeTenantName = (token.activeTenantName as string | undefined) ?? null;
       session.user.activeTenantWorkspaceMode = (token.activeTenantWorkspaceMode as WorkspaceMode | undefined) ?? null;
+      session.user.activeTenantPlan = (token.activeTenantPlan as PlanTier | undefined) ?? null;
       session.user.memberships = (token.memberships as Array<{
         tenantId: string;
         tenantSlug: string;
         tenantName: string;
         role: TenantRole;
         workspaceMode: WorkspaceMode;
+        plan: PlanTier;
       }> | undefined) ?? [];
       return session;
     }

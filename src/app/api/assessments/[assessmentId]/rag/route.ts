@@ -4,7 +4,6 @@ import { prisma } from '@/lib/db/prisma';
 import { requireRole } from '@/lib/rbac/authorize';
 import { ragGenerateSchema } from '@/lib/validation/evidence';
 import { runRagForQuestion } from '@/lib/evidence/rag';
-import { requireAIAccess } from '@/lib/billing/entitlements';
 import { handleRouteError, notFound } from '@/lib/http';
 import { writeAuditLog } from '@/lib/audit';
 
@@ -12,7 +11,6 @@ export async function POST(request: Request, { params }: { params: { assessmentI
   try {
     const session = await getSessionContext();
     requireRole(session, 'MEMBER');
-    await requireAIAccess(session.tenantId);
 
     const payload = ragGenerateSchema.parse(await request.json());
 

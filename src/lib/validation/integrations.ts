@@ -76,12 +76,21 @@ export const connectorUpsertSchema = z
       }
     }
 
-    if (payload.provider === 'GOOGLE_DRIVE' && !payload.googleDriveFolderId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['googleDriveFolderId'],
-        message: 'Google Drive live mode requires a folder ID'
-      });
+    if (payload.provider === 'GOOGLE_DRIVE') {
+      if (!payload.googleDriveFolderId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['googleDriveFolderId'],
+          message: 'Google Drive live mode requires a folder ID'
+        });
+      }
+      if (!payload.googleServiceAccountJson) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['googleServiceAccountJson'],
+          message: 'Google Drive live mode requires service account JSON'
+        });
+      }
     }
 
     if (payload.provider === 'OUTBOUND_WEBHOOK' && !payload.outboundWebhookUrl) {

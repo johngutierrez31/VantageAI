@@ -2,6 +2,7 @@ import { MembershipStatus, PlanTier, Prisma, TrialStatus, WorkspaceMode } from '
 import { prisma } from '@/lib/db/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { getTrialEndDate } from '@/lib/workspace-mode';
+import { hashPassword } from '@/lib/auth/password';
 
 function slugify(value: string) {
   return value
@@ -30,6 +31,7 @@ type ProvisionWorkspaceArgs = {
   slug?: string;
   ownerEmail: string;
   ownerName?: string | null;
+  ownerPassword?: string;
   mode?: WorkspaceModeRequest;
   trialDays?: number;
 };
@@ -78,6 +80,15 @@ export async function provisionWorkspace(args: ProvisionWorkspaceArgs) {
       emailVerified: new Date()
     }
   });
+
+  if (args.ownerPassword) {
+    const passwordHash = hashPassword(args.ownerPassword);
+    await prisma.userCredential.upsert({
+      where: { userId: user.id },
+      update: { passwordHash },
+      create: { userId: user.id, passwordHash }
+    });
+  }
 
   const created = await prisma.$transaction(async (tx) => {
     const tenant = await tx.tenant.create({

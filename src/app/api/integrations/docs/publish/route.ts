@@ -8,6 +8,7 @@ import {
   recordConnectorActivity
 } from '@/lib/integrations/connectors';
 import { publishArtifactToConfluence } from '@/lib/integrations/confluence';
+import { publishArtifactToGoogleDrive } from '@/lib/integrations/google-drive';
 import { documentPublishSchema } from '@/lib/validation/integrations';
 
 export async function POST(request: Request) {
@@ -30,10 +31,12 @@ export async function POST(request: Request) {
             artifactType: payload.artifactType,
             artifactId: payload.artifactId
           })
-        : {
-            status: 'SKIPPED' as const,
-            summary: 'Google Drive publishing is framework-ready and intentionally deferred for auth-safe follow-up'
-          };
+        : await publishArtifactToGoogleDrive({
+            tenantId: session.tenantId,
+            connector,
+            artifactType: payload.artifactType,
+            artifactId: payload.artifactId
+          });
 
     const activity = await recordConnectorActivity({
       tenantId: session.tenantId,

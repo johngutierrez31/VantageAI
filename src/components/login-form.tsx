@@ -12,6 +12,8 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/app/command-center', [searchParams]);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'password' | 'magic'>('password');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -21,14 +23,31 @@ export function LoginForm() {
     setMessage(null);
 
     try {
-      const result = await signIn('email', {
-        email,
-        callbackUrl,
-        redirect: false
-      });
+      const result =
+        mode === 'password'
+          ? await signIn('credentials', {
+              email,
+              password,
+              callbackUrl,
+              redirect: false
+            })
+          : await signIn('email', {
+              email,
+              callbackUrl,
+              redirect: false
+            });
 
       if (result?.error) {
-        setMessage('Sign-in failed. Confirm your email is part of an active tenant.');
+        setMessage(
+          mode === 'password'
+            ? 'Sign-in failed. Check your email/password and workspace access.'
+            : 'Sign-in failed. Confirm your email is part of an active tenant.'
+        );
+        return;
+      }
+
+      if (mode === 'password') {
+        window.location.href = result?.url ?? callbackUrl;
         return;
       }
 
@@ -51,8 +70,18 @@ export function LoginForm() {
         </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant={mode === 'password' ? 'default' : 'outline'} onClick={() => setMode('password')}>
+              Password
+            </Button>
+            <Button type="button" variant={mode === 'magic' ? 'default' : 'outline'} onClick={() => setMode('magic')}>
+              Magic Link
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground">
-            Use your organization email. Access is tenant-scoped and requires an active membership.
+            {mode === 'password'
+              ? 'Use your workspace email and password.'
+              : 'Use your organization email to receive a secure sign-in link.'}
           </p>
           <Input
             type="email"
@@ -61,11 +90,28 @@ export function LoginForm() {
             onChange={(event) => setEmail(event.target.value)}
             required
           />
+          {mode === 'password' ? (
+            <Input
+              type="password"
+              value={password}
+              placeholder="Password"
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          ) : null}
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? 'Sending secure link...' : 'Send secure sign-in link'}
+            {loading
+              ? mode === 'password'
+                ? 'Signing in...'
+                : 'Sending secure link...'
+              : mode === 'password'
+                ? 'Sign in'
+                : 'Send secure sign-in link'}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Magic links expire automatically and open the workspace assigned to your account.
+            {mode === 'password'
+              ? 'If you do not have a password yet, sign in once with Magic Link and set it from My Workspace.'
+              : 'Magic links expire automatically and open the workspace assigned to your account.'}
           </p>
           {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
         </form>

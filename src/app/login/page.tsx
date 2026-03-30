@@ -31,7 +31,7 @@ export default function LoginPage({ searchParams }: Props) {
               Start a real workspace for buyer diligence, executive posture, AI risk, and response workflows.
             </h1>
             <p className="max-w-2xl text-lg text-muted-foreground">
-              Sign in to an existing workspace, start a new 14-day full-access trial, or open the guided demo if this environment is configured for evaluation.
+              Sign in with your workspace password, use a secure magic link, start a new 14-day full-access trial, or open the guided demo if this environment is configured for evaluation.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">

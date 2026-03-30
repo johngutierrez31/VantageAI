@@ -48,6 +48,7 @@ jobs:
           AUTH_SECRET="ci-auth-secret"
           APP_BASE_URL="http://127.0.0.1:3000"
           DEMO_MODE="true"
+          DEMO_BYPASS_ENABLED="true"
           DEMO_USER_EMAIL="admin@vantageciso.local"
           DEMO_TENANT_SLUG="demo-tenant"
           DEFAULT_STORAGE_PROVIDER="LOCAL"
@@ -84,7 +85,7 @@ jobs:
       - name: Full deterministic validation
         env:
           CI: true
-          APP_SERVER_SCRIPT: start
+          APP_SERVER_SCRIPT: dev
         run: npm run test:full
 
       - name: Upload validation artifacts

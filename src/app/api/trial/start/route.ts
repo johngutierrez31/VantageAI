@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       slug: payload.slug,
       ownerEmail: payload.email,
       ownerName: payload.name,
+      ownerPassword: payload.password,
       mode: 'TRIAL',
       trialDays: 14
     });

@@ -13,6 +13,7 @@ import {
 } from '@/lib/integrations/connectors';
 import { sendSlackNotification } from '@/lib/integrations/slack';
 import { sendWebhookNotification } from '@/lib/integrations/webhook';
+import { testGoogleDriveHealth } from '@/lib/integrations/google-drive';
 
 export async function POST(_request: Request, { params }: { params: { id: string } }) {
   try {
@@ -126,13 +127,12 @@ export async function POST(_request: Request, { params }: { params: { id: string
               };
         }
       }
+    } else if (connector.provider === 'GOOGLE_DRIVE') {
+      result = await testGoogleDriveHealth(connector);
     } else {
       result = {
         status: connector.mode === 'SIMULATED' ? 'SUCCEEDED' : 'SKIPPED',
-        summary:
-          connector.provider === 'GOOGLE_DRIVE'
-            ? 'Google Drive remains framework-ready and intentionally deferred for auth-safe follow-up'
-            : 'No health test implemented'
+        summary: 'No health test implemented'
       };
     }
 

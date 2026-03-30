@@ -1,3 +1,5 @@
+_Last reviewed: 2026-03-30_
+
 ## Mission
 
 Build VantageAI as the security operating system for lean teams under procurement pressure.

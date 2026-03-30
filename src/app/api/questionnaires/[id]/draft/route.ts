@@ -6,7 +6,7 @@ import { questionnaireDraftSchema } from '@/lib/validation/questionnaire';
 import { generateDraftAnswer } from '@/lib/questionnaire/drafting';
 import { deriveQuestionnaireUploadStatus } from '@/lib/trust/packets';
 import { resolveTrustFindingsForQuestionnaireItem, syncTrustFinding } from '@/lib/trust/findings';
-import { requireAIAccess, requireCopilotQuota } from '@/lib/billing/entitlements';
+import { requireCopilotQuota } from '@/lib/billing/entitlements';
 import { handleRouteError, notFound, badRequest } from '@/lib/http';
 import { writeAuditLog } from '@/lib/audit';
 
@@ -77,7 +77,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
   try {
     const session = await getSessionContext();
     requireRole(session, 'MEMBER');
-    await requireAIAccess(session.tenantId);
     const payload = questionnaireDraftSchema.parse(await request.json());
 
     const upload = await prisma.questionnaireUpload.findFirst({

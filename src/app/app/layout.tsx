@@ -175,6 +175,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       kind: 'range' as const
     },
     {
+      id: 'account',
+      label: 'My Workspace',
+      description: 'Your user profile, role, active workspace, and subscription access.',
+      href: '/app/account',
+      kind: 'settings' as const
+    },
+    {
       id: 'settings-members',
       label: 'Settings: Members',
       description: 'Manage workspace members and roles.',

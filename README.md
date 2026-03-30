@@ -1,22 +1,58 @@
-# VantageCISO
+# VantageAI Product App
 
-Multi-tenant security assessment platform with:
+`app.vantageciso.com` is a multi-tenant security operating system for lean teams under procurement pressure.
 
-- Solo-CISO command center with threat trend radar and seven-day mission queue.
-- One-click mission and runbook task pack automation.
-- Auth.js magic-link auth and tenant membership enforcement.
-- Template + assessment lifecycle with deterministic scoring.
-- Evidence vault ingestion, chunk embeddings, and RAG draft citations.
-- Questionnaire import/mapping workflow into assessment responses.
-- Report generation and branded exports.
-- Stripe subscriptions, webhook sync, and feature entitlements.
+The product roadmap and build rules are defined in `AGENTS.md`. This `README` summarizes the current implementation posture for contributors.
 
-See `docs/setup.md`, `docs/api.md`, `docs/solo-ciso-operating-system.md`, and `docs/staging-deploy-checklist.md`.
+## Product Priorities
+
+Build modules in this order:
+
+1. TrustOps
+2. Pulse
+3. AI Governance
+4. Response Ops
+
+Favor work that improves buyer diligence turnaround, procurement readiness, executive visibility, and recurring weekly operations.
+
+## Existing Product Surfaces
+
+Extend these first before adding net-new surfaces:
+
+- Command Center
+- Trust Inbox
+- Findings / Gaps
+- Policies
+- Copilot
+- Runbooks
+- Security Analyst
+- Cyber Range
+- Questionnaires
+- Assessments
+
+## Platform Expectations
+
+- Tenant-scoped records for every meaningful operator output.
+- Audit-aware workflows with actor and status tracking.
+- Explicit Prisma models when lifecycle/review/export/reporting is required.
+- Zod-validated payloads and typed route contracts.
+- AI workflows must store confidence, cite evidence where available, and require review for low-confidence/high-stakes output.
+
+## Documentation Map
+
+- Setup: `docs/setup.md`
+- API surface: `docs/api.md`
+- Architecture: `docs/architecture.md`
+- Data model: `docs/data-model.md`
+- AI guardrails: `docs/ai-guardrails.md`
+- Operator help center: `docs/help-center/README.md`
+- Deployment checks: `docs/staging-deploy-checklist.md`
 
 ## Quality Gates
 
 - `npm run test` - unit and integration workflow coverage (scoring, RAG, questionnaire import, report export, policy generation, cyber-range generation, security validation).
 - `npm run lint` - static lint checks.
+- `npm run typecheck` - TypeScript compile-time checks.
 - `npm run build` - production build validation.
 - `npm run test:runtime` - runtime smoke checks against a production server (`/`, `/login`, `/skills`, auth-gated `/app`, and protected API behavior).
 - `npm run test:deep` - full deep validation pass (`test` + `build` + runtime smoke).

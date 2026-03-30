@@ -4,7 +4,8 @@
 
 - Confirm `DATABASE_URL` points to staging Postgres.
 - Apply migrations: `npm run prisma:migrate`.
-- Seed baseline tenant/templates for smoke tests: `npm run prisma:seed`.
+- Seed baseline metadata (production-safe): `npm run prisma:seed`.
+- Optional guided demo workspace seed for scripted validation only: `npm run prisma:seed:demo`.
 - Configure S3-compatible bucket (or keep `LOCAL` for ephemeral staging only).
 
 ## 2. Secrets and Providers

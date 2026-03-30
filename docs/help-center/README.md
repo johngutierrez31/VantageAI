@@ -1,6 +1,7 @@
 # VantageAI Help Center
 
 This help center is the operator guide for `app.vantageciso.com`.
+It aligns to the product direction in `AGENTS.md`: TrustOps -> Pulse -> AI Governance -> Response Ops.
 
 Use this set in order if you are new to the suite:
 

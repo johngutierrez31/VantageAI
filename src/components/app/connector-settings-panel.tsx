@@ -464,7 +464,7 @@ export function ConnectorSettingsPanel({
                       rows={4}
                       value={form.googleServiceAccountJson}
                       onChange={(event) => updateForm(provider, { googleServiceAccountJson: event.target.value })}
-                      placeholder="Optional service account JSON for future Drive enablement"
+                      placeholder={connector?.hasSecrets ? 'Service account JSON saved. Paste to rotate.' : 'Google service account JSON'}
                     />
                   </>
                 ) : null}

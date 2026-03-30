@@ -2,17 +2,19 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 export function TrialStartForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = useMemo(() => searchParams.get('callbackUrl') ?? '/app/command-center?welcome=trial', [searchParams]);
   const [workspaceName, setWorkspaceName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -27,7 +29,8 @@ export function TrialStartForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workspaceName,
-          email
+          email,
+          password
         })
       });
 
@@ -39,19 +42,22 @@ export function TrialStartForm() {
         return;
       }
 
-      const signInResult = await signIn('email', {
+      const signInResult = await signIn('credentials', {
         email,
+        password,
         callbackUrl,
         redirect: false
       });
 
       if (signInResult?.error) {
-        setMessage('Trial workspace created, but the secure sign-in link could not be sent automatically.');
+        setMessage('Trial workspace created, but password login did not complete automatically. Use Sign in above.');
         setBusy(false);
         return;
       }
 
-      setMessage('Your 14-day trial workspace is ready. Check your inbox for the secure sign-in link.');
+      router.push(callbackUrl);
+      router.refresh();
+      setMessage('Your 14-day trial workspace is ready. Signing you in...');
     } catch (error) {
       console.error('[trial] start request failed', error);
       setMessage('Trial provisioning failed. Check server logs and local configuration.');
@@ -86,11 +92,19 @@ export function TrialStartForm() {
             placeholder="name@company.com"
             required
           />
+          <Input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Create password (min 10 chars)"
+            minLength={10}
+            required
+          />
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? 'Creating trial workspace...' : 'Start 14-day trial'}
           </Button>
           <p className="text-xs text-muted-foreground">
-            You will receive a magic link and land in your new blank workspace.
+            We will create your account with password login enabled immediately.
           </p>
           {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
         </form>

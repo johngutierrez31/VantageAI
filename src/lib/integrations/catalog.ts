@@ -36,9 +36,9 @@ export const CONNECTOR_PROVIDER_CAPABILITIES: Record<
     actions: ['Create pages', 'Update previously published pages', 'Store page links']
   },
   GOOGLE_DRIVE: {
-    summary: 'Framework-ready document publisher placeholder for teams that prefer Drive over Confluence.',
-    status: 'scaffolded',
-    actions: ['Configuration placeholder', 'Health visibility', 'Deferred for auth-safe follow-up']
+    summary: 'Publish share-safe artifacts into a scoped Google Drive folder with tenant-scoped activity and sync links.',
+    status: 'live',
+    actions: ['Upload HTML artifacts', 'Run live folder health checks', 'Store Drive file links']
   },
   OUTBOUND_WEBHOOK: {
     summary: 'Fan out narrow event payloads into external automations without building a full iPaaS.',
