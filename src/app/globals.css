@@ -104,6 +104,12 @@ a:hover {
   color: #d4b872;
 }
 
+/* WCAG AA contrast fix: --danger (HSL 351 57% 35%) is only 2.1:1 on dark bg — fails 4.5:1.
+   Override text-danger to HSL(351 70% 59%) which achieves 4.6:1 on background. */
+.text-danger {
+  color: hsl(351 70% 59%);
+}
+
 .card {
   @apply rounded-lg border border-border bg-card p-5 text-card-foreground shadow-panel;
 }

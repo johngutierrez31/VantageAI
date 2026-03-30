@@ -71,8 +71,15 @@ export function PageHeader({
           {contextualHelp ? <ContextualHelpPanel help={contextualHelp} /> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {primaryAction ? (
+            <>
+              {renderAction(primaryAction, 0, true)}
+              {secondaryActions.length > 0 && (
+                <span aria-hidden="true" className="hidden h-5 w-px bg-border lg:inline-block" />
+              )}
+            </>
+          ) : null}
           {secondaryActions.map((action, index) => renderAction(action, index))}
-          {primaryAction ? renderAction(primaryAction, 0, true) : null}
         </div>
       </div>
       <div aria-hidden="true" className="ornate-divider mt-6" />

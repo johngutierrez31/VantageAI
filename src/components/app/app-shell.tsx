@@ -299,6 +299,12 @@ export function AppShell({
 
   return (
     <div className={cn('academia-shell min-h-screen bg-background text-foreground', funMode && 'fun-mode')}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} items={searchItems} />
       <div className="mx-auto grid min-h-screen max-w-[1600px] grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="hidden border-r border-border/80 bg-card/80 p-4 lg:block">
@@ -333,7 +339,7 @@ export function AppShell({
               </div>
             ) : null}
           </div>
-          <nav className="space-y-1">
+          <nav aria-label="Main navigation" className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -341,6 +347,7 @@ export function AppShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? 'page' : undefined}
                   className={cn(
                     'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-serif transition-colors duration-300 ease-out',
                     active
@@ -348,7 +355,7 @@ export function AppShell({
                       : 'text-muted-foreground hover:bg-muted/40 hover:text-primary'
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -446,8 +453,9 @@ export function AppShell({
                     }}
                     type="button"
                     aria-expanded={showNotifications}
+                    aria-label="View notifications"
                   >
-                    <Bell className="h-4 w-4" />
+                    <Bell className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   {notifications.length ? (
                     <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-warning" />
@@ -667,7 +675,7 @@ export function AppShell({
           ) : (
             <div aria-hidden="true" className="ornate-divider mx-4 md:mx-6 lg:mx-8" />
           )}
-          <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 lg:px-8">{children}</main>
+          <main id="main-content" className="flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 lg:px-8">{children}</main>
         </div>
       </div>
     </div>
