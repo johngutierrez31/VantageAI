@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
     secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
   });
 
-  const anonymousDemoSession = isDemoModeEnabled() && !token;
+  const anonymousDemoSession = isDemoModeEnabled({ requestHost: request.nextUrl.hostname }) && !token;
   const workspaceMode = resolveWorkspaceModeFromToken(token);
   const demoWorkspace = workspaceMode === 'DEMO' || anonymousDemoSession;
 
